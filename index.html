@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Idle RPG — Путь Героя</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0a0a14;
+      color: #e0d8c8;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      overflow: hidden;
+      user-select: none;
+    }
+    #app {
+      display: flex;
+      flex-direction: column;
+      width: 1280px;
+      height: 720px;
+      margin: 0 auto;
+    }
+
+    /* ═══════════════════════════ HUD ═══════════════════════════ */
+    #hud {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      height: 52px;
+      padding: 0 14px;
+      background: linear-gradient(180deg, #12122a 0%, #0d0d20 100%);
+      border-bottom: 1px solid #2a2a4a;
+      flex-shrink: 0;
+    }
+    .class-badge {
+      display: flex; align-items: center; gap: 7px;
+      padding: 4px 11px; border-radius: 20px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.13);
+      font-size: 12px; font-weight: 600;
+    }
+    #hud-class-icon { width: 14px; height: 14px; border-radius: 50%; }
+    .hud-stat { display: flex; align-items: center; gap: 5px; font-size: 12px; }
+    .hud-stat .lbl { color: #666; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .hud-stat .val { color: #ffd700; font-weight: 700; }
+    #xp-bar-wrap { flex: 1; display: flex; align-items: center; gap: 8px; min-width: 0; }
+    #xp-bar-bg { flex: 1; height: 9px; background: #1a1a2e; border-radius: 5px; overflow: hidden; border: 1px solid #2a2a4a; }
+    #xp-bar { height: 100%; background: linear-gradient(90deg, #6c3fc5, #9b6bff); border-radius: 5px; transition: width 0.3s; width: 0%; }
+    #xp-label { font-size: 10px; color: #666; white-space: nowrap; }
+    #prestige-btn {
+      padding: 4px 11px; background: linear-gradient(135deg, #b8860b, #ffd700);
+      color: #1a0a00; border: none; border-radius: 4px;
+      font-size: 10px; font-weight: 700; cursor: pointer; display: none;
+    }
+    #prestige-btn:hover { filter: brightness(1.15); }
+    #settings-btn {
+      padding: 5px 10px; background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12); border-radius: 6px;
+      color: #aaa; font-size: 15px; cursor: pointer; line-height: 1;
+      transition: background 0.15s;
+    }
+    #settings-btn:hover { background: rgba(255,255,255,0.14); color: #fff; }
+
+    /* ═══════════════════════════ BATTLE STRIP ═══════════════════════════ */
+    #battle-strip {
+      height: 52px;
+      background: linear-gradient(180deg, #0a0a1c, #080814);
+      border-bottom: 1px solid #1e1e38;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      gap: 10px;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .bs-player-block {
+      width: 220px;
+      flex-shrink: 0;
+      padding: 4px 10px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.07);
+      transition: outline 0.1s;
+    }
+    .bs-player-header {
+      display: flex; align-items: center; gap: 5px;
+      margin-bottom: 4px;
+    }
+    .bs-class-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .bs-player-name { font-size: 12px; font-weight: 700; color: #ccc; }
+    .bs-level { font-size: 10px; color: #555; margin-left: 2px; }
+    .bs-player-status { font-size: 10px; margin-left: auto; }
+    .bs-hp-wrap { display: flex; align-items: center; gap: 6px; }
+    .bs-hp-bar { flex: 1; height: 5px; background: #111; border-radius: 3px; overflow: hidden; }
+    .bs-hp-fill { height: 100%; border-radius: 3px; transition: width 0.2s, background 0.3s; background: #44dd44; width: 100%; }
+    .bs-hp-text { font-size: 9px; color: #666; white-space: nowrap; }
+
+    .bs-vs-block {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      flex-shrink: 0; width: 76px;
+    }
+    .bs-vs-text { font-size: 16px; line-height: 1; }
+    .bs-progress { font-size: 10px; color: #666; }
+    .bs-wave-badge {
+      font-size: 9px; color: #aaa; padding: 1px 6px;
+      border-radius: 10px; background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      white-space: nowrap;
+    }
+
+    .bs-enemies-block {
+      flex: 1; min-width: 0;
+      padding: 4px 8px;
+      background: rgba(255,80,0,0.04);
+      border-radius: 6px;
+      border: 1px solid rgba(180,60,0,0.12);
+    }
+    .bs-enemies-list {
+      display: flex; flex-wrap: wrap; gap: 5px; align-items: center;
+      max-height: 44px; overflow: hidden;
+    }
+    .bs-waiting { font-size: 11px; color: #555; }
+    .bs-enemy-chip {
+      display: flex; flex-direction: column; gap: 2px;
+      padding: 2px 7px;
+      background: rgba(180,40,0,0.18);
+      border: 1px solid rgba(200,60,0,0.25);
+      border-radius: 4px;
+      min-width: 60px;
+    }
+    .bs-boss-chip { border-color: rgba(255,150,50,0.5); background: rgba(200,80,0,0.25); }
+    .bs-enemy-name { font-size: 10px; color: #cc8866; white-space: nowrap; }
+    .bs-enemy-hp-bar { height: 3px; background: #222; border-radius: 2px; overflow: hidden; }
+    .bs-enemy-hp-fill { height: 100%; border-radius: 2px; transition: width 0.2s; }
+
+    /* ═══════════════════════════ MAIN AREA ═══════════════════════════ */
+    #main-area {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ═══════════════════════════ CLASS TREE ═══════════════════════════ */
+    #class-tree-panel {
+      width: 280px; flex-shrink: 0;
+      background: #0e0e1e; border-right: 1px solid #2a2a4a;
+      display: flex; flex-direction: column;
+    }
+    #class-tree-header {
+      padding: 8px 14px; font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1px; color: #aaa;
+      border-bottom: 1px solid #2a2a4a; flex-shrink: 0;
+    }
+    #branch-tabs {
+      display: flex; border-bottom: 1px solid #2a2a4a; flex-shrink: 0;
+    }
+    .branch-tab {
+      flex: 1; padding: 6px 4px; text-align: center; font-size: 11px;
+      cursor: pointer; border-bottom: 2px solid transparent;
+      color: #555; transition: all 0.15s;
+    }
+    .branch-tab:hover { color: #aaa; background: rgba(255,255,255,0.03); }
+    .branch-tab.active { color: #fff; border-bottom-color: var(--tab-color,#fff); }
+    #class-tree-search { padding: 5px 8px; border-bottom: 1px solid #2a2a4a; flex-shrink: 0; }
+    #class-tree-search input {
+      width: 100%; background: #1a1a2e; border: 1px solid #2a2a4a;
+      border-radius: 4px; padding: 4px 8px; color: #e0d8c8; font-size: 11px; outline: none;
+    }
+    #class-tree-search input::placeholder { color: #555; }
+    #class-tree-search input:focus { border-color: #4a4a7a; }
+    #class-tree-scroll { flex: 1; overflow-y: auto; padding: 6px 4px; }
+    #class-tree-scroll::-webkit-scrollbar { width: 3px; }
+    #class-tree-scroll::-webkit-scrollbar-thumb { background: #2a2a4a; border-radius: 2px; }
+    .tree-node {
+      padding: 4px 6px; border-radius: 4px; font-size: 11px;
+      cursor: default; margin-bottom: 1px; transition: background 0.1s;
+      border: 1px solid transparent;
+    }
+    .tree-node .node-row { display: flex; align-items: center; gap: 4px; }
+    .tree-node .node-name { font-weight: 600; }
+    .tree-node .node-indent { display: inline-block; }
+    .node-specialty-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .tree-node.locked { opacity: 0.35; }
+    .tree-node.current { background: rgba(255,215,0,0.11); border-color: rgba(255,215,0,0.38); }
+    .tree-node.current .node-name { color: #ffd700; }
+    .tree-node.available { background: rgba(100,200,100,0.07); border-color: rgba(100,200,100,0.28); cursor: pointer; }
+    .tree-node.available:hover { background: rgba(100,200,100,0.16); border-color: rgba(100,200,100,0.55); }
+    .tree-node.available .node-name { color: #7dda7d; }
+    .tree-node.ancestor { background: rgba(255,255,255,0.03); }
+    .tree-node.ancestor .node-name { color: #999; }
+
+    /* ═══════════════════════════ CANVAS ═══════════════════════════ */
+    #game-container {
+      flex: 1; background: #080810;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    #game-container canvas { display: block; }
+
+    /* ═══════════════════════════ STATS PANEL ═══════════════════════════ */
+    #stats-panel {
+      width: 300px; flex-shrink: 0;
+      background: #0e0e1e; border-left: 1px solid #2a2a4a;
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .panel-section { border-bottom: 1px solid #1e1e36; padding: 8px 12px; }
+    .panel-section-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #555; margin-bottom: 6px; }
+    .stat-row { display: flex; justify-content: space-between; align-items: center; padding: 2px 0; font-size: 11px; }
+    .stat-row .sname { color: #777; }
+    .stat-row .sval { color: #e0d8c8; font-weight: 600; }
+    .stat-row .smult { font-size: 9px; color: #6c6; margin-left: 3px; }
+    #upgrades-scroll { flex: 1; overflow-y: auto; padding: 6px 10px; }
+    #upgrades-scroll::-webkit-scrollbar { width: 3px; }
+    #upgrades-scroll::-webkit-scrollbar-thumb { background: #2a2a4a; border-radius: 2px; }
+    .upgrade-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 6px 7px; margin-bottom: 4px;
+      background: #12122a; border-radius: 5px; border: 1px solid #1e1e3a;
+    }
+    .upgrade-item .upg-info { flex: 1; }
+    .upgrade-item .upg-name { font-size: 11px; font-weight: 600; color: #ccc; }
+    .upgrade-item .upg-desc { font-size: 9px; color: #555; margin-top: 1px; }
+    .upgrade-item .upg-level { font-size: 9px; color: #777; }
+    .upg-buy-btn {
+      padding: 4px 9px; border: none; border-radius: 4px;
+      background: linear-gradient(135deg, #1e3a1e, #2a5a2a);
+      color: #7dda7d; font-size: 10px; font-weight: 700; cursor: pointer;
+      white-space: nowrap; border: 1px solid rgba(125,218,125,0.25);
+      transition: all 0.15s;
+    }
+    .upg-buy-btn:hover { filter: brightness(1.12); }
+    .upg-buy-btn:disabled { background: #1a1a2a; color: #444; cursor: not-allowed; border-color: transparent; }
+
+    /* ═══════════════════════════ COMBAT LOG ═══════════════════════════ */
+    #combat-log {
+      height: 96px; background: #0a0a18; border-top: 1px solid #2a2a4a;
+      display: flex; flex-direction: column; flex-shrink: 0;
+    }
+    #log-header { padding: 3px 12px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #444; border-bottom: 1px solid #1a1a2e; flex-shrink: 0; }
+    #log-entries { flex: 1; overflow-y: auto; padding: 3px 12px; display: flex; flex-direction: column-reverse; gap: 1px; }
+    #log-entries::-webkit-scrollbar { width: 3px; }
+    #log-entries::-webkit-scrollbar-thumb { background: #2a2a4a; }
+    .log-entry { font-size: 10px; line-height: 1.35; color: #666; animation: fadeIn 0.2s ease; }
+    .log-entry.kill { color: #e8a84a; }
+    .log-entry.crit { color: #ff6b6b; }
+    .log-entry.level { color: #9b6bff; font-weight: 600; }
+    .log-entry.class-change { color: #ffd700; font-weight: 600; }
+    .log-entry.wave { color: #6bb8ff; }
+    .log-entry.death { color: #cc4444; }
+    .log-entry.prestige { color: #ff9f3f; font-weight: 700; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ═══════════════════════════ CLASS MODAL ═══════════════════════════ */
+    #class-modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7); z-index: 100;
+      align-items: center; justify-content: center;
+    }
+    #class-modal-overlay.visible { display: flex; }
+    #class-modal {
+      background: linear-gradient(135deg,#12122a,#1a1a38);
+      border: 1px solid #3a3a6a; border-radius: 12px;
+      padding: 22px; width: 360px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+    }
+    #class-modal h3 { font-size: 17px; margin-bottom: 4px; color: #ffd700; }
+    #class-modal .modal-subtitle { font-size: 11px; color: #777; margin-bottom: 14px; }
+    #class-modal .modal-stats { margin-bottom: 14px; }
+    .modal-stat-row { display: flex; justify-content: space-between; font-size: 11px; padding: 2px 0; border-bottom: 1px solid #1e1e36; }
+    .modal-stat-row .msr-name { color: #777; }
+    .modal-stat-row .msr-val { color: #7dda7d; }
+    #class-modal .modal-actions { display: flex; gap: 9px; margin-top: 14px; }
+    .modal-confirm-btn {
+      flex: 1; padding: 9px; border: none; border-radius: 6px;
+      background: linear-gradient(135deg,#1e5a1e,#2a8a2a); color: #7dda7d;
+      font-size: 12px; font-weight: 700; cursor: pointer;
+      border: 1px solid rgba(125,218,125,0.35);
+    }
+    .modal-confirm-btn:hover { filter: brightness(1.2); }
+    .modal-cancel-btn {
+      flex: 1; padding: 9px; border: 1px solid #3a3a5a; border-radius: 6px;
+      background: transparent; color: #777; font-size: 12px; cursor: pointer;
+    }
+    .modal-cancel-btn:hover { background: rgba(255,255,255,0.05); color: #aaa; }
+
+    /* ═══════════════════════════ PRESTIGE MODAL ═══════════════════════════ */
+    #prestige-modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.82); z-index: 101;
+      align-items: center; justify-content: center;
+    }
+    #prestige-modal-overlay.visible { display: flex; }
+    #prestige-modal {
+      background: linear-gradient(135deg,#1a1200,#2a1e00);
+      border: 2px solid #b8860b; border-radius: 12px; padding: 26px; width: 400px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.9), 0 0 40px rgba(184,134,11,0.25);
+      text-align: center;
+    }
+    #prestige-modal h2 { font-size: 21px; color: #ffd700; margin-bottom: 8px; }
+    #prestige-modal p { font-size: 12px; color: #ccc; margin-bottom: 14px; line-height: 1.6; }
+    #prestige-modal .prestige-bonus { font-size: 13px; color: #ffa500; font-weight: 700; margin-bottom: 18px; }
+    #prestige-modal .prestige-actions { display: flex; gap: 11px; }
+    .prestige-confirm-btn {
+      flex: 1; padding: 11px;
+      background: linear-gradient(135deg,#b8860b,#ffd700);
+      color: #1a0a00; border: none; border-radius: 6px;
+      font-size: 13px; font-weight: 700; cursor: pointer;
+    }
+    .prestige-confirm-btn:hover { filter: brightness(1.15); }
+    .prestige-cancel-btn {
+      flex: 1; padding: 11px; background: transparent;
+      border: 1px solid #444; border-radius: 6px; color: #777; font-size: 13px; cursor: pointer;
+    }
+
+    /* ═══════════════════════════ SETTINGS MODAL ═══════════════════════════ */
+    #settings-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.78); z-index: 200;
+      align-items: center; justify-content: center;
+    }
+    #settings-overlay.visible { display: flex; }
+    #settings-modal {
+      background: linear-gradient(160deg,#10102a,#18182e);
+      border: 1px solid #3a3a6a; border-radius: 14px;
+      width: 540px; max-height: 560px;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.9);
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+    #settings-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px 12px;
+      border-bottom: 1px solid #2a2a4a;
+      flex-shrink: 0;
+    }
+    #settings-header h2 { font-size: 16px; color: #e0d8c8; }
+    #settings-header span { font-size: 10px; color: #555; }
+    #settings-close-btn {
+      background: none; border: none; color: #666; font-size: 18px;
+      cursor: pointer; padding: 2px 6px; border-radius: 4px;
+    }
+    #settings-close-btn:hover { color: #aaa; background: rgba(255,255,255,0.06); }
+
+    /* Вкладки */
+    #settings-tabs {
+      display: flex; border-bottom: 1px solid #2a2a4a;
+      padding: 0 20px; flex-shrink: 0;
+    }
+    .stab {
+      padding: 8px 16px; font-size: 12px; font-weight: 600;
+      color: #555; cursor: pointer; border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    .stab:hover { color: #aaa; }
+    .stab.active { color: #ccc; border-bottom-color: #6644cc; }
+
+    #settings-body { flex: 1; overflow-y: auto; padding: 16px 20px; }
+    #settings-body::-webkit-scrollbar { width: 4px; }
+    #settings-body::-webkit-scrollbar-thumb { background: #2a2a4a; border-radius: 2px; }
+
+    .stab-content { display: none; }
+    .stab-content.active { display: block; }
+
+    /* Статистика */
+    .sstat-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 8px; margin-bottom: 8px;
+    }
+    .sstat-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 8px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.07);
+    }
+    .sstat-icon { font-size: 20px; }
+    .sstat-value { font-size: 14px; font-weight: 700; color: #e0d8c8; }
+    .sstat-label { font-size: 10px; color: #666; margin-top: 1px; }
+
+    /* Настройки-кнопки */
+    .settings-action-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 0; border-bottom: 1px solid #1e1e30;
+    }
+    .settings-action-row:last-child { border-bottom: none; }
+    .sar-info .sar-title { font-size: 13px; font-weight: 600; color: #ccc; }
+    .sar-info .sar-desc  { font-size: 10px; color: #555; margin-top: 1px; }
+    .settings-btn {
+      padding: 7px 16px; border-radius: 6px; border: none;
+      font-size: 12px; font-weight: 600; cursor: pointer;
+      background: rgba(255,255,255,0.07);
+      color: #aaa; border: 1px solid rgba(255,255,255,0.1);
+      transition: all 0.15s;
+    }
+    .settings-btn:hover { background: rgba(255,255,255,0.12); color: #ddd; }
+
+    /* Зона опасности */
+    .danger-zone {
+      margin-top: 16px; padding: 14px;
+      border: 1px solid rgba(200,50,50,0.25);
+      border-radius: 8px; background: rgba(180,20,20,0.06);
+    }
+    .danger-zone-title { font-size: 11px; font-weight: 700; color: #884444; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+    .settings-danger-btn {
+      width: 100%; padding: 9px; border-radius: 6px;
+      font-size: 12px; font-weight: 700; cursor: pointer;
+      background: rgba(150,20,20,0.2);
+      color: #cc6666; border: 1px solid rgba(180,50,50,0.3);
+      transition: all 0.2s;
+    }
+    .settings-danger-btn:hover { background: rgba(180,30,30,0.3); color: #ff8888; border-color: rgba(200,60,60,0.5); }
+    .settings-danger-btn.confirm1 {
+      background: rgba(200,100,0,0.2); color: #ffaa44;
+      border-color: rgba(220,120,0,0.4); animation: pulse 0.4s ease;
+    }
+    .settings-danger-btn.confirm2 {
+      background: rgba(220,20,20,0.3); color: #ff5555;
+      border-color: rgba(240,40,40,0.6); animation: pulse 0.3s ease;
+    }
+    @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.02); } }
+
+    #settings-footer {
+      padding: 10px 20px; border-top: 1px solid #1e1e3a;
+      font-size: 10px; color: #444; text-align: center;
+      flex-shrink: 0;
+    }
+    /* Скрытый file input */
+    #import-file-input { display: none; }
+  </style>
+</head>
+<body>
+  <div id="app">
+
+    <!-- HUD -->
+    <div id="hud">
+      <div class="class-badge">
+        <div class="class-icon" id="hud-class-icon" style="width:14px;height:14px;border-radius:50%;"></div>
+        <span id="hud-class-name">Новичок</span>
+        <span id="hud-prestige-stars" style="color:#ffd700;font-size:9px;"></span>
+      </div>
+      <div class="hud-stat"><span class="lbl">Ур.</span><span class="val" id="hud-level">1</span></div>
+      <div id="xp-bar-wrap">
+        <div id="xp-bar-bg"><div id="xp-bar"></div></div>
+        <span id="xp-label">0 / 100 XP</span>
+      </div>
+      <div class="hud-stat"><span class="lbl">Золото</span><span class="val" id="hud-gold">0</span></div>
+      <div class="hud-stat"><span class="lbl">Волна</span><span class="val" id="hud-wave">1</span></div>
+      <div class="hud-stat"><span class="lbl">Убито</span><span class="val" id="hud-kills">0</span></div>
+      <button id="prestige-btn" onclick="window.game && window.game.showPrestigeModal()">⭐ Переродиться</button>
+      <button id="settings-btn" onclick="window.game && window.game.openSettings()" title="Настройки">⚙️</button>
+    </div>
+
+    <!-- BATTLE STRIP -->
+    <div id="battle-strip">
+      <!-- заполняется BattleStrip.js -->
+    </div>
+
+    <!-- MAIN AREA -->
+    <div id="main-area">
+
+      <!-- Class Tree -->
+      <div id="class-tree-panel">
+        <div id="class-tree-header">🌿 Дерево Классов</div>
+        <div id="branch-tabs">
+          <div class="branch-tab active" data-branch="all" style="--tab-color:#fff">Все</div>
+          <div class="branch-tab" data-branch="warrior" style="--tab-color:#e74c3c">⚔</div>
+          <div class="branch-tab" data-branch="rogue"   style="--tab-color:#9b59b6">🗡</div>
+          <div class="branch-tab" data-branch="archer"  style="--tab-color:#2ecc71">🏹</div>
+          <div class="branch-tab" data-branch="mage"    style="--tab-color:#3498db">✨</div>
+        </div>
+        <div id="class-tree-search">
+          <input type="text" placeholder="Поиск класса..." id="class-search-input" />
+        </div>
+        <div id="class-tree-scroll"></div>
+      </div>
+
+      <!-- Phaser Canvas -->
+      <div id="game-container"></div>
+
+      <!-- Stats Panel -->
+      <div id="stats-panel">
+        <div class="panel-section">
+          <div class="panel-section-title">⚡ Характеристики</div>
+          <div class="stat-row"><span class="sname">❤️ Здоровье</span><span><span class="sval" id="stat-hp">100</span><span class="smult" id="stat-hp-mult"></span></span></div>
+          <div class="stat-row"><span class="sname">⚔️ Урон</span><span><span class="sval" id="stat-atk">10</span><span class="smult" id="stat-atk-mult"></span></span></div>
+          <div class="stat-row"><span class="sname">🛡️ Защита</span><span><span class="sval" id="stat-def">5</span><span class="smult" id="stat-def-mult"></span></span></div>
+          <div class="stat-row"><span class="sname">⚡ Скорость</span><span><span class="sval" id="stat-spd">1.0</span><span class="smult" id="stat-spd-mult">/с</span></span></div>
+          <div class="stat-row"><span class="sname">🎯 Крит шанс</span><span><span class="sval" id="stat-crit">5</span><span class="smult">%</span></span></div>
+          <div class="stat-row"><span class="sname">💥 Крит урон</span><span><span class="sval" id="stat-critdmg">150</span><span class="smult">%</span></span></div>
+          <div class="stat-row"><span class="sname">📚 Опыт ×</span><span><span class="sval" id="stat-xpmult">1.00</span></span></div>
+          <div class="stat-row"><span class="sname">💰 Золото ×</span><span><span class="sval" id="stat-goldmult">1.00</span></span></div>
+          <div class="stat-row"><span class="sname">🏆 Престиж ×</span><span><span class="sval" id="stat-prestmult">1.00</span></span></div>
+        </div>
+        <div class="panel-section">
+          <div class="panel-section-title">🔧 Прокачка</div>
+        </div>
+        <div id="upgrades-scroll"></div>
+      </div>
+    </div>
+
+    <!-- Combat Log -->
+    <div id="combat-log">
+      <div id="log-header">📜 Журнал Боя</div>
+      <div id="log-entries"></div>
+    </div>
+  </div>
+
+  <!-- ══════ CLASS MODAL ══════ -->
+  <div id="class-modal-overlay">
+    <div id="class-modal">
+      <h3 id="modal-class-name">Воин</h3>
+      <div class="modal-subtitle" id="modal-class-desc">Описание класса</div>
+      <div class="modal-stats" id="modal-class-stats"></div>
+      <div style="font-size:11px;color:#888;">Стоимость: <span style="color:#ffd700;font-weight:700;" id="modal-class-cost">200</span> 🪙</div>
+      <div class="modal-actions">
+        <button class="modal-confirm-btn" id="modal-confirm-btn">Сменить класс</button>
+        <button class="modal-cancel-btn"  id="modal-cancel-btn">Отмена</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════ PRESTIGE MODAL ══════ -->
+  <div id="prestige-modal-overlay">
+    <div id="prestige-modal">
+      <h2>⭐ Перерождение ⭐</h2>
+      <p>Ваш герой достиг предела своих возможностей. Переродитесь, чтобы начать заново с постоянным усилением!</p>
+      <div class="prestige-bonus" id="prestige-bonus-text">+10% к золоту и опыту навсегда</div>
+      <p style="font-size:10px;color:#888;">⚠️ Класс сбросится до Новичка. Улучшения и классы сохранятся.</p>
+      <div class="prestige-actions" style="margin-top:18px;">
+        <button class="prestige-confirm-btn" id="prestige-confirm-btn">Переродиться!</button>
+        <button class="prestige-cancel-btn"  id="prestige-cancel-btn">Ещё нет</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════ SETTINGS MODAL ══════ -->
+  <div id="settings-overlay">
+    <div id="settings-modal">
+      <div id="settings-header">
+        <div>
+          <h2>⚙️ Меню</h2>
+          <span>Idle RPG — Путь Героя v1.0</span>
+        </div>
+        <button id="settings-close-btn">✕</button>
+      </div>
+
+      <div id="settings-tabs">
+        <div class="stab active" data-tab="stats">📊 Статистика</div>
+        <div class="stab" data-tab="manage">🗂️ Управление</div>
+      </div>
+
+      <div id="settings-body">
+        <!-- Статистика -->
+        <div class="stab-content active" id="stab-stats">
+          <div id="stats-content">
+            <!-- заполняется SettingsMenu.js -->
+          </div>
+        </div>
+
+        <!-- Управление -->
+        <div class="stab-content" id="stab-manage">
+          <div class="settings-action-row">
+            <div class="sar-info">
+              <div class="sar-title">💾 Сохранить сейчас</div>
+              <div class="sar-desc">Автосейв каждые 30 сек + при закрытии</div>
+            </div>
+            <button class="settings-btn" id="save-now-btn">Сохранить</button>
+          </div>
+
+          <div class="settings-action-row">
+            <div class="sar-info">
+              <div class="sar-title">📤 Экспорт сейва</div>
+              <div class="sar-desc">Скачать файл сохранения (JSON)</div>
+            </div>
+            <button class="settings-btn" id="export-save-btn">Экспорт</button>
+          </div>
+
+          <div class="settings-action-row">
+            <div class="sar-info">
+              <div class="sar-title">📥 Импорт сейва</div>
+              <div class="sar-desc">Загрузить файл сохранения (JSON)</div>
+            </div>
+            <button class="settings-btn" id="import-save-btn">Импорт</button>
+          </div>
+          <input type="file" id="import-file-input" accept=".json" />
+
+          <div class="danger-zone">
+            <div class="danger-zone-title">⚠️ Зона опасности</div>
+            <button class="settings-danger-btn" id="reset-progress-btn">🗑️ Сбросить прогресс</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="settings-footer">
+        Сохранение: localStorage • Офлайн-прогресс: до 8 часов
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
