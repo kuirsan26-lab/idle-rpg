@@ -52,6 +52,21 @@
     #xp-bar-bg { flex: 1; height: 9px; background: #1a1a2e; border-radius: 5px; overflow: hidden; border: 1px solid #2a2a4a; }
     #xp-bar { height: 100%; background: linear-gradient(90deg, #6c3fc5, #9b6bff); border-radius: 5px; transition: width 0.3s; width: 0%; }
     #xp-label { font-size: 10px; color: #666; white-space: nowrap; }
+    #prestige-progress {
+      display: flex; flex-direction: column; align-items: flex-end; gap: 2px; min-width: 90px;
+    }
+    #prestige-progress-label {
+      font-size: 9px; color: #b8860b; white-space: nowrap; letter-spacing: 0.3px;
+    }
+    #prestige-progress-bar-bg {
+      width: 90px; height: 5px; background: #1a1a2e;
+      border-radius: 3px; overflow: hidden; border: 1px solid #3a2a0a;
+    }
+    #prestige-progress-bar {
+      height: 100%; border-radius: 3px;
+      background: linear-gradient(90deg, #b8860b, #ffd700);
+      transition: width 0.4s; width: 0%;
+    }
     #prestige-btn {
       padding: 4px 11px; background: linear-gradient(135deg, #b8860b, #ffd700);
       color: #1a0a00; border: none; border-radius: 4px;
@@ -452,6 +467,10 @@
       <div class="hud-stat"><span class="lbl">Золото</span><span class="val" id="hud-gold">0</span></div>
       <div class="hud-stat"><span class="lbl">Волна</span><span class="val" id="hud-wave">1</span></div>
       <div class="hud-stat"><span class="lbl">Убито</span><span class="val" id="hud-kills">0</span></div>
+      <div id="prestige-progress">
+        <span id="prestige-progress-label">⭐ Ур. 1 / 99</span>
+        <div id="prestige-progress-bar-bg"><div id="prestige-progress-bar"></div></div>
+      </div>
       <button id="prestige-btn" onclick="window.game && window.game.showPrestigeModal()">⭐ Переродиться</button>
       <button id="settings-btn" onclick="window.game && window.game.openSettings()" title="Настройки">⚙️</button>
     </div>

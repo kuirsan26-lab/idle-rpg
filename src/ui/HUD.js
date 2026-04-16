@@ -24,7 +24,7 @@ export class HUD {
         : `⚔️ Волна ${d.wave}`;
       this._log(txt, d.isBoss ? 'kill' : 'wave');
     });
-    state.on('death',          () => { this._log('💀 Вы погибли! -10% золота. Возрождение...', 'death'); this._updateGold(); });
+    state.on('death',          () => { this._log('💀 Вы погибли! -5% золота. Возрождение...', 'death'); this._updateGold(); });
     state.on('respawn',        () => this._log('✨ Возрождение!', 'wave'));
     state.on('prestige',       (d) => {
       this._log(`⭐ ПЕРЕРОЖДЕНИЕ #${d.count}! +${d.count * 10}% к опыту и золоту навсегда`, 'prestige');
@@ -100,8 +100,21 @@ export class HUD {
   }
 
   _updatePrestigeBtn() {
-    const btn = document.getElementById('prestige-btn');
-    if (btn) btn.style.display = this.state.canPrestige() ? 'block' : 'none';
+    const can  = this.state.canPrestige();
+    const btn  = document.getElementById('prestige-btn');
+    const prog = document.getElementById('prestige-progress');
+
+    if (btn)  btn.style.display  = can ? 'block' : 'none';
+    if (prog) prog.style.display = can ? 'none'  : 'flex';
+
+    if (!can) {
+      const lvl    = this.state.level;
+      const pct    = Math.min(100, Math.round((lvl / 99) * 100));
+      const bar    = document.getElementById('prestige-progress-bar');
+      const label  = document.getElementById('prestige-progress-label');
+      if (bar)   bar.style.width   = pct + '%';
+      if (label) label.textContent = `⭐ Ур. ${lvl} / 99`;
+    }
   }
 
   // ── Журнал боя ────────────────────────────────────────────────────────────────
