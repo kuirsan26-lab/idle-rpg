@@ -64,7 +64,9 @@ main.js
 
 `CombatSystem` тикает каждые 200ms. После смерти игрока — таймер `RESPAWN_MS`, затем `_spawnWave()` **с той же волной** (волна не инкрементируется). Волна засчитывается только когда все мобы мертвы и игрок жив.
 
-Колбэки наблюдателей: `onWaveSpawn`, `onMobDeath`, `onPlayerAttack`, `onPlayerHit`, `onPlayerDeath`, `onRespawn`.
+**Откат волны**: счётчик `deathsOnWave` инкрементируется при каждой смерти и сбрасывается при прохождении волны. Если `deathsOnWave >= MAX_DEATHS_PER_WAVE (3)` — при следующем респавне `currentWave--` и спавн предыдущей волны. Минимум — волна 1.
+
+Колбэки наблюдателей: `onWaveSpawn`, `onMobDeath`, `onPlayerAttack`, `onPlayerHit`, `onPlayerDeath`, `onRespawn`, `onWaveRollback`.
 
 Мобы в `combat.mobs[]` — чистые данные. Их визуальные аналоги живут в `GameScene.mobVisuals` (Map<mobId, visual>).
 

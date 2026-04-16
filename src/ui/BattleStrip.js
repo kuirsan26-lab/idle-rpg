@@ -59,13 +59,31 @@ export class BattleStrip {
     this._flashPlayer();
   }
 
-  onPlayerDeath() {
+  onPlayerDeath({ deathsOnWave = 0, maxDeaths = 3 } = {}) {
     const strip = document.getElementById('bs-player-hp-fill');
     if (strip) { strip.style.width = '0%'; strip.style.background = '#880000'; }
     const name = document.getElementById('bs-player-name');
     if (name) name.style.color = '#ff4444';
     const status = document.getElementById('bs-player-status');
-    if (status) { status.textContent = '💀 ПОГИБ'; status.style.color = '#ff4444'; }
+    if (status) {
+      const remaining = maxDeaths - deathsOnWave;
+      const warning = remaining > 0
+        ? ` (−${remaining} до отката)`
+        : ' ⬇️ откат!';
+      status.textContent = `💀 ПОГИБ${warning}`;
+      status.style.color = remaining > 0 ? '#ff8844' : '#ff4444';
+    }
+  }
+
+  onWaveRollback({ wave }) {
+    const badge = document.getElementById('bs-wave-badge');
+    if (badge) {
+      badge.textContent = `⬇️ Откат → Волна ${wave}`;
+      badge.style.background = 'rgba(180,60,180,0.35)';
+      badge.style.borderColor = '#aa44aa';
+      // Вернём нормальный вид через 2с
+      setTimeout(() => this._updateWave(), 2000);
+    }
   }
 
   onRespawn() {

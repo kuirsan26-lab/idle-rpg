@@ -62,16 +62,26 @@ combat.register({
   onMobDeath: ({ mob, xpGained, goldGained }) => {
     hud.logCombat(`☠ ${mob.data.name} убит! +${goldGained}g +${xpGained}XP`, 'kill');
   },
+  onPlayerDeath: ({ deathsOnWave, maxDeaths }) => {
+    const remaining = maxDeaths - deathsOnWave;
+    if (remaining > 0) {
+      hud.logCombat(`💀 Погиб! Ещё ${remaining} смерт${remaining === 1 ? 'ь' : 'и'} — откат волны`, 'hit');
+    }
+  },
+  onWaveRollback: ({ wave }) => {
+    hud.logCombat(`⬇️ Слишком сложно — возврат на волну ${wave}`, 'system');
+  },
 });
 
 // Пробрасываем combat в battleStrip для real-time обновлений
 combat.register({
-  onWaveSpawn:    (d) => battleStrip.onWaveSpawn(d),
-  onMobDeath:     (d) => battleStrip.onMobDeath(d),
-  onPlayerDeath:  ()  => battleStrip.onPlayerDeath(),
-  onRespawn:      ()  => battleStrip.onRespawn(),
-  onPlayerHit:    (d) => battleStrip.onPlayerHit(d),
-  onPlayerAttack: (d) => battleStrip.onPlayerAttack(d),
+  onWaveSpawn:     (d) => battleStrip.onWaveSpawn(d),
+  onMobDeath:      (d) => battleStrip.onMobDeath(d),
+  onPlayerDeath:   (d) => battleStrip.onPlayerDeath(d),
+  onRespawn:       ()  => battleStrip.onRespawn(),
+  onPlayerHit:     (d) => battleStrip.onPlayerHit(d),
+  onPlayerAttack:  (d) => battleStrip.onPlayerAttack(d),
+  onWaveRollback:  (d) => battleStrip.onWaveRollback(d),
 });
 
 // ── 5. Старт боя ──────────────────────────────────────────────────────────────

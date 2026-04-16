@@ -4,9 +4,10 @@
  */
 import { createMobData, getMobCount } from '../data/mobs.js';
 
-const TICK_MS       = 200;   // базовый тик логики
-const RESPAWN_MS    = 3000;  // время до воскрешения
-const WAVE_PAUSE_MS = 1500;  // пауза между волнами
+const TICK_MS            = 200;   // базовый тик логики
+const RESPAWN_MS         = 3000;  // время до воскрешения
+const WAVE_PAUSE_MS      = 1500;  // пауза между волнами
+const MAX_DEATHS_PER_WAVE = 3;    // смертей до отката на предыдущую волну
 
 export class CombatSystem {
   /** @param {import('./GameState.js').GameState} state */
@@ -19,6 +20,7 @@ export class CombatSystem {
     this.respawnTimer   = 0;
     this.waveTimer      = 0;
     this.waveState      = 'fighting';// 'fighting' | 'paused' | 'spawning'
+    this.deathsOnWave   = 0;        // счётчик смертей на текущей волне
 
     this._mobCallbacks = [];         // {onSpawn, onDeath, onDamage, onPlayerAttack, onPlayerHit}
     this._lastTick     = performance.now();
@@ -54,8 +56,16 @@ export class CombatSystem {
         this.respawnTimer = 0;
         this.state.respawn();
         this._emit('onRespawn', {});
-        // Переспавним ТУ ЖЕ волну — не засчитываем её как пройденную
         this.waveState = 'fighting';
+
+        // Откат на предыдущую волну при слишком частых смертях
+        if (this.deathsOnWave >= MAX_DEATHS_PER_WAVE && this.state.currentWave > 1) {
+          this.state.currentWave--;
+          this.deathsOnWave = 0;
+          this._emit('onWaveRollback', { wave: this.state.currentWave });
+          this.state.emit('waveRollback', { wave: this.state.currentWave });
+        }
+
         this._spawnWave();
       }
       return;
@@ -75,6 +85,7 @@ export class CombatSystem {
 
     // Волна считается пройденной только если игрок ЖИВОЙ и мобы закончились
     if (this.mobs.length === 0 && this.waveState === 'fighting') {
+      this.deathsOnWave = 0; // волна пройдена — сбрасываем счётчик смертей
       this.waveState = 'paused';
       this.state.currentWave++;
       this.state.emit('waveCleared', { wave: this.state.currentWave - 1 });
@@ -117,9 +128,10 @@ export class CombatSystem {
           this._emit('onPlayerHit', { damage: dmg });
 
           if (died) {
-            this._emit('onPlayerDeath', {});
+            this.deathsOnWave++;
+            this._emit('onPlayerDeath', { deathsOnWave: this.deathsOnWave, maxDeaths: MAX_DEATHS_PER_WAVE });
             this.mobs = [];
-            // waveState остаётся 'fighting' — после respawn та же волна переспавнится
+            // waveState остаётся 'fighting' — после respawn та же волна (или откат) переспавнится
             return;
           }
         }
