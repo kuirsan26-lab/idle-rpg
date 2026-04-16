@@ -91,11 +91,10 @@ setTimeout(() => combat.start(), 700);
 function handleResize() {
   const app = document.getElementById('app');
   if (!app) return;
-  const scale = Math.min(window.innerWidth / 1280, window.innerHeight / 720, 1);
-  app.style.transform       = `scale(${scale})`;
-  app.style.transformOrigin = 'top left';
-  document.body.style.width  = `${1280 * scale}px`;
-  document.body.style.height = `${720 * scale}px`;
+  const scale = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
+  const x = (window.innerWidth  - 1280 * scale) / 2;
+  const y = (window.innerHeight - 720  * scale) / 2;
+  app.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
 }
 window.addEventListener('resize', handleResize);
 handleResize();
