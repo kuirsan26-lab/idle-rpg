@@ -86,49 +86,36 @@ export class GameScene extends Phaser.Scene {
   }
 
   _createBackground() {
-    // Спрайтовый фон (первые волны — лес)
     const firstKey = this._bgKey(this.gameState?.currentWave ?? 1);
-    if (this.textures.exists(firstKey)) {
-      this._bgImage = this.add.image(0, 0, firstKey).setOrigin(0).setDepth(-1);
+    const hasBg    = this.textures.exists(firstKey);
+
+    if (hasBg) {
+      // Спрайтовый фон на depth 0
+      this._bgImage = this.add.image(0, 0, firstKey).setOrigin(0).setDepth(0);
+    } else {
+      // Процедурный фон (fallback)
+      const g = this.add.graphics();
+      g.fillGradientStyle(0x06060f, 0x06060f, 0x0c0820, 0x0c0820, 1);
+      g.fillRect(0, 0, SCENE_W, GROUND_Y);
+      g.fillStyle(0xeeeedd, 0.25); g.fillCircle(520, 55, 38);
+      g.fillStyle(0x06060f, 0.6);  g.fillCircle(535, 48, 36);
+      const stars = this.add.graphics();
+      stars.fillStyle(0xffffff, 1);
+      for (let i = 0; i < 80; i++) {
+        stars.fillCircle(Math.random() * SCENE_W, Math.random() * (GROUND_Y - 40),
+          Math.random() < 0.15 ? 1.5 : 0.8);
+      }
+      const mtn = this.add.graphics();
+      mtn.fillStyle(0x0a0618, 1);
+      mtn.fillPoints([[0,190],[80,120],[180,160],[280,100],[360,145],[450,115],[540,150],[620,180],[620,GROUND_Y],[0,GROUND_Y]].map(([x,y])=>({x,y})),true);
+      const hills = this.add.graphics();
+      hills.fillStyle(0x0d0a1e, 1);
+      hills.fillPoints([[0,230],[100,185],[200,220],[320,175],[430,205],[530,180],[620,210],[620,GROUND_Y],[0,GROUND_Y]].map(([x,y])=>({x,y})),true);
     }
 
-    const g = this.add.graphics();
-
-    // Небо — тёмно-синий градиент
-    g.fillGradientStyle(0x06060f, 0x06060f, 0x0c0820, 0x0c0820, 1);
-    g.fillRect(0, 0, SCENE_W, GROUND_Y);
-
-    // Луна
-    g.fillStyle(0xeeeedd, 0.25);
-    g.fillCircle(520, 55, 38);
-    g.fillStyle(0x06060f, 0.6);
-    g.fillCircle(535, 48, 36);
-
-    // Звёзды
-    const stars = this.add.graphics();
-    stars.fillStyle(0xffffff, 1);
-    for (let i = 0; i < 80; i++) {
-      const x = Math.random() * SCENE_W;
-      const y = Math.random() * (GROUND_Y - 40);
-      const r = Math.random() < 0.15 ? 1.5 : 0.8;
-      stars.fillCircle(x, y, r);
-    }
-
-    // Дальние горы (силуэты)
-    const mtn = this.add.graphics();
-    mtn.fillStyle(0x0a0618, 1);
-    const peaks = [[0, 190], [80, 120], [180, 160], [280, 100], [360, 145], [450, 115], [540, 150], [620, 180], [620, GROUND_Y], [0, GROUND_Y]];
-    mtn.fillPoints(peaks.map(([x, y]) => ({ x, y })), true);
-
-    // Ближние холмы
-    const hills = this.add.graphics();
-    hills.fillStyle(0x0d0a1e, 1);
-    const hillPts = [[0, 230], [100, 185], [200, 220], [320, 175], [430, 205], [530, 180], [620, 210], [620, GROUND_Y], [0, GROUND_Y]];
-    hills.fillPoints(hillPts.map(([x, y]) => ({ x, y })), true);
-
-    // Земля
-    const ground = this.add.graphics();
-    ground.fillGradientStyle(0x1a0f2e, 0x1a0f2e, 0x0d0820, 0x0d0820, 1);
+    // Полоска земли поверх фона (depth 1)
+    const ground = this.add.graphics().setDepth(1);
+    ground.fillGradientStyle(0x1a0f2e, 0x1a0f2e, 0x0d0820, 0x0d0820, hasBg ? 0.75 : 1);
     ground.fillRect(0, GROUND_Y, SCENE_W, SCENE_H - GROUND_Y);
 
     // Линия земли — светящаяся
@@ -146,28 +133,23 @@ export class GameScene extends Phaser.Scene {
   }
 
   _createArena() {
-    // Зона игрока (левая часть) — слабая подсветка
-    const playerZone = this.add.graphics();
+    const playerZone = this.add.graphics().setDepth(2);
     playerZone.fillStyle(0x002233, 0.15);
     playerZone.fillRect(0, 80, 200, GROUND_Y - 80);
     playerZone.lineStyle(1, 0x004466, 0.25);
     playerZone.strokeRect(0, 80, 200, GROUND_Y - 80);
 
-    // Вертикальная разделительная линия
-    const divider = this.add.graphics();
+    const divider = this.add.graphics().setDepth(2);
     divider.lineStyle(1, 0x3a2060, 0.5);
     divider.lineBetween(210, 60, 210, GROUND_Y);
 
-    // Метки зон
     this.add.text(105, 70, '— ГЕРОЙ —', {
-      fontSize: '9px', fill: '#335577', fontFamily: 'Segoe UI',
-      letterSpacing: 2,
-    }).setOrigin(0.5);
+      fontSize: '9px', fill: '#335577', fontFamily: 'Segoe UI', letterSpacing: 2,
+    }).setOrigin(0.5).setDepth(2);
 
     this.add.text(420, 70, '— ВРАГИ —', {
-      fontSize: '9px', fill: '#553322', fontFamily: 'Segoe UI',
-      letterSpacing: 2,
-    }).setOrigin(0.5);
+      fontSize: '9px', fill: '#553322', fontFamily: 'Segoe UI', letterSpacing: 2,
+    }).setOrigin(0.5).setDepth(2);
 
     // Декоративные факелы
     this._createTorch(195, GROUND_Y - 5);
@@ -175,11 +157,10 @@ export class GameScene extends Phaser.Scene {
   }
 
   _createTorch(x, y) {
-    const g = this.add.graphics();
+    const g = this.add.graphics().setDepth(2);
     g.fillStyle(0x8844aa, 0.8);
     g.fillRect(x - 1, y - 20, 3, 20);
-    // Пламя (анимированное через tween)
-    const flame = this.add.graphics();
+    const flame = this.add.graphics().setDepth(2);
     flame.fillStyle(0xff8822, 0.9);
     flame.fillTriangle(x, y - 25, x - 4, y - 20, x + 4, y - 20);
     this.tweens.add({
