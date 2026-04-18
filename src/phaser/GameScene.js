@@ -20,7 +20,25 @@ export class GameScene extends Phaser.Scene {
   }
 
   preload() {
-    this.load.image('mob_goblin', '/sprites/goblin.png');
+    // Мобы
+    for (const id of ['slime','goblin','skeleton','orc','troll','dragonling','demon','lich','dragon','archdemon']) {
+      this.load.image(`mob_${id}`, `/sprites/${id}.png`);
+    }
+    // Боссы
+    for (const id of ['boss_slime_king','boss_goblin_chief','boss_bone_king','boss_orc_warlord',
+                      'boss_troll_ancient','boss_fire_dragon','boss_demon_lord','boss_lich_king',
+                      'boss_dragon_ancient','boss_chaos_lord']) {
+      this.load.image(`mob_${id}`, `/sprites/${id}.png`);
+    }
+    // Герои
+    for (const branch of ['novice','warrior','rogue','archer','mage']) {
+      this.load.image(`hero_${branch}`, `/sprites/hero_${branch}.png`);
+    }
+    // Фоны
+    for (const key of ['bg_01_10','bg_11_20','bg_21_30','bg_31_40','bg_41_50',
+                       'bg_51_60','bg_61_70','bg_71_80','bg_81_90','bg_91_100']) {
+      this.load.image(key, `/backgrounds/${key}.jpg`);
+    }
   }
 
   create() {
@@ -43,12 +61,37 @@ export class GameScene extends Phaser.Scene {
 
     this.gameState.on('classChanged', () => this._updatePlayerVisual());
     this.gameState.on('hpChanged',   () => this._updatePlayerHpBar());
-    this.gameState.on('waveStarted', (d) => this._showWaveBanner(d));
+    this.gameState.on('waveStarted', (d) => { this._showWaveBanner(d); this._updateBackground(d.wave); });
   }
 
   // ─────────────────────────────────────────────────────── ФОНЫ И АРЕНА ───────
 
+  _bgKey(wave) {
+    const tier = Math.min(Math.ceil(wave / 10), 10);
+    return ['bg_01_10','bg_11_20','bg_21_30','bg_31_40','bg_41_50',
+            'bg_51_60','bg_61_70','bg_71_80','bg_81_90','bg_91_100'][tier - 1];
+  }
+
+  _updateBackground(wave) {
+    const key = this._bgKey(wave);
+    if (!this.textures.exists(key)) return;
+    if (this._bgImage) {
+      this.tweens.add({ targets: this._bgImage, alpha: 0, duration: 600,
+        onComplete: () => {
+          this._bgImage.setTexture(key).setAlpha(0);
+          this.tweens.add({ targets: this._bgImage, alpha: 1, duration: 800 });
+        }
+      });
+    }
+  }
+
   _createBackground() {
+    // Спрайтовый фон (первые волны — лес)
+    const firstKey = this._bgKey(this.gameState?.currentWave ?? 1);
+    if (this.textures.exists(firstKey)) {
+      this._bgImage = this.add.image(0, 0, firstKey).setOrigin(0).setDepth(-1);
+    }
+
     const g = this.add.graphics();
 
     // Небо — тёмно-синий градиент
@@ -152,8 +195,7 @@ export class GameScene extends Phaser.Scene {
     this.playerContainer = this.add.container(PLAYER_X, PLAYER_Y);
 
     this.playerShadow = this.add.ellipse(0, 24, 44, 10, 0x000000, 0.4);
-    this.playerBody   = this.add.graphics();
-    this._drawPlayerBody();
+    this.playerBody   = this._buildPlayerSprite();
 
     // HP бар под персонажем
     const hpBg   = this.add.rectangle(0, 40, 52, 7, 0x111111);
@@ -178,8 +220,35 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
+  _buildPlayerSprite() {
+    const branch = this._getBranch();
+    const key    = `hero_${branch}`;
+    if (this.textures.exists(key)) {
+      const spr = this.add.image(0, 0, key);
+      spr.setScale(70 / spr.height).setOrigin(0.5, 1).setY(24);
+      return spr;
+    }
+    const gfx = this.add.graphics();
+    this._drawPlayerBodyGfx(gfx);
+    return gfx;
+  }
+
   _drawPlayerBody() {
-    this.playerBody.clear();
+    if (this.playerBody?.type === 'Image') {
+      const branch = this._getBranch();
+      const key    = `hero_${branch}`;
+      if (this.textures.exists(key)) {
+        this.playerBody.setTexture(key);
+        return;
+      }
+    }
+    if (this.playerBody?.type === 'Graphics') {
+      this._drawPlayerBodyGfx(this.playerBody);
+    }
+  }
+
+  _drawPlayerBodyGfx(gfx) {
+    gfx.clear();
     const branch = this._getBranch();
     const color  = BRANCH_HEX[branch] ?? 0xaaaaaa;
     const light  = this._lighten(color, 70);
@@ -372,7 +441,16 @@ export class GameScene extends Phaser.Scene {
   }
 
   // Спрайты для мобов: mob_id → texture key
-  _MOB_SPRITES = { goblin: 'mob_goblin' };
+  _MOB_SPRITES = {
+    slime: 'mob_slime', goblin: 'mob_goblin', skeleton: 'mob_skeleton',
+    orc: 'mob_orc', troll: 'mob_troll', dragonling: 'mob_dragonling',
+    demon: 'mob_demon', lich: 'mob_lich', dragon: 'mob_dragon', archdemon: 'mob_archdemon',
+    boss_slime_king: 'mob_boss_slime_king', boss_goblin_chief: 'mob_boss_goblin_chief',
+    boss_bone_king: 'mob_boss_bone_king', boss_orc_warlord: 'mob_boss_orc_warlord',
+    boss_troll_ancient: 'mob_boss_troll_ancient', boss_fire_dragon: 'mob_boss_fire_dragon',
+    boss_demon_lord: 'mob_boss_demon_lord', boss_lich_king: 'mob_boss_lich_king',
+    boss_dragon_ancient: 'mob_boss_dragon_ancient', boss_chaos_lord: 'mob_boss_chaos_lord',
+  };
 
   /** Создаёт визуальное тело моба: спрайт если есть, иначе Graphics */
   _createMobBody(data) {
