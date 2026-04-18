@@ -58,8 +58,10 @@ export class CombatSystem {
         this._emit('onRespawn', {});
         this.waveState = 'fighting';
 
-        // Откат на предыдущую волну при слишком частых смертях
-        if (this.deathsOnWave >= MAX_DEATHS_PER_WAVE && this.state.currentWave > 1) {
+        // Откат на предыдущую волну: сразу при смерти на боссе ИЛИ после MAX_DEATHS_PER_WAVE смертей
+        const isBossWave = this.state.currentWave % 10 === 0;
+        const shouldRollback = (isBossWave || this.deathsOnWave >= MAX_DEATHS_PER_WAVE) && this.state.currentWave > 1;
+        if (shouldRollback) {
           this.state.currentWave--;
           this.deathsOnWave = 0;
           this._emit('onWaveRollback', { wave: this.state.currentWave });
