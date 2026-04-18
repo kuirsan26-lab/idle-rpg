@@ -274,10 +274,14 @@ export class GameState extends EventBus {
     if (this.getPrestigeRank('startGold3')) startGold += 25_000;
     this.gold = startGold;
 
+    this.currentHp = this.getStats().maxHp;
+
     this.emit('prestige', { count: this.prestigeCount, pp, totalPp: this.prestigePoints });
     this.emit('classChanged', { classId: 'novice' });
     this.emit('statsChanged');
     this.emit('goldChanged', { gold: this.gold });
+    this.emit('hpChanged', { hp: this.currentHp });
+    this.save();
     return true;
   }
 

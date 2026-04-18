@@ -26,6 +26,18 @@ export class CombatSystem {
     this._lastTick     = performance.now();
 
     this._timerId = null;
+
+    // При престиже — сбросить текущих мобов и начать с новой волны
+    state.on('prestige', () => {
+      this.mobs          = [];
+      this.attackCooldown = 0;
+      this.deathsOnWave   = 0;
+      this.waveState      = 'fighting';
+      this.state.isAlive  = true;
+      this.state.currentHp = this.state.getStats().maxHp;
+      this._emit('onRespawn', {});
+      this._spawnWave();
+    });
   }
 
   start() {
@@ -87,9 +99,12 @@ export class CombatSystem {
 
     // Волна считается пройденной только если игрок ЖИВОЙ и мобы закончились
     if (this.mobs.length === 0 && this.waveState === 'fighting') {
-      this.deathsOnWave = 0; // волна пройдена — сбрасываем счётчик смертей
+      this.deathsOnWave = 0;
       this.waveState = 'paused';
       this.state.currentWave++;
+      // Полное лечение между волнами
+      this.state.currentHp = this.state.getStats().maxHp;
+      this.state.emit('hpChanged', { hp: this.state.currentHp });
       this.state.emit('waveCleared', { wave: this.state.currentWave - 1 });
       return;
     }

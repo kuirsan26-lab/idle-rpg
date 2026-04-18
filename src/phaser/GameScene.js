@@ -9,7 +9,7 @@ const SCENE_W  = 620;
 const SCENE_H  = 480;
 const PLAYER_X = 100;
 const GROUND_Y = 310; // Y земли
-const PLAYER_Y = GROUND_Y - 20;
+const PLAYER_Y = GROUND_Y - 5; // ноги персонажей чуть ниже линии земли
 
 export class GameScene extends Phaser.Scene {
   constructor() { super({ key: 'GameScene' }); }
@@ -136,7 +136,9 @@ export class GameScene extends Phaser.Scene {
     const groundKey = this._groundKey(this.gameState?.currentWave ?? 1);
     const hasGround = this.textures.exists(groundKey);
     if (hasGround) {
-      this._groundImage = this.add.image(0, GROUND_Y, groundKey)
+      // Сдвигаем вверх на 45px чтобы fade-зона ушла за верхний край,
+      // и видимый грунт начинался у GROUND_Y+15 — прямо под ногами персонажей
+      this._groundImage = this.add.image(0, GROUND_Y - 45, groundKey)
         .setOrigin(0, 0).setDepth(1);
     } else {
       const ground = this.add.graphics().setDepth(1);
@@ -199,7 +201,7 @@ export class GameScene extends Phaser.Scene {
   // ─────────────────────────────────────────────────────────── ИГРОК ──────────
 
   _createPlayer() {
-    this.playerContainer = this.add.container(PLAYER_X, PLAYER_Y);
+    this.playerContainer = this.add.container(PLAYER_X, PLAYER_Y).setDepth(3);
 
     this.playerShadow = this.add.ellipse(0, 24, 44, 10, 0x000000, 0.4);
     this.playerBody   = this._buildPlayerSprite();
@@ -217,7 +219,7 @@ export class GameScene extends Phaser.Scene {
       fontSize: '11px', fill: '#99aacc',
       fontFamily: 'Segoe UI', fontStyle: 'bold',
       stroke: '#000', strokeThickness: 2,
-    }).setOrigin(0.5, 1);
+    }).setOrigin(0.5, 1).setDepth(3);
     this._updatePlayerLabel();
 
     // Дыхание
@@ -411,7 +413,7 @@ export class GameScene extends Phaser.Scene {
     const targetX = SCENE_W - 100 - (index % 3) * 35;
     const y       = PLAYER_Y + offsetY;
 
-    const container = this.add.container(startX, y);
+    const container = this.add.container(startX, y).setDepth(3);
 
     const shadow = this.add.ellipse(0, 26, 40, 9, 0x000000, 0.4);
     const body   = this._createMobBody(mob.data);
