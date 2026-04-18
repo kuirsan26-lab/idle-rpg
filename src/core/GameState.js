@@ -5,10 +5,10 @@
 import { getCumulativeBonuses, CLASS_MAP, CHILDREN_MAP, DEPTH_LEVEL_REQ, DEPTH_GOLD_COST } from '../data/classes.js';
 
 // Базовые статы на 1-м уровне
-const BASE_STATS = { hp: 100, atk: 10, def: 5, spd: 1.0 };
+const BASE_STATS = { hp: 130, atk: 14, def: 7, spd: 1.3 };
 
 // Рост статов за уровень
-const LEVEL_GROWTH = { hp: 12, atk: 1.2, def: 0.6, spd: 0.008 };
+const LEVEL_GROWTH = { hp: 14, atk: 1.5, def: 0.8, spd: 0.010 };
 
 // Формула XP до следующего уровня
 export function xpForLevel(level) {
@@ -26,7 +26,7 @@ export const UPGRADE_BONUS = {
   atk:    { atk: 0.06 },
   def:    { def: 0.06 },
   hp:     { hp: 0.08 },
-  spd:    { spd: 0.04 },
+  spd:    { spd: 0.06 },
   crit:   { crit: 0.02 },
   critDmg:{ critDmg: 0.10 },
 };
@@ -35,10 +35,25 @@ export const UPGRADES_LIST = [
   { id: 'atk',     name: '⚔️ Сила Удара',    desc: '+6% к урону за уровень' },
   { id: 'def',     name: '🛡️ Крепость',      desc: '+6% к защите за уровень' },
   { id: 'hp',      name: '❤️ Живучесть',     desc: '+8% к HP за уровень' },
-  { id: 'spd',     name: '⚡ Быстрота',       desc: '+4% к скорости атаки' },
+  { id: 'spd',     name: '⚡ Быстрота',       desc: '+6% к скорости атаки' },
   { id: 'crit',    name: '🎯 Меткость',       desc: '+2% к шансу крита' },
   { id: 'critDmg', name: '💥 Сокрушение',     desc: '+10% к урону крита' },
 ];
+
+// ── Постоянные улучшения престижа ─────────────────────────────────────────────
+export const PRESTIGE_UPGRADES = [
+  { id: 'startGold1',   name: '💰 Стартовое золото I',   desc: '+1,000 золота на старте',            cost: 3,  max: 1, group: 'gold'  },
+  { id: 'startGold2',   name: '💰 Стартовое золото II',  desc: '+5,000 золота на старте',            cost: 8,  max: 1, group: 'gold'  },
+  { id: 'startGold3',   name: '💰 Стартовое золото III', desc: '+25,000 золота на старте',           cost: 20, max: 1, group: 'gold'  },
+  { id: 'xpBonus',      name: '📚 Бонус опыта',          desc: '+20% XP навсегда за ранг',          cost: 5,  max: 5, group: 'mult'  },
+  { id: 'goldBonus',    name: '🪙 Бонус золота',         desc: '+20% золота навсегда за ранг',      cost: 5,  max: 5, group: 'mult'  },
+  { id: 'baseAtk',      name: '⚔️ Базовый удар',         desc: '+15% базового урона за ранг',       cost: 8,  max: 5, group: 'stats' },
+  { id: 'baseHp',       name: '❤️ Базовое здоровье',     desc: '+15% базового HP за ранг',          cost: 8,  max: 5, group: 'stats' },
+  { id: 'baseSpd',      name: '⚡ Скорость ветерана',    desc: '+10% базовой скорости за ранг',     cost: 12, max: 3, group: 'stats' },
+  { id: 'keepUpgrades', name: '🔒 Сохранить улучшения',  desc: 'Апгрейды магазина не сбрасываются', cost: 30, max: 1, group: 'qol'   },
+  { id: 'startWave',    name: '🌊 Стартовая волна',      desc: 'Начинать каждый ран с волны 5',     cost: 20, max: 1, group: 'qol'   },
+];
+export const PRESTIGE_UPGRADES_MAP = new Map(PRESTIGE_UPGRADES.map(u => [u.id, u]));
 
 class EventBus {
   constructor() { this._listeners = new Map(); }
@@ -67,8 +82,9 @@ export class GameState extends EventBus {
     this.totalKills  = 0;
     this.totalGold   = 0;
     this.playTime    = 0;
-    this.prestigeCount = 0;
-    this.prestigeMult  = 1.0;   // множитель золота и XP от престижа
+    this.prestigeCount  = 0;
+    this.prestigePoints = 0;   // накопленные ПО (не сбрасываются)
+    this.prestigeShop   = {};  // { upgradeId: rank }
 
     // ── Классы ─────────────────────────────────────────────────────
     this.currentClass    = 'novice';
@@ -92,20 +108,26 @@ export class GameState extends EventBus {
     return getCumulativeBonuses(this.currentClass);
   }
 
-  /** Рассчитать эффективные статы (с учётом уровня, класса, улучшений) */
+  /** Рассчитать эффективные статы (с учётом уровня, класса, улучшений, престижа) */
   getStats() {
-    const lvl    = this.level;
-    const cb     = this.classBonuses;
-    const upg    = this.upgrades;
-    const prestige = this.prestigeMult;
+    const lvl = this.level;
+    const cb  = this.classBonuses;
+    const upg = this.upgrades;
 
-    // Сырые базовые значения
-    const rawHp  = BASE_STATS.hp  + LEVEL_GROWTH.hp  * (lvl - 1);
-    const rawAtk = BASE_STATS.atk + LEVEL_GROWTH.atk * (lvl - 1);
-    const rawDef = BASE_STATS.def + LEVEL_GROWTH.def * (lvl - 1);
-    const rawSpd = BASE_STATS.spd + LEVEL_GROWTH.spd * (lvl - 1);
+    // Постоянные бонусы из магазина престижа (множители к базовым значениям)
+    const pHp   = 1 + this.getPrestigeRank('baseHp')  * 0.15;
+    const pAtk  = 1 + this.getPrestigeRank('baseAtk') * 0.15;
+    const pSpd  = 1 + this.getPrestigeRank('baseSpd') * 0.10;
+    const pXp   = 1 + this.getPrestigeRank('xpBonus') * 0.20;
+    const pGold = 1 + this.getPrestigeRank('goldBonus') * 0.20;
 
-    // Суммарный бонус от улучшений
+    // Сырые базовые значения с учётом постоянных бонусов престижа
+    const rawHp  = BASE_STATS.hp  * pHp  + LEVEL_GROWTH.hp  * (lvl - 1);
+    const rawAtk = BASE_STATS.atk * pAtk + LEVEL_GROWTH.atk * (lvl - 1);
+    const rawDef = BASE_STATS.def         + LEVEL_GROWTH.def * (lvl - 1);
+    const rawSpd = BASE_STATS.spd * pSpd  + LEVEL_GROWTH.spd * (lvl - 1);
+
+    // Суммарный бонус от улучшений магазина
     const upgBonuses = {};
     for (const [id, lvls] of Object.entries(upg)) {
       const b = UPGRADE_BONUS[id];
@@ -126,8 +148,8 @@ export class GameState extends EventBus {
       spd:     parseFloat((rawSpd * spdMult).toFixed(2)),
       crit:    Math.min(95, 5  + (cb.crit    || 0) * 100 + (upgBonuses.crit    || 0) * 100),
       critDmg: 150 + (cb.critDmg || 0) * 100 + (upgBonuses.critDmg || 0) * 100,
-      xpMult:  parseFloat(((1 + (cb.xpMult   || 0)) * prestige).toFixed(3)),
-      goldMult:parseFloat(((1 + (cb.goldMult  || 0)) * prestige).toFixed(3)),
+      xpMult:  parseFloat(((1 + (cb.xpMult   || 0)) * pXp).toFixed(3)),
+      goldMult:parseFloat(((1 + (cb.goldMult  || 0)) * pGold).toFixed(3)),
       // для отображения множителей в UI
       hpMult, atkMult, defMult, spdMult,
     };
@@ -208,27 +230,68 @@ export class GameState extends EventBus {
     return true;
   }
 
-  /** Можно ли совершить перерождение */
+  /** Получить ранг постоянного улучшения престижа */
+  getPrestigeRank(id) {
+    return this.prestigeShop[id] ?? 0;
+  }
+
+  /** Сколько ПО принесёт текущий ран */
+  calcPrestigePoints() {
+    return Math.floor(this.currentWave / 2) + Math.floor(this.level / 2);
+  }
+
+  /** Можно ли совершить перерождение (минимум 1 ПО) */
   canPrestige() {
-    return this.level >= 99 || [...this.unlockedClasses].some(id => {
-      const cls = CLASS_MAP.get(id);
-      return cls && cls.depth >= 10;
-    });
+    return this.calcPrestigePoints() >= 1;
   }
 
   /** Перерождение */
   prestige() {
     if (!this.canPrestige()) return false;
+
+    const pp = this.calcPrestigePoints();
     this.prestigeCount++;
-    this.prestigeMult = 1 + this.prestigeCount * 0.10;
+    this.prestigePoints += pp;
 
-    this.level   = 1;
-    this.xp      = 0;
-    this.currentClass = 'novice';
-    // Улучшения сохраняются; разблокированные классы сохраняются
+    // Сброс уровня и класса
+    this.level = 1;
+    this.xp    = 0;
+    this.currentClass    = 'novice';
+    this.unlockedClasses = new Set(['novice']);
 
-    this.emit('prestige', { count: this.prestigeCount });
+    // Улучшения магазина: сбрасываются, если не куплен keepUpgrades
+    if (!this.getPrestigeRank('keepUpgrades')) {
+      this.upgrades = { atk: 0, def: 0, hp: 0, spd: 0, crit: 0, critDmg: 0 };
+    }
+
+    // Стартовая волна
+    this.currentWave = this.getPrestigeRank('startWave') ? 5 : 1;
+
+    // Стартовое золото из магазина престижа
+    let startGold = 0;
+    if (this.getPrestigeRank('startGold1')) startGold += 1_000;
+    if (this.getPrestigeRank('startGold2')) startGold += 5_000;
+    if (this.getPrestigeRank('startGold3')) startGold += 25_000;
+    this.gold = startGold;
+
+    this.emit('prestige', { count: this.prestigeCount, pp, totalPp: this.prestigePoints });
     this.emit('classChanged', { classId: 'novice' });
+    this.emit('statsChanged');
+    this.emit('goldChanged', { gold: this.gold });
+    return true;
+  }
+
+  /** Купить постоянное улучшение в магазине престижа */
+  buyPrestigeUpgrade(id) {
+    const upg  = PRESTIGE_UPGRADES_MAP.get(id);
+    if (!upg) return false;
+    const rank = this.getPrestigeRank(id);
+    if (rank >= upg.max) return false;
+    if (this.prestigePoints < upg.cost) return false;
+    this.prestigePoints -= upg.cost;
+    this.prestigeShop[id] = rank + 1;
+    this.currentHp = this.getStats().maxHp; // пересчитать HP при изменении бонусов
+    this.emit('prestigeShopChanged');
     this.emit('statsChanged');
     return true;
   }
@@ -267,7 +330,7 @@ export class GameState extends EventBus {
   // ── Сохранение ─────────────────────────────────────────────────────
   save() {
     const data = {
-      v: 1,
+      v: 2,
       level: this.level,
       xp: this.xp,
       gold: this.gold,
@@ -275,7 +338,8 @@ export class GameState extends EventBus {
       totalGold: this.totalGold,
       playTime: this.playTime,
       prestigeCount: this.prestigeCount,
-      prestigeMult: this.prestigeMult,
+      prestigePoints: this.prestigePoints,
+      prestigeShop: { ...this.prestigeShop },
       currentClass: this.currentClass,
       unlockedClasses: [...this.unlockedClasses],
       upgrades: { ...this.upgrades },
@@ -294,20 +358,21 @@ export class GameState extends EventBus {
       const raw = localStorage.getItem('idle_rpg_save');
       if (!raw) return false;
       const data = JSON.parse(raw);
-      if (!data || data.v !== 1) return false;
+      if (!data || (data.v !== 1 && data.v !== 2)) return false;
 
-      this.level          = data.level ?? 1;
-      this.xp             = data.xp ?? 0;
-      this.gold           = data.gold ?? 0;
-      this.totalKills     = data.totalKills ?? 0;
-      this.totalGold      = data.totalGold ?? 0;
-      this.playTime       = data.playTime ?? 0;
-      this.prestigeCount  = data.prestigeCount ?? 0;
-      this.prestigeMult   = data.prestigeMult ?? 1.0;
-      this.currentClass   = data.currentClass ?? 'novice';
-      this.unlockedClasses= new Set(data.unlockedClasses ?? ['novice']);
-      this.upgrades       = { atk: 0, def: 0, hp: 0, spd: 0, crit: 0, critDmg: 0, ...data.upgrades };
-      this.currentWave    = data.currentWave ?? 1;
+      this.level           = data.level ?? 1;
+      this.xp              = data.xp ?? 0;
+      this.gold            = data.gold ?? 0;
+      this.totalKills      = data.totalKills ?? 0;
+      this.totalGold       = data.totalGold ?? 0;
+      this.playTime        = data.playTime ?? 0;
+      this.prestigeCount   = data.prestigeCount ?? 0;
+      this.prestigePoints  = data.prestigePoints ?? 0;
+      this.prestigeShop    = data.prestigeShop ?? {};
+      this.currentClass    = data.currentClass ?? 'novice';
+      this.unlockedClasses = new Set(data.unlockedClasses ?? ['novice']);
+      this.upgrades        = { atk: 0, def: 0, hp: 0, spd: 0, crit: 0, critDmg: 0, ...data.upgrades };
+      this.currentWave     = data.currentWave ?? 1;
 
       // Офлайн-прогресс (до 8 часов)
       const elapsed = Math.min((Date.now() - (data.timestamp ?? Date.now())) / 1000, 8 * 3600);

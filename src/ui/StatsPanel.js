@@ -34,7 +34,7 @@ export class StatsPanel {
     set('stat-critdmg',  s.critDmg.toFixed(0));
     set('stat-xpmult',   s.xpMult.toFixed(2));
     set('stat-goldmult', s.goldMult.toFixed(2));
-    set('stat-prestmult', this.state.prestigeMult.toFixed(2));
+    set('stat-prestmult', this.state.prestigeCount > 0 ? `#${this.state.prestigeCount} (${this.state.prestigePoints} ПО)` : '—');
 
     // Множители
     const setMult = (id, val) => {

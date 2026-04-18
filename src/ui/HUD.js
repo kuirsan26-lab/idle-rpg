@@ -27,9 +27,11 @@ export class HUD {
     state.on('death',          () => { this._log('💀 Вы погибли! -5% золота. Возрождение...', 'death'); this._updateGold(); });
     state.on('respawn',        () => this._log('✨ Возрождение!', 'wave'));
     state.on('prestige',       (d) => {
-      this._log(`⭐ ПЕРЕРОЖДЕНИЕ #${d.count}! +${d.count * 10}% к опыту и золоту навсегда`, 'prestige');
+      this._log(`⭐ ПЕРЕРОЖДЕНИЕ #${d.count}! Получено ${d.pp} ПО (всего: ${d.totalPp} ПО)`, 'prestige');
       this._update();
     });
+    state.on('waveCleared',    () => this._updatePrestigeBtn());
+    state.on('levelUp',        () => this._updatePrestigeBtn());
 
     // Prestige modal
     document.getElementById('prestige-confirm-btn').addEventListener('click', () => {
@@ -46,9 +48,29 @@ export class HUD {
   }
 
   showPrestigeModal() {
-    const count = this.state.prestigeCount + 1;
+    const pp       = this.state.calcPrestigePoints();
+    const totalPp  = this.state.prestigePoints + pp;
+    const hasKeep  = this.state.getPrestigeRank('keepUpgrades') > 0;
+    const hasWave  = this.state.getPrestigeRank('startWave') > 0;
+    const startGold = (this.state.getPrestigeRank('startGold1') ? 1000 : 0)
+                    + (this.state.getPrestigeRank('startGold2') ? 5000 : 0)
+                    + (this.state.getPrestigeRank('startGold3') ? 25000 : 0);
+
     document.getElementById('prestige-bonus-text').textContent =
-      `+${count * 10}% к золоту и опыту навсегда (итого ×${(1 + count * 0.10).toFixed(1)})`;
+      `+${pp} ПО (всего будет ${totalPp} ПО)`;
+
+    const keepRow  = document.getElementById('prestige-keep-upgrades-row');
+    const goldRow  = document.getElementById('prestige-start-gold-row');
+    const waveRow  = document.getElementById('prestige-start-wave-row');
+
+    if (keepRow) keepRow.style.display = hasKeep ? '' : 'none';
+    if (goldRow) {
+      goldRow.style.display = startGold > 0 ? '' : 'none';
+      const goldVal = document.getElementById('prestige-start-gold-val');
+      if (goldVal) goldVal.textContent = this._fmt(startGold);
+    }
+    if (waveRow) waveRow.style.display = hasWave ? '' : 'none';
+
     document.getElementById('prestige-modal-overlay').classList.add('visible');
   }
 
@@ -100,21 +122,15 @@ export class HUD {
   }
 
   _updatePrestigeBtn() {
-    const can  = this.state.canPrestige();
-    const btn  = document.getElementById('prestige-btn');
-    const prog = document.getElementById('prestige-progress');
+    const pp      = this.state.calcPrestigePoints();
+    const canDo   = this.state.canPrestige();
+    const btn     = document.getElementById('prestige-btn');
+    const preview = document.getElementById('prestige-pp-preview');
+    const hudPp   = document.getElementById('hud-pp');
 
-    if (btn)  btn.style.display  = can ? 'block' : 'none';
-    if (prog) prog.style.display = can ? 'none'  : 'flex';
-
-    if (!can) {
-      const lvl    = this.state.level;
-      const pct    = Math.min(100, Math.round((lvl / 99) * 100));
-      const bar    = document.getElementById('prestige-progress-bar');
-      const label  = document.getElementById('prestige-progress-label');
-      if (bar)   bar.style.width   = pct + '%';
-      if (label) label.textContent = `⭐ Ур. ${lvl} / 99`;
-    }
+    if (btn)     btn.disabled         = !canDo;
+    if (preview) preview.textContent  = pp;
+    if (hudPp)   hudPp.textContent    = this.state.prestigePoints;
   }
 
   // ── Журнал боя ────────────────────────────────────────────────────────────────

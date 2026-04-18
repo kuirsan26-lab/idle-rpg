@@ -52,27 +52,20 @@
     #xp-bar-bg { flex: 1; height: 9px; background: #1a1a2e; border-radius: 5px; overflow: hidden; border: 1px solid #2a2a4a; }
     #xp-bar { height: 100%; background: linear-gradient(90deg, #6c3fc5, #9b6bff); border-radius: 5px; transition: width 0.3s; width: 0%; }
     #xp-label { font-size: 10px; color: #666; white-space: nowrap; }
-    #prestige-progress {
-      display: flex; flex-direction: column; align-items: flex-end; gap: 2px; min-width: 90px;
-    }
-    #prestige-progress-label {
-      font-size: 9px; color: #b8860b; white-space: nowrap; letter-spacing: 0.3px;
-    }
-    #prestige-progress-bar-bg {
-      width: 90px; height: 5px; background: #1a1a2e;
-      border-radius: 3px; overflow: hidden; border: 1px solid #3a2a0a;
-    }
-    #prestige-progress-bar {
-      height: 100%; border-radius: 3px;
-      background: linear-gradient(90deg, #b8860b, #ffd700);
-      transition: width 0.4s; width: 0%;
-    }
+    #prestige-area { display: flex; align-items: center; gap: 5px; }
     #prestige-btn {
-      padding: 4px 11px; background: linear-gradient(135deg, #b8860b, #ffd700);
+      padding: 4px 10px; background: linear-gradient(135deg, #b8860b, #ffd700);
       color: #1a0a00; border: none; border-radius: 4px;
-      font-size: 10px; font-weight: 700; cursor: pointer; display: none;
+      font-size: 10px; font-weight: 700; cursor: pointer;
     }
-    #prestige-btn:hover { filter: brightness(1.15); }
+    #prestige-btn:disabled { opacity: 0.45; cursor: default; filter: grayscale(0.5); }
+    #prestige-btn:not(:disabled):hover { filter: brightness(1.15); }
+    #prestige-pp-badge {
+      padding: 4px 9px; background: rgba(184,134,11,0.18);
+      border: 1px solid #b8860b; border-radius: 4px;
+      font-size: 10px; font-weight: 700; color: #ffd700; cursor: pointer; white-space: nowrap;
+    }
+    #prestige-pp-badge:hover { background: rgba(184,134,11,0.32); }
     #settings-btn {
       padding: 5px 10px; background: rgba(255,255,255,0.07);
       border: 1px solid rgba(255,255,255,0.12); border-radius: 6px;
@@ -447,6 +440,53 @@
     }
     /* Скрытый file input */
     #import-file-input { display: none; }
+
+    /* ═══════════════════════════ PRESTIGE SHOP ═══════════════════════════ */
+    #prestige-shop-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.82); z-index: 102;
+      align-items: center; justify-content: center;
+    }
+    #prestige-shop-overlay.visible { display: flex; }
+    #prestige-shop-modal {
+      background: linear-gradient(160deg,#0e0e20,#1a1a2e);
+      border: 1px solid #b8860b; border-radius: 14px;
+      width: 580px; max-height: 560px; display: flex; flex-direction: column;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.95), 0 0 40px rgba(184,134,11,0.2);
+    }
+    #pshop-header {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      padding: 18px 22px 14px; border-bottom: 1px solid #2a2a4a; flex-shrink: 0;
+    }
+    #pshop-header h2 { font-size: 18px; color: #ffd700; margin-bottom: 3px; }
+    #pshop-pp-display { font-size: 12px; color: #aaa; }
+    #pshop-pp-display strong { color: #ffd700; font-size: 15px; }
+    #pshop-close-btn {
+      background: none; border: none; color: #666; font-size: 18px; cursor: pointer; padding: 2px 6px;
+    }
+    #pshop-close-btn:hover { color: #aaa; }
+    #pshop-body {
+      padding: 16px 22px; overflow-y: auto; display: grid;
+      grid-template-columns: 1fr 1fr; gap: 10px;
+    }
+    .pshop-item {
+      background: rgba(255,255,255,0.04); border: 1px solid #2a2a4a;
+      border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 5px;
+    }
+    .pshop-item.maxed { border-color: #3a6a3a; background: rgba(0,100,0,0.08); }
+    .pshop-item-name { font-size: 12px; font-weight: 700; color: #ffd700; }
+    .pshop-item-desc { font-size: 10px; color: #888; flex: 1; }
+    .pshop-item-rank { font-size: 10px; color: #7dda7d; }
+    .pshop-item-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
+    .pshop-buy-btn {
+      padding: 5px 12px; font-size: 11px; font-weight: 700; cursor: pointer;
+      border-radius: 5px; border: none;
+      background: linear-gradient(135deg,#b8860b,#ffd700); color: #1a0a00;
+    }
+    .pshop-buy-btn:disabled { background: #2a2a3a; color: #555; cursor: default; }
+    .pshop-buy-btn:not(:disabled):hover { filter: brightness(1.15); }
+    .pshop-cost { font-size: 11px; color: #b8860b; font-weight: 700; }
+    .pshop-maxed-label { font-size: 11px; color: #7dda7d; font-weight: 700; }
   </style>
 </head>
 <body>
@@ -467,11 +507,10 @@
       <div class="hud-stat"><span class="lbl">Золото</span><span class="val" id="hud-gold">0</span></div>
       <div class="hud-stat"><span class="lbl">Волна</span><span class="val" id="hud-wave">1</span></div>
       <div class="hud-stat"><span class="lbl">Убито</span><span class="val" id="hud-kills">0</span></div>
-      <div id="prestige-progress">
-        <span id="prestige-progress-label">⭐ Ур. 1 / 99</span>
-        <div id="prestige-progress-bar-bg"><div id="prestige-progress-bar"></div></div>
+      <div id="prestige-area">
+        <button id="prestige-btn" onclick="window.game && window.game.showPrestigeModal()">⭐ Переродиться (+<span id="prestige-pp-preview">0</span> ПО)</button>
+        <div id="prestige-pp-badge" onclick="window.game && window.game.openPrestigeShop()">🏆 <span id="hud-pp">0</span> ПО</div>
       </div>
-      <button id="prestige-btn" onclick="window.game && window.game.showPrestigeModal()">⭐ Переродиться</button>
       <button id="settings-btn" onclick="window.game && window.game.openSettings()" title="Настройки">⚙️</button>
     </div>
 
@@ -548,13 +587,32 @@
   <div id="prestige-modal-overlay">
     <div id="prestige-modal">
       <h2>⭐ Перерождение ⭐</h2>
-      <p>Ваш герой достиг предела своих возможностей. Переродитесь, чтобы начать заново с постоянным усилением!</p>
-      <div class="prestige-bonus" id="prestige-bonus-text">+10% к золоту и опыту навсегда</div>
-      <p style="font-size:10px;color:#888;">⚠️ Класс сбросится до Новичка. Улучшения и классы сохранятся.</p>
-      <div class="prestige-actions" style="margin-top:18px;">
+      <div class="prestige-bonus" id="prestige-bonus-text">+0 ПО</div>
+      <div id="prestige-modal-details" style="font-size:11px;color:#ccc;line-height:1.8;margin-bottom:14px;text-align:left;">
+        <div>✅ <span style="color:#7dda7d;">Сохранится:</span> Очки Престижа, магазин ПО</div>
+        <div id="prestige-keep-upgrades-row">✅ <span style="color:#7dda7d;">Сохранятся:</span> Улучшения магазина</div>
+        <div>🔄 <span style="color:#ff9f3f;">Сбросится:</span> Уровень, класс, золото</div>
+        <div id="prestige-start-gold-row" style="display:none;">💰 <span style="color:#ffd700;">Стартовое золото:</span> <span id="prestige-start-gold-val">0</span></div>
+        <div id="prestige-start-wave-row" style="display:none;">🌊 <span style="color:#7db8ff;">Начало с волны 5</span></div>
+      </div>
+      <div class="prestige-actions">
         <button class="prestige-confirm-btn" id="prestige-confirm-btn">Переродиться!</button>
         <button class="prestige-cancel-btn"  id="prestige-cancel-btn">Ещё нет</button>
       </div>
+    </div>
+  </div>
+
+  <!-- ══════ PRESTIGE SHOP OVERLAY ══════ -->
+  <div id="prestige-shop-overlay">
+    <div id="prestige-shop-modal">
+      <div id="pshop-header">
+        <div>
+          <h2>🏆 Магазин Престижа</h2>
+          <div id="pshop-pp-display">Очки: <strong id="pshop-pp">0</strong> ПО</div>
+        </div>
+        <button id="pshop-close-btn">✕</button>
+      </div>
+      <div id="pshop-body"></div>
     </div>
   </div>
 

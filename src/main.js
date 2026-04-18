@@ -10,6 +10,7 @@ import { StatsPanel }     from './ui/StatsPanel.js';
 import { HUD }            from './ui/HUD.js';
 import { BattleStrip }   from './ui/BattleStrip.js';
 import { SettingsMenu }  from './ui/SettingsMenu.js';
+import { PrestigeShop }  from './ui/PrestigeShop.js';
 import { CLASS_MAP }     from './data/classes.js';
 
 window._classMap = CLASS_MAP;
@@ -48,11 +49,12 @@ phaserGame.events.once('ready', () => {
 });
 
 // ── 4. HTML UI ────────────────────────────────────────────────────────────────
-const hud          = new HUD(state);
-const classTree    = new ClassTreePanel(state);
-const statsPanel   = new StatsPanel(state);
-const battleStrip  = new BattleStrip(state, combat);
-const settingsMenu = new SettingsMenu(state);
+const hud           = new HUD(state);
+const classTree     = new ClassTreePanel(state);
+const statsPanel    = new StatsPanel(state);
+const battleStrip   = new BattleStrip(state, combat);
+const settingsMenu  = new SettingsMenu(state);
+const prestigeShop  = new PrestigeShop(state);
 
 // Логирование боевых событий
 combat.register({
