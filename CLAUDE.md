@@ -70,9 +70,53 @@ main.js
 
 Мобы в `combat.mobs[]` — чистые данные. Их визуальные аналоги живут в `GameScene.mobVisuals` (Map<mobId, visual>).
 
-### Prestige system
+### Prestige system (v2)
 
-`canPrestige()` — уровень ≥ 99 ИЛИ разблокирован класс depth 10. До выполнения условий в HUD показывается прогресс-бар `⭐ Ур. X / 99`. При достижении условия бар скрывается, появляется кнопка «Переродиться». Штраф за смерть — **5% золота** (`gold * 0.95`).
+`canPrestige()` — доступен при ≥1 ПО (очко престижа). ПО копятся с первого убийства.
+
+**Формула ПО:** `floor(currentWave / 2) + floor(level / 2)` — суммируются навсегда.
+
+**Магазин (10 апгрейдов, `src/ui/PrestigeShop.js`):** стартовое золото I/II/III, бонус XP×5, бонус золота×5, базовый ATK×5, базовый HP×5, скорость ветерана×3, сохранить улучшения (30 ПО), стартовая волна (20 ПО).
+
+`window.game.openPrestigeShop()` — открыть магазин. HUD: кнопка «Переродиться (+X ПО)» + бейдж `🏆 Y ПО` для входа в магазин.
+
+**Формат сохранения v2** (v1 читается для совместимости). Штраф за смерть — **5% золота**.
+
+### Combat balance
+
+**Mob scaling:** `1.12^(wave-1)` (было 1.18 — слишком жёстко).
+
+**Player base stats:** `{ hp: 130, atk: 14, def: 7, spd: 1.3 }` (атака ~769ms).
+
+**Level growth:** `{ hp: 14, atk: 1.5, def: 0.8, spd: 0.010 }` за уровень.
+
+**Wave rollback:** при смерти на боссе (wave % 10 === 0) — откат немедленно; иначе — после 3 смертей на волне.
+
+### Sprites & backgrounds (GameScene.js)
+
+**Все 34 ассета готовы** в `public/`:
+- `sprites/`: goblin, slime, skeleton, orc, troll, dragonling, demon, lich, dragon, archdemon (10 мобов) + 10 боссов (boss_slime_king → boss_chaos_lord) + 5 героев (hero_novice/warrior/rogue/archer/mage) — 128×128 RGBA PNG
+- `backgrounds/`: bg_01_10 → bg_91_100 (10 фонов) — 620×480 JPG
+
+**Глубины (depth) в Phaser scene:**
+- `0` — фоновое изображение (`_bgImage`)
+- `1` — полоса земли (`_ground`)
+- `2` — арена (факелы, декор)
+- `3+` — мобы и игрок (создаются динамически)
+- `10+` — UI-оверлеи
+
+Когда `_bgImage` существует — процедурное небо (sky/moon/stars/mountains/hills) не рисуется, ground рисуется с alpha 0.75.
+
+**Паттерн подключения спрайта:**
+```js
+// preload()
+this.load.image('mob_goblin', '/sprites/goblin.png');
+// _MOB_SPRITES
+_MOB_SPRITES = { goblin: 'mob_goblin', ... };
+// _createMobBody() — автоматически подхватит через textures.exists(key)
+```
+
+**Генерация новых спрайтов:** `python -X utf8 scripts/generate_sprites.py` (YandexART 2.0, credentials в `memory/reference_yandexart.md`).
 
 ### BattleStrip (ui/BattleStrip.js)
 
@@ -86,7 +130,7 @@ main.js
 
 ### Save system
 
-`GameState.save()` / `GameState._load()` — localStorage (`idle_rpg_save`, версия `v:1`). Автосейв каждые 30с + `beforeunload`. При загрузке считает офлайн-прогресс (до 8 часов).
+`GameState.save()` / `GameState._load()` — localStorage (`idle_rpg_save`, версия `v:2`). Автосейв каждые 30с + `beforeunload`. При загрузке считает офлайн-прогресс (до 8 часов).
 
 ## Update policy
 
