@@ -39,6 +39,11 @@ export class GameScene extends Phaser.Scene {
                        'bg_51_60','bg_61_70','bg_71_80','bg_81_90','bg_91_100']) {
       this.load.image(key, `/backgrounds/${key}.jpg`);
     }
+    // Полосы земли
+    for (const key of ['ground_01_10','ground_11_20','ground_21_30','ground_31_40','ground_41_50',
+                       'ground_51_60','ground_61_70','ground_71_80','ground_81_90','ground_91_100']) {
+      this.load.image(key, `/backgrounds/${key}.png`);
+    }
   }
 
   create() {
@@ -72,14 +77,28 @@ export class GameScene extends Phaser.Scene {
             'bg_51_60','bg_61_70','bg_71_80','bg_81_90','bg_91_100'][tier - 1];
   }
 
+  _groundKey(wave) {
+    const tier = Math.min(Math.ceil(wave / 10), 10);
+    return ['ground_01_10','ground_11_20','ground_21_30','ground_31_40','ground_41_50',
+            'ground_51_60','ground_61_70','ground_71_80','ground_81_90','ground_91_100'][tier - 1];
+  }
+
   _updateBackground(wave) {
-    const key = this._bgKey(wave);
-    if (!this.textures.exists(key)) return;
-    if (this._bgImage) {
+    const bgKey     = this._bgKey(wave);
+    const groundKey = this._groundKey(wave);
+    if (this._bgImage && this.textures.exists(bgKey)) {
       this.tweens.add({ targets: this._bgImage, alpha: 0, duration: 600,
         onComplete: () => {
-          this._bgImage.setTexture(key).setAlpha(0);
+          this._bgImage.setTexture(bgKey).setAlpha(0);
           this.tweens.add({ targets: this._bgImage, alpha: 1, duration: 800 });
+        }
+      });
+    }
+    if (this._groundImage && this.textures.exists(groundKey)) {
+      this.tweens.add({ targets: this._groundImage, alpha: 0, duration: 600,
+        onComplete: () => {
+          this._groundImage.setTexture(groundKey).setAlpha(0);
+          this.tweens.add({ targets: this._groundImage, alpha: 1, duration: 800 });
         }
       });
     }
@@ -114,15 +133,22 @@ export class GameScene extends Phaser.Scene {
     }
 
     // Полоска земли поверх фона (depth 1)
-    const ground = this.add.graphics().setDepth(1);
-    ground.fillGradientStyle(0x1a0f2e, 0x1a0f2e, 0x0d0820, 0x0d0820, hasBg ? 0.75 : 1);
-    ground.fillRect(0, GROUND_Y, SCENE_W, SCENE_H - GROUND_Y);
-
-    // Линия земли — светящаяся
-    ground.lineStyle(2, 0x3a2060, 0.9);
-    ground.lineBetween(0, GROUND_Y, SCENE_W, GROUND_Y);
-    ground.lineStyle(1, 0x6040aa, 0.3);
-    ground.lineBetween(0, GROUND_Y - 1, SCENE_W, GROUND_Y - 1);
+    const groundKey = this._groundKey(this.gameState?.currentWave ?? 1);
+    const hasGround = this.textures.exists(groundKey);
+    if (hasGround) {
+      this._groundImage = this.add.image(0, GROUND_Y, groundKey)
+        .setOrigin(0, 0).setDepth(1);
+    } else {
+      const ground = this.add.graphics().setDepth(1);
+      ground.fillGradientStyle(0x1a0f2e, 0x1a0f2e, 0x0d0820, 0x0d0820, hasBg ? 0.75 : 1);
+      ground.fillRect(0, GROUND_Y, SCENE_W, SCENE_H - GROUND_Y);
+      if (!hasBg) {
+        ground.lineStyle(2, 0x3a2060, 0.9);
+        ground.lineBetween(0, GROUND_Y, SCENE_W, GROUND_Y);
+        ground.lineStyle(1, 0x6040aa, 0.3);
+        ground.lineBetween(0, GROUND_Y - 1, SCENE_W, GROUND_Y - 1);
+      }
+    }
 
     // Туман у земли
     for (let i = 0; i < 4; i++) {
