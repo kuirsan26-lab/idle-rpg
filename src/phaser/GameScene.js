@@ -15,9 +15,12 @@ export class GameScene extends Phaser.Scene {
   constructor() { super({ key: 'GameScene' }); }
 
   init(data) {
-    // Данные теперь гарантированно приходят через scene.add(key, class, true, data)
     this.gameState = data.state;
     this.combat    = data.combat;
+  }
+
+  preload() {
+    this.load.image('mob_goblin', '/sprites/goblin.png');
   }
 
   create() {
@@ -335,8 +338,7 @@ export class GameScene extends Phaser.Scene {
     const container = this.add.container(startX, y);
 
     const shadow = this.add.ellipse(0, 26, 40, 9, 0x000000, 0.4);
-    const body   = this.add.graphics();
-    this._drawMobBody(body, mob.data);
+    const body   = this._createMobBody(mob.data);
 
     // HP бар
     const hpBg = this.add.rectangle(0, -44, 50, 6, 0x111111);
@@ -367,6 +369,24 @@ export class GameScene extends Phaser.Scene {
     });
 
     this.mobVisuals.set(mob.id, { container, body, hpFill, mob, targetX, baseY: y });
+  }
+
+  // Спрайты для мобов: mob_id → texture key
+  _MOB_SPRITES = { goblin: 'mob_goblin' };
+
+  /** Создаёт визуальное тело моба: спрайт если есть, иначе Graphics */
+  _createMobBody(data) {
+    const key = this._MOB_SPRITES[data.id];
+    if (key && this.textures.exists(key)) {
+      const sprite = this.add.image(0, 0, key);
+      // Масштаб: вписываем в ~70px высоту, ставим ноги на y=24
+      const scale = 70 / sprite.height;
+      sprite.setScale(scale).setOrigin(0.5, 1).setY(24);
+      return sprite;
+    }
+    const gfx = this.add.graphics();
+    this._drawMobBody(gfx, data);
+    return gfx;
   }
 
   _drawMobBody(gfx, data) {
@@ -453,7 +473,7 @@ export class GameScene extends Phaser.Scene {
 
     this._updateMobHpBar(v);
 
-    // Вспышка тела
+    // Вспышка тела (работает и для спрайта и для Graphics)
     this.tweens.add({ targets: v.body, alpha: 0.25, duration: 55, yoyo: true });
 
     // Отлёт моба
