@@ -11,6 +11,7 @@
     "atlas": "python -X utf8 scripts/build_atlas.py"
   },
   "dependencies": {
+    "@vercel/analytics": "^2.0.1",
     "phaser": "^3.80.1"
   },
   "devDependencies": {

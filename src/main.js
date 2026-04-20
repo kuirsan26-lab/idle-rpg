@@ -1,6 +1,9 @@
 /**
  * Точка входа: инициализация Phaser + UI систем
  */
+import { inject } from '@vercel/analytics';
+inject();
+
 import Phaser from 'phaser';
 import { GameScene }     from './phaser/GameScene.js';
 import { GameState }     from './core/GameState.js';
