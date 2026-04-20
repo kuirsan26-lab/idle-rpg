@@ -9,11 +9,11 @@ import { generateItem, SELL_VALUE } from '../data/items.js';
 const BASE_STATS = { hp: 130, atk: 14, def: 7, spd: 1.3 };
 
 // Рост статов за уровень
-const LEVEL_GROWTH = { hp: 14, atk: 1.5, def: 0.8, spd: 0.010 };
+const LEVEL_GROWTH = { hp: 18, atk: 2.0, def: 1.0, spd: 0.010 };
 
 // Формула XP до следующего уровня
 export function xpForLevel(level) {
-  return Math.round(100 * Math.pow(1.28, level - 1));
+  return Math.round(100 * Math.pow(1.22, level - 1));
 }
 
 // Формула стоимости улучшения

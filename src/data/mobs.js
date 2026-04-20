@@ -153,7 +153,7 @@ export const BOSS_TYPES = [
 
 /** Масштабирование стат моба по волне */
 function waveScale(wave) {
-  return Math.pow(1.12, wave - 1);
+  return Math.pow(1.08, wave - 1);
 }
 
 /** Создать данные моба для заданной волны */
