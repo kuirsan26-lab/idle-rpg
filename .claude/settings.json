@@ -1,0 +1,25 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -n \"$(git status --porcelain 2>/dev/null)\" ]; then echo '{\"systemMessage\": \"🚀 Есть незакоммиченные изменения — не забудь запушить в GitHub! Обнови ARCHITECTURE.md если менялась структура.\"}'; fi"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"var d=JSON.parse(require('fs').readFileSync(0,'utf8'));var f=(d.tool_input||{}).file_path||'';if(f.indexOf('/src/')>-1&&f.endsWith('.js')){console.log(JSON.stringify({systemMessage:'📝 Файл src/*.js изменён — проверь, нужно ли обновить ARCHITECTURE.md'}))}\" 2>/dev/null || true"
+          }
+        ]
+      }
+    ]
+  }
+}
