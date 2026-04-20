@@ -12,6 +12,7 @@ export class HUD {
     this._update();
 
     this._unsubs = [
+      state.on('player:inventoryChanged', () => this._updateInvCount()),
       state.on('player:statsChanged',     () => this._update()),
       state.on('player:goldChanged',      () => this._updateGold()),
       state.on('player:hpChanged',        () => this._updateXp()),
@@ -47,6 +48,11 @@ export class HUD {
 
   destroy() {
     this._unsubs.forEach(u => u());
+  }
+
+  _updateInvCount() {
+    const el = document.getElementById('hud-inv-count');
+    if (el) el.textContent = this.state.inventory.length > 0 ? `(${this.state.inventory.length})` : '';
   }
 
   showPrestigeModal() {

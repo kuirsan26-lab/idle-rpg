@@ -11,6 +11,7 @@ import { HUD }            from './ui/HUD.js';
 import { BattleStrip }   from './ui/BattleStrip.js';
 import { SettingsMenu }  from './ui/SettingsMenu.js';
 import { PrestigeShop }  from './ui/PrestigeShop.js';
+import { InventoryPanel } from './ui/InventoryPanel.js';
 import { CLASS_MAP }     from './data/classes.js';
 
 window._classMap = CLASS_MAP;
@@ -53,16 +54,18 @@ const hud           = new HUD(state);
 const classTree     = new ClassTreePanel(state);
 const statsPanel    = new StatsPanel(state);
 const battleStrip   = new BattleStrip(state, combat);
-const settingsMenu  = new SettingsMenu(state);
-const prestigeShop  = new PrestigeShop(state);
+const settingsMenu   = new SettingsMenu(state);
+const prestigeShop   = new PrestigeShop(state);
+const inventoryPanel = new InventoryPanel(state);
 
 // Логирование боевых событий
 combat.register({
   onPlayerAttack: ({ mob, damage, isCrit }) => {
     if (isCrit) hud.logCombat(`⚡ КРИТ по ${mob.data.name}: ${damage} урона!`, 'crit');
   },
-  onMobDeath: ({ mob, xpGained, goldGained }) => {
+  onMobDeath: ({ mob, xpGained, goldGained, itemDrop }) => {
     hud.logCombat(`☠ ${mob.data.name} убит! +${goldGained}g +${xpGained}XP`, 'kill');
+    if (itemDrop) hud.logCombat(`🎁 Дроп: ${itemDrop.name}`, 'level');
   },
   onPlayerDeath: ({ deathsOnWave, maxDeaths }) => {
     const remaining = maxDeaths - deathsOnWave;

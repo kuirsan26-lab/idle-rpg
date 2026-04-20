@@ -3,6 +3,7 @@
  * Единственный источник истины; все системы читают и пишут только сюда.
  */
 import { getCumulativeBonuses, CLASS_MAP, CHILDREN_MAP, DEPTH_LEVEL_REQ, DEPTH_GOLD_COST } from '../data/classes.js';
+import { generateItem, SELL_VALUE } from '../data/items.js';
 
 // Базовые статы на 1-м уровне
 const BASE_STATS = { hp: 130, atk: 14, def: 7, spd: 1.3 };
@@ -93,6 +94,10 @@ export class GameState extends EventBus {
     // ── Улучшения (кол-во купленных уровней) ───────────────────────
     this.upgrades = { atk: 0, def: 0, hp: 0, spd: 0, crit: 0, critDmg: 0 };
 
+    // ── Инвентарь и снаряжение ──────────────────────────────────────────
+    this.inventory  = [];                                      // макс 20 предметов
+    this.equipment  = { weapon: null, armor: null, accessory: null };
+
     // ── Бой ─────────────────────────────────────────────────────────
     this.currentWave    = 1;
     this.currentHp      = 0;   // заполняется после инициализации
@@ -106,6 +111,18 @@ export class GameState extends EventBus {
   /** Все суммарные бонусы от класса */
   get classBonuses() {
     return getCumulativeBonuses(this.currentClass);
+  }
+
+  /** Суммарные бонусы от надетого снаряжения */
+  get equipBonuses() {
+    const result = {};
+    for (const item of Object.values(this.equipment)) {
+      if (!item) continue;
+      for (const [k, v] of Object.entries(item.bonuses)) {
+        result[k] = (result[k] || 0) + v;
+      }
+    }
+    return result;
   }
 
   /** Рассчитать эффективные статы (с учётом уровня, класса, улучшений, престижа) */
@@ -136,21 +153,22 @@ export class GameState extends EventBus {
       }
     }
 
-    const hpMult   = 1 + (cb.hp   || 0) + (upgBonuses.hp  || 0);
-    const atkMult  = 1 + (cb.atk  || 0) + (upgBonuses.atk || 0);
-    const defMult  = 1 + (cb.def  || 0) + (upgBonuses.def || 0);
-    const spdMult  = 1 + (cb.spd  || 0) + (upgBonuses.spd || 0);
+    const eq = this.equipBonuses;
+
+    const hpMult   = 1 + (cb.hp   || 0) + (upgBonuses.hp  || 0) + (eq.hp  || 0);
+    const atkMult  = 1 + (cb.atk  || 0) + (upgBonuses.atk || 0) + (eq.atk || 0);
+    const defMult  = 1 + (cb.def  || 0) + (upgBonuses.def || 0) + (eq.def || 0);
+    const spdMult  = 1 + (cb.spd  || 0) + (upgBonuses.spd || 0) + (eq.spd || 0);
 
     return {
       maxHp:   Math.round(rawHp * hpMult),
       atk:     Math.max(1, Math.round(rawAtk * atkMult)),
       def:     Math.max(0, Math.round(rawDef * defMult)),
       spd:     parseFloat((rawSpd * spdMult).toFixed(2)),
-      crit:    Math.min(95, 5  + (cb.crit    || 0) * 100 + (upgBonuses.crit    || 0) * 100),
-      critDmg: 150 + (cb.critDmg || 0) * 100 + (upgBonuses.critDmg || 0) * 100,
-      xpMult:  parseFloat(((1 + (cb.xpMult   || 0)) * pXp).toFixed(3)),
-      goldMult:parseFloat(((1 + (cb.goldMult  || 0)) * pGold).toFixed(3)),
-      // для отображения множителей в UI
+      crit:    Math.min(95, 5  + (cb.crit    || 0) * 100 + (upgBonuses.crit    || 0) * 100 + (eq.crit    || 0) * 100),
+      critDmg: 150 + (cb.critDmg || 0) * 100 + (upgBonuses.critDmg || 0) * 100 + (eq.critDmg || 0) * 100,
+      xpMult:  parseFloat(((1 + (cb.xpMult   || 0) + (eq.xpMult   || 0)) * pXp).toFixed(3)),
+      goldMult:parseFloat(((1 + (cb.goldMult  || 0) + (eq.goldMult || 0)) * pGold).toFixed(3)),
       hpMult, atkMult, defMult, spdMult,
     };
   }
@@ -264,6 +282,10 @@ export class GameState extends EventBus {
       this.upgrades = { atk: 0, def: 0, hp: 0, spd: 0, crit: 0, critDmg: 0 };
     }
 
+    // Инвентарь и снаряжение сбрасываются при перерождении
+    this.inventory = [];
+    this.equipment = { weapon: null, armor: null, accessory: null };
+
     // Стартовая волна
     this.currentWave = this.getPrestigeRank('startWave') ? 5 : 1;
 
@@ -322,6 +344,64 @@ export class GameState extends EventBus {
     this.emit('player:hpChanged', { hp: this.currentHp });
   }
 
+  // ── Инвентарь ─────────────────────────────────────────────────────
+
+  /** Попытка дропа предмета с моба. isBoss — босс гарантирует rare+ */
+  rollItemDrop(wave, isBoss = false) {
+    const chance = isBoss ? 0.50 : 0.12;
+    if (Math.random() > chance) return null;
+    if (this.inventory.length >= 20) return null; // инвентарь полон
+
+    const forcedRarity = isBoss && Math.random() < 0.7 ? 'rare' : null;
+    const item = generateItem(wave, forcedRarity);
+    this.inventory.push(item);
+    this.emit('player:inventoryChanged', { item });
+    return item;
+  }
+
+  /** Надеть предмет из инвентаря. Возвращает false если предмет не найден */
+  equipItem(uid) {
+    const idx  = this.inventory.findIndex(i => i.uid === uid);
+    if (idx === -1) return false;
+    const item = this.inventory[idx];
+    const slot = item.type;
+
+    // Снять текущий предмет в слоте → инвентарь
+    if (this.equipment[slot]) {
+      this.inventory.push(this.equipment[slot]);
+    }
+    this.equipment[slot] = item;
+    this.inventory.splice(idx, 1);
+
+    this.emit('player:statsChanged');
+    this.emit('player:inventoryChanged', {});
+    return true;
+  }
+
+  /** Снять предмет из слота в инвентарь */
+  unequipItem(slot) {
+    const item = this.equipment[slot];
+    if (!item) return false;
+    if (this.inventory.length >= 20) return false;
+    this.inventory.push(item);
+    this.equipment[slot] = null;
+    this.emit('player:statsChanged');
+    this.emit('player:inventoryChanged', {});
+    return true;
+  }
+
+  /** Продать предмет из инвентаря */
+  sellItem(uid) {
+    const idx = this.inventory.findIndex(i => i.uid === uid);
+    if (idx === -1) return false;
+    const item = this.inventory[idx];
+    this.inventory.splice(idx, 1);
+    const gold = Math.round(SELL_VALUE[item.rarity] * (1 + item.wave * 0.05));
+    this.addGold(gold);
+    this.emit('player:inventoryChanged', {});
+    return gold;
+  }
+
   /** Начальная инициализация / загрузка */
   initialize() {
     const loaded = this._load();
@@ -348,6 +428,8 @@ export class GameState extends EventBus {
       unlockedClasses: [...this.unlockedClasses],
       upgrades: { ...this.upgrades },
       currentWave: this.currentWave,
+      inventory:  this.inventory,
+      equipment:  this.equipment,
       timestamp: Date.now(),
     };
     try {
@@ -377,6 +459,8 @@ export class GameState extends EventBus {
       this.unlockedClasses = new Set(data.unlockedClasses ?? ['novice']);
       this.upgrades        = { atk: 0, def: 0, hp: 0, spd: 0, crit: 0, critDmg: 0, ...data.upgrades };
       this.currentWave     = data.currentWave ?? 1;
+      this.inventory       = data.inventory ?? [];
+      this.equipment       = { weapon: null, armor: null, accessory: null, ...(data.equipment ?? {}) };
 
       // Офлайн-прогресс (до 8 часов)
       const elapsed = Math.min((Date.now() - (data.timestamp ?? Date.now())) / 1000, 8 * 3600);

@@ -172,13 +172,14 @@ export class CombatSystem {
 
   // ── Убийство моба ───────────────────────────────────────────────────────────
   _killMob(mob) {
-    const stats = this.state.getStats();
     const xpGained   = this.state.addXp(mob.data.xp);
-    const goldGained  = this.state.addGold(mob.data.gold);
+    const goldGained = this.state.addGold(mob.data.gold);
     this.state.totalKills++;
 
+    const itemDrop = this.state.rollItemDrop(this.state.currentWave, mob.data.isBoss);
+
     this.mobs = this.mobs.filter(m => m !== mob);
-    this._emit('onMobDeath', { mob, xpGained, goldGained });
+    this._emit('onMobDeath', { mob, xpGained, goldGained, itemDrop });
     this.state.emit('combat:killCountChanged', { kills: this.state.totalKills });
   }
 

@@ -442,6 +442,84 @@
     #import-file-input { display: none; }
 
     /* ═══════════════════════════ PRESTIGE SHOP ═══════════════════════════ */
+    /* ── Кнопка инвентаря ── */
+    #inventory-btn {
+      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);
+      color: #ccc; font-size: 11px; padding: 3px 8px; border-radius: 4px; cursor: pointer;
+    }
+    #inventory-btn:hover { background: rgba(255,255,255,0.14); color: #fff; }
+    #hud-inv-count { font-size: 9px; color: #ffd700; }
+
+    /* ── Оверлей инвентаря ── */
+    #inventory-overlay {
+      display: none; position: absolute; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.72); align-items: center; justify-content: center;
+    }
+    #inventory-overlay.visible { display: flex; }
+    .inv-panel {
+      background: #111118; border: 1px solid rgba(255,255,255,0.12); border-radius: 8px;
+      width: 720px; max-height: 580px; display: flex; flex-direction: column;
+      font-family: 'Segoe UI', sans-serif; color: #ccc;
+    }
+    .inv-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.08);
+      font-size: 13px; font-weight: 700; color: #eee;
+    }
+    #inv-close-btn {
+      background: none; border: none; color: #666; font-size: 16px; cursor: pointer; padding: 2px 6px;
+    }
+    #inv-close-btn:hover { color: #aaa; }
+    .inv-body { display: flex; gap: 12px; padding: 12px; overflow: hidden; }
+    /* Слоты снаряжения */
+    .inv-slots-col { width: 180px; flex-shrink: 0; display: flex; flex-direction: column; gap: 8px; }
+    .inv-slots-title { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
+    .inv-eq-slot {
+      border: 1px solid rgba(255,255,255,0.08); border-radius: 5px; padding: 7px 9px;
+      cursor: pointer; min-height: 56px; transition: border-color 0.15s;
+    }
+    .inv-eq-slot:hover { border-color: rgba(255,255,255,0.2); }
+    .inv-eq-slot.filled { border-color: rgba(100,160,255,0.3); background: rgba(60,100,180,0.06); }
+    .inv-eq-label { font-size: 10px; color: #555; margin-bottom: 4px; }
+    .inv-eq-name  { font-size: 11px; font-weight: 600; }
+    .inv-eq-bonus { font-size: 9px; color: #888; margin-top: 2px; }
+    .inv-eq-hint  { font-size: 9px; color: #444; margin-top: 3px; }
+    .inv-eq-empty { font-size: 10px; color: #333; font-style: italic; }
+    /* Инвентарь */
+    .inv-right-col { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .inv-inv-title {
+      font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 1px;
+      margin-bottom: 6px; display: flex; gap: 6px; align-items: center;
+    }
+    #inv-count { color: #888; }
+    #inv-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+      overflow-y: auto; padding-right: 4px;
+    }
+    .inv-item {
+      border: 1px solid rgba(255,255,255,0.07); border-radius: 5px; padding: 7px 8px;
+      cursor: pointer; position: relative; transition: border-color 0.12s;
+    }
+    .inv-item:hover { border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.03); }
+    .inv-item-type  { font-size: 14px; margin-bottom: 2px; }
+    .inv-item-name  { font-size: 11px; font-weight: 600; margin-bottom: 1px; }
+    .inv-item-rarity{ font-size: 9px; margin-bottom: 3px; }
+    .inv-item-bonus { font-size: 9px; color: #888; margin-bottom: 2px; }
+    .inv-item-wave  { font-size: 8px; color: #444; }
+    .inv-sell-btn {
+      position: absolute; top: 5px; right: 5px;
+      background: rgba(180,120,0,0.2); border: 1px solid rgba(200,150,0,0.3);
+      color: #cc9900; font-size: 9px; padding: 1px 5px; border-radius: 3px; cursor: pointer;
+    }
+    .inv-sell-btn:hover { background: rgba(180,120,0,0.4); }
+    .inv-empty { color: #333; font-size: 11px; font-style: italic; grid-column: 1/-1; padding: 12px 0; text-align: center; }
+    #inv-notif {
+      position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.8); border: 1px solid #555; border-radius: 4px;
+      padding: 4px 12px; font-size: 11px; color: #ffd700; pointer-events: none;
+      opacity: 0; transition: opacity 0.3s;
+    }
+
     #prestige-shop-overlay {
       display: none; position: fixed; inset: 0;
       background: rgba(0,0,0,0.82); z-index: 102;
@@ -511,6 +589,7 @@
         <button id="prestige-btn" onclick="window.game && window.game.showPrestigeModal()">⭐ Переродиться (+<span id="prestige-pp-preview">0</span> ПО)</button>
         <div id="prestige-pp-badge" onclick="window.game && window.game.openPrestigeShop()">🏆 <span id="hud-pp">0</span> ПО</div>
       </div>
+      <button id="inventory-btn" onclick="window.game && window.game.openInventory()" title="Инвентарь">🎒 <span id="hud-inv-count"></span></button>
       <button id="settings-btn" onclick="window.game && window.game.openSettings()" title="Настройки">⚙️</button>
     </div>
 
@@ -676,6 +755,29 @@
 
       <div id="settings-footer">
         Сохранение: localStorage • Офлайн-прогресс: до 8 часов
+      </div>
+    </div>
+  </div>
+
+  <!-- INVENTORY OVERLAY -->
+  <div id="inventory-overlay">
+    <div class="inv-panel">
+      <div class="inv-header">
+        <span>🎒 Инвентарь и снаряжение</span>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span id="inv-notif"></span>
+          <button id="inv-close-btn">✕</button>
+        </div>
+      </div>
+      <div class="inv-body">
+        <div class="inv-slots-col">
+          <div class="inv-slots-title">Снаряжение</div>
+          <div id="inv-equipment"></div>
+        </div>
+        <div class="inv-right-col">
+          <div class="inv-inv-title">Инвентарь <span id="inv-count">0/20</span></div>
+          <div id="inv-grid"></div>
+        </div>
       </div>
     </div>
   </div>
