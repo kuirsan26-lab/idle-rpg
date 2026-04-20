@@ -29,7 +29,7 @@ export class CombatSystem {
     this._rafId = null;
 
     // При престиже — сбросить текущих мобов и начать с новой волны
-    state.on('prestige', () => {
+    state.on('player:prestige', () => {
       this.mobs          = [];
       this.attackCooldown = 0;
       this.deathsOnWave   = 0;
@@ -91,7 +91,7 @@ export class CombatSystem {
           this.state.currentWave--;
           this.deathsOnWave = 0;
           this._emit('onWaveRollback', { wave: this.state.currentWave });
-          this.state.emit('waveRollback', { wave: this.state.currentWave });
+          this.state.emit('combat:waveRollback', { wave: this.state.currentWave });
         }
 
         this._spawnWave();
@@ -118,8 +118,8 @@ export class CombatSystem {
       this.state.currentWave++;
       // Полное лечение между волнами
       this.state.currentHp = this.state.getStats().maxHp;
-      this.state.emit('hpChanged', { hp: this.state.currentHp });
-      this.state.emit('waveCleared', { wave: this.state.currentWave - 1 });
+      this.state.emit('player:hpChanged', { hp: this.state.currentHp });
+      this.state.emit('combat:waveCleared', { wave: this.state.currentWave - 1 });
       return;
     }
 
@@ -179,7 +179,7 @@ export class CombatSystem {
 
     this.mobs = this.mobs.filter(m => m !== mob);
     this._emit('onMobDeath', { mob, xpGained, goldGained });
-    this.state.emit('killCountChanged', { kills: this.state.totalKills });
+    this.state.emit('combat:killCountChanged', { kills: this.state.totalKills });
   }
 
   // ── Спавн волны ─────────────────────────────────────────────────────────────
@@ -199,7 +199,7 @@ export class CombatSystem {
     }
 
     this._emit('onWaveSpawn', { wave, mobs: this.mobs });
-    this.state.emit('waveStarted', { wave, isBoss: wave % 10 === 0 });
+    this.state.emit('combat:waveStarted', { wave, isBoss: wave % 10 === 0 });
   }
 
   // ── Emit ─────────────────────────────────────────────────────────────────────

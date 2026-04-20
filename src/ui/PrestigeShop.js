@@ -11,8 +11,8 @@ export class PrestigeShop {
     this._render();
     this._bindEvents();
 
-    state.on('prestigeShopChanged', () => this._refresh());
-    state.on('prestige',            () => this._refresh());
+    state.on('player:prestigeShopChanged', () => this._refresh());
+    state.on('player:prestige',            () => this._refresh());
 
     window.game = window.game || {};
     window.game.openPrestigeShop = () => this.open();

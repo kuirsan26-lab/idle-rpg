@@ -11,8 +11,8 @@ export class StatsPanel {
     this._renderUpgrades();
     this._updateStats();
 
-    state.on('statsChanged', () => this._updateStats());
-    state.on('goldChanged',  () => {
+    state.on('player:statsChanged', () => this._updateStats());
+    state.on('player:goldChanged',  () => {
       this._updateStats();
       this._updateButtonStates();
     });

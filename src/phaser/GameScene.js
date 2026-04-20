@@ -64,9 +64,9 @@ export class GameScene extends Phaser.Scene {
       onRespawn:      ()  => this._onRespawn(),
     });
 
-    this.gameState.on('classChanged', () => this._updatePlayerVisual());
-    this.gameState.on('hpChanged',   () => this._updatePlayerHpBar());
-    this.gameState.on('waveStarted', (d) => { this._showWaveBanner(d); this._updateBackground(d.wave); });
+    this.gameState.on('player:classChanged', () => this._updatePlayerVisual());
+    this.gameState.on('player:hpChanged',   () => this._updatePlayerHpBar());
+    this.gameState.on('combat:waveStarted', (d) => { this._showWaveBanner(d); this._updateBackground(d.wave); });
   }
 
   // ─────────────────────────────────────────────────────── ФОНЫ И АРЕНА ───────

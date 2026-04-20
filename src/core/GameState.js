@@ -165,9 +165,9 @@ export class GameState extends EventBus {
       this.xp -= xpForLevel(this.level);
       this.level++;
       this.currentHp = this.getStats().maxHp;
-      this.emit('levelUp', { level: this.level });
+      this.emit('player:levelUp', { level: this.level });
     }
-    this.emit('statsChanged');
+    this.emit('player:statsChanged');
     return gained;
   }
 
@@ -177,7 +177,7 @@ export class GameState extends EventBus {
     const gained = Math.round(amount * stats.goldMult);
     this.gold     += gained;
     this.totalGold += gained;
-    this.emit('goldChanged', { gold: this.gold });
+    this.emit('player:goldChanged', { gold: this.gold });
     return gained;
   }
 
@@ -188,8 +188,8 @@ export class GameState extends EventBus {
     if (this.gold < cost) return false;
     this.gold -= cost;
     this.upgrades[id] = level + 1;
-    this.emit('statsChanged');
-    this.emit('goldChanged', { gold: this.gold });
+    this.emit('player:statsChanged');
+    this.emit('player:goldChanged', { gold: this.gold });
     return true;
   }
 
@@ -224,9 +224,9 @@ export class GameState extends EventBus {
     this.gold -= cost;
     this.currentClass = classId;
     this.unlockedClasses.add(classId);
-    this.emit('classChanged', { classId });
-    this.emit('statsChanged');
-    this.emit('goldChanged', { gold: this.gold });
+    this.emit('player:classChanged', { classId });
+    this.emit('player:statsChanged');
+    this.emit('player:goldChanged', { gold: this.gold });
     return true;
   }
 
@@ -276,11 +276,11 @@ export class GameState extends EventBus {
 
     this.currentHp = this.getStats().maxHp;
 
-    this.emit('prestige', { count: this.prestigeCount, pp, totalPp: this.prestigePoints });
-    this.emit('classChanged', { classId: 'novice' });
-    this.emit('statsChanged');
-    this.emit('goldChanged', { gold: this.gold });
-    this.emit('hpChanged', { hp: this.currentHp });
+    this.emit('player:prestige', { count: this.prestigeCount, pp, totalPp: this.prestigePoints });
+    this.emit('player:classChanged', { classId: 'novice' });
+    this.emit('player:statsChanged');
+    this.emit('player:goldChanged', { gold: this.gold });
+    this.emit('player:hpChanged', { hp: this.currentHp });
     this.save();
     return true;
   }
@@ -295,20 +295,20 @@ export class GameState extends EventBus {
     this.prestigePoints -= upg.cost;
     this.prestigeShop[id] = rank + 1;
     this.currentHp = this.getStats().maxHp; // пересчитать HP при изменении бонусов
-    this.emit('prestigeShopChanged');
-    this.emit('statsChanged');
+    this.emit('player:prestigeShopChanged');
+    this.emit('player:statsChanged');
     return true;
   }
 
   /** Получить урон (возвращает true если смерть) */
   takeDamage(amount) {
     this.currentHp = Math.max(0, this.currentHp - amount);
-    this.emit('hpChanged', { hp: this.currentHp });
+    this.emit('player:hpChanged', { hp: this.currentHp });
     if (this.currentHp <= 0) {
       this.isAlive = false;
       this.gold = Math.max(0, Math.round(this.gold * 0.95));
-      this.emit('death');
-      this.emit('goldChanged', { gold: this.gold });
+      this.emit('player:death');
+      this.emit('player:goldChanged', { gold: this.gold });
       return true;
     }
     return false;
@@ -318,8 +318,8 @@ export class GameState extends EventBus {
   respawn() {
     this.isAlive   = true;
     this.currentHp = this.getStats().maxHp;
-    this.emit('respawn');
-    this.emit('hpChanged', { hp: this.currentHp });
+    this.emit('player:respawn');
+    this.emit('player:hpChanged', { hp: this.currentHp });
   }
 
   /** Начальная инициализация / загрузка */

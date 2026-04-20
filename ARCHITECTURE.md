@@ -84,17 +84,28 @@ GameState (EventBus)
 
 ### Ключевые события GameState
 
+**Неймспейс `player:`** — состояние игрока
+
 | Событие | Когда |
 |---------|-------|
-| `statsChanged` | изменились характеристики |
-| `goldChanged` | изменилось золото |
-| `levelUp` | новый уровень |
-| `classChanged` | выбран класс |
-| `death` | смерть игрока |
-| `prestige` | перерождение |
-| `waveStarted` | начало волны |
-| `hpChanged` | изменилось HP |
-| `respawn` | респавн после смерти |
+| `player:statsChanged` | изменились характеристики |
+| `player:goldChanged` | изменилось золото |
+| `player:levelUp` | новый уровень |
+| `player:classChanged` | выбран класс |
+| `player:death` | смерть игрока |
+| `player:prestige` | перерождение |
+| `player:hpChanged` | изменилось HP |
+| `player:respawn` | респавн после смерти |
+| `player:prestigeShopChanged` | куплен апгрейд в магазине престижа |
+
+**Неймспейс `combat:`** — волны и бой
+
+| Событие | Когда |
+|---------|-------|
+| `combat:waveStarted` | начало волны |
+| `combat:waveCleared` | волна пройдена |
+| `combat:waveRollback` | откат на предыдущую волну |
+| `combat:killCountChanged` | изменился счётчик убийств |
 
 ### Phaser init (критично)
 
@@ -185,7 +196,7 @@ GameState (EventBus)
 
 ### Бэклог — технический долг (из best practices)
 
-- [ ] **Event namespacing** — переименовать события в `combat:goldChanged`, `ui:statsChanged` и т.д. (защита от коллизий при росте кодовой базы)
+- [x] **Event namespacing** — переименовать события в `player:*` и `combat:*` (защита от коллизий при росте кодовой базы)
 - [ ] **destroy() в UI-модулях** — добавить метод с `state.off(...)` во все UI-компоненты (предотвращает утечки памяти)
 - [ ] **Валидация баланса классов** — postprocess после `generateDeepClasses()`: считать суммарный бонус каждой ветки, флажить выбросы
 - [ ] **Texture atlas** — объединить спрайты через TexturePacker (меньше HTTP-запросов, лучше GPU batching)

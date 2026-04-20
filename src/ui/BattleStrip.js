@@ -16,11 +16,11 @@ export class BattleStrip {
 
     this._render();
 
-    state.on('hpChanged',    () => this._updatePlayerHP());
-    state.on('classChanged', () => this._updatePlayer());
-    state.on('statsChanged', () => this._updatePlayer());
-    state.on('waveStarted',  () => this._updateWave());
-    state.on('respawn',      () => this._updatePlayerHP());
+    state.on('player:hpChanged',    () => this._updatePlayerHP());
+    state.on('player:classChanged', () => this._updatePlayer());
+    state.on('player:statsChanged', () => this._updatePlayer());
+    state.on('combat:waveStarted',  () => this._updateWave());
+    state.on('player:respawn',      () => this._updatePlayerHP());
   }
 
   // ── Callbacks от CombatSystem ────────────────────────────────────────────────
