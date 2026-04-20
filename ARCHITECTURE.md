@@ -181,7 +181,14 @@ GameState (EventBus)
 
 ### В работе / ближайшее
 
-- [ ] (пусто — добавляй сюда активные задачи)
+- [ ] **Game loop: rAF + panic cap** — заменить `setInterval(200ms)` в `Combat.js` на `requestAnimationFrame` + accumulated delta + panic cap ≤10 сек (устраняет шквал обновлений после фоновой вкладки)
+
+### Бэклог — технический долг (из best practices)
+
+- [ ] **Event namespacing** — переименовать события в `combat:goldChanged`, `ui:statsChanged` и т.д. (защита от коллизий при росте кодовой базы)
+- [ ] **destroy() в UI-модулях** — добавить метод с `state.off(...)` во все UI-компоненты (предотвращает утечки памяти)
+- [ ] **Валидация баланса классов** — postprocess после `generateDeepClasses()`: считать суммарный бонус каждой ветки, флажить выбросы
+- [ ] **Texture atlas** — объединить спрайты через TexturePacker (меньше HTTP-запросов, лучше GPU batching)
 
 ### Бэклог — геймплей
 
