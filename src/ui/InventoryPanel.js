@@ -94,9 +94,6 @@ export class InventoryPanel {
         <!-- Спрайт героя -->
         <div class="inv-doll-figure">
           <img class="inv-doll-hero-sprite" src="/sprites/${this._heroSprite()}.png" draggable="false">
-          <div class="inv-doll-stats">
-            ${this._dollStatsHtml()}
-          </div>
         </div>
 
         <!-- Правый слот: аксессуар -->
@@ -123,6 +120,11 @@ export class InventoryPanel {
                <div class="doll-slot-bonus">${formatBonuses(A.bonuses)}</div>
                <div class="doll-slot-hint">↩ снять</div>`
             : `<div class="doll-slot-empty">Пусто</div>`}
+        </div>
+
+        <!-- Суммарные статы (row 3) -->
+        <div class="inv-doll-stats">
+          ${this._dollStatsHtml()}
         </div>
 
       </div>
