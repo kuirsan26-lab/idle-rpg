@@ -4,22 +4,7 @@
  */
 import { RARITY_COLOR, RARITY_LABEL, ITEM_TYPE_ICON, ITEM_TYPE_LABEL, formatBonuses, SELL_VALUE } from '../data/items.js';
 
-// Цвет части тела по редкости (или дефолт если пусто)
-const EMPTY_COLOR  = '#2a2a3a';
-const EMPTY_STROKE = '#3a3a5e';
-
-function bodyColor(item) {
-  return item ? RARITY_COLOR[item.rarity] : EMPTY_COLOR;
-}
-function bodyStroke(item) {
-  return item ? RARITY_COLOR[item.rarity] : EMPTY_STROKE;
-}
-function bodyGlow(item) {
-  if (!item) return '';
-  const c = RARITY_COLOR[item.rarity];
-  const intensity = item.rarity === 'epic' ? 8 : item.rarity === 'rare' ? 5 : 3;
-  return `filter: drop-shadow(0 0 ${intensity}px ${c});`;
-}
+const HERO_SPRITE = { warrior: 'hero_warrior', rogue: 'hero_rogue', archer: 'hero_archer', mage: 'hero_mage' };
 
 export class InventoryPanel {
   constructor(state) {
@@ -79,19 +64,16 @@ export class InventoryPanel {
 
   // ── Кукла персонажа ──────────────────────────────────────────────────────────
 
+  _heroSprite() {
+    const cls = window._classMap?.get(this.state.currentClass);
+    return HERO_SPRITE[cls?.branch] || 'hero_novice';
+  }
+
   _renderDoll() {
     const eq = this.state.equipment;
     const W  = eq.weapon;
     const A  = eq.armor;
     const Ac = eq.accessory;
-
-    const wColor  = bodyColor(W);  const wStroke = bodyStroke(W);
-    const aColor  = bodyColor(A);  const aStroke = bodyStroke(A);
-    const acColor = bodyColor(Ac); const acStroke = bodyStroke(Ac);
-
-    const wGlow  = bodyGlow(W);
-    const aGlow  = bodyGlow(A);
-    const acGlow = bodyGlow(Ac);
 
     document.getElementById('inv-doll').innerHTML = `
       <div class="inv-doll-layout">
@@ -109,56 +91,9 @@ export class InventoryPanel {
             : `<div class="doll-slot-empty">Пусто</div>`}
         </div>
 
-        <!-- SVG кукла -->
+        <!-- Спрайт героя -->
         <div class="inv-doll-figure">
-          <svg viewBox="0 0 90 200" width="90" height="200" xmlns="http://www.w3.org/2000/svg">
-            <!-- Голова -->
-            <circle cx="45" cy="20" r="17" fill="#12121e" stroke="#4a4a7a" stroke-width="1.5"/>
-            <!-- Глаза -->
-            <circle cx="38" cy="18" r="3.5" fill="#5555bb" opacity="0.9"/>
-            <circle cx="52" cy="18" r="3.5" fill="#5555bb" opacity="0.9"/>
-            <!-- Блик в глазах -->
-            <circle cx="39.5" cy="16.5" r="1.2" fill="#aaaaff" opacity="0.7"/>
-            <circle cx="53.5" cy="16.5" r="1.2" fill="#aaaaff" opacity="0.7"/>
-            <!-- Рот -->
-            <path d="M39 25 Q45 29 51 25" stroke="#4a4a7a" stroke-width="1" fill="none"/>
-            <!-- Шея -->
-            <rect x="40" y="37" width="10" height="9" fill="#12121e" stroke="#3a3a5e" stroke-width="1"/>
-
-            <!-- Левая рука (оружие) -->
-            <g style="${wGlow}">
-              <rect x="7" y="48" width="16" height="46" rx="4"
-                    fill="${wColor}" stroke="${wStroke}" stroke-width="1.5" opacity="${W ? '1' : '0.5'}"/>
-              ${W ? `<text x="15" y="78" text-anchor="middle" font-size="10" fill="${wStroke}" opacity="0.8">⚔</text>` : ''}
-            </g>
-
-            <!-- Торс (броня) -->
-            <g style="${aGlow}">
-              <rect x="24" y="46" width="42" height="52" rx="4"
-                    fill="${aColor}" stroke="${aStroke}" stroke-width="1.5" opacity="${A ? '1' : '0.5'}"/>
-              ${A ? `<text x="45" y="76" text-anchor="middle" font-size="11" fill="${aStroke}" opacity="0.9">🛡</text>` : ''}
-            </g>
-
-            <!-- Правая рука (аксессуар) -->
-            <g style="${acGlow}">
-              <rect x="67" y="48" width="16" height="46" rx="4"
-                    fill="${acColor}" stroke="${acStroke}" stroke-width="1.5" opacity="${Ac ? '1' : '0.5'}"/>
-              ${Ac ? `<text x="75" y="78" text-anchor="middle" font-size="10" fill="${acStroke}" opacity="0.8">💍</text>` : ''}
-            </g>
-
-            <!-- Пояс -->
-            <rect x="24" y="97" width="42" height="10" rx="2" fill="#1a1a2e" stroke="#3a3a5e" stroke-width="1"/>
-
-            <!-- Левая нога -->
-            <rect x="25" y="108" width="17" height="56" rx="4" fill="#12121e" stroke="#3a3a5e" stroke-width="1.2"/>
-            <!-- Правая нога -->
-            <rect x="48" y="108" width="17" height="56" rx="4" fill="#12121e" stroke="#3a3a5e" stroke-width="1.2"/>
-            <!-- Ступни -->
-            <rect x="23" y="159" width="21" height="8" rx="3" fill="#0e0e1a" stroke="#3a3a5e" stroke-width="1"/>
-            <rect x="46" y="159" width="21" height="8" rx="3" fill="#0e0e1a" stroke="#3a3a5e" stroke-width="1"/>
-          </svg>
-
-          <!-- Подпись под куклой -->
+          <img class="inv-doll-hero-sprite" src="/sprites/${this._heroSprite()}.png" draggable="false">
           <div class="inv-doll-stats">
             ${this._dollStatsHtml()}
           </div>

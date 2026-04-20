@@ -504,7 +504,7 @@
     .inv-item-type  { font-size: 14px; margin-bottom: 2px; }
     .inv-item-name  { font-size: 11px; font-weight: 600; margin-bottom: 1px; }
     .inv-item-rarity{ font-size: 9px; margin-bottom: 3px; }
-    .inv-item-bonus { font-size: 9px; color: #888; margin-bottom: 2px; }
+    .inv-item-bonus { font-size: 9px; color: #888; margin-bottom: 2px; word-break: break-word; line-height: 1.35; }
     .inv-item-wave  { font-size: 8px; color: #444; }
     .inv-sell-btn {
       position: absolute; top: 5px; right: 5px;
@@ -524,7 +524,7 @@
     #inv-doll { flex-shrink: 0; }
     .inv-doll-layout {
       display: grid;
-      grid-template-columns: 130px 110px 130px;
+      grid-template-columns: 120px 128px 120px;
       grid-template-rows: auto auto;
       gap: 8px;
       align-items: start;
@@ -532,6 +532,13 @@
     .inv-doll-figure {
       grid-column: 2; grid-row: 1 / 3;
       display: flex; flex-direction: column; align-items: center; gap: 6px;
+    }
+    .inv-doll-hero-sprite {
+      width: 128px; height: 128px;
+      image-rendering: pixelated;
+      filter: brightness(0.38) saturate(0.5);
+      opacity: 0.82;
+      display: block;
     }
     .inv-doll-left   { grid-column: 1; grid-row: 1; }
     .inv-doll-right  { grid-column: 3; grid-row: 1; }
@@ -546,7 +553,7 @@
     .doll-slot-icon  { font-size: 18px; margin-bottom: 3px; }
     .doll-slot-label { font-size: 9px; color: #555; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
     .doll-slot-name  { font-size: 10px; font-weight: 600; margin-bottom: 2px; line-height: 1.3; }
-    .doll-slot-bonus { font-size: 8px; color: #888; }
+    .doll-slot-bonus { font-size: 8px; color: #888; word-break: break-word; line-height: 1.4; }
     .doll-slot-hint  { font-size: 8px; color: #444; margin-top: 3px; }
     .doll-slot-empty { font-size: 9px; color: #2a2a3a; font-style: italic; }
     .inv-doll-stats  { display: flex; flex-wrap: wrap; gap: 3px; justify-content: center; padding: 4px 2px; }
