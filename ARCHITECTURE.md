@@ -199,7 +199,7 @@ GameState (EventBus)
 - [x] **Event namespacing** — переименовать события в `player:*` и `combat:*` (защита от коллизий при росте кодовой базы)
 - [x] **destroy() в UI-модулях** — добавить метод с `state.off(...)` во все UI-компоненты (предотвращает утечки памяти)
 - [x] **Валидация баланса классов** — `scripts/validate_balance.js` (`npm run balance`): считает power score каждой ветки по глубинам, флажит выбросы >15% от среднего
-- [ ] **Texture atlas** — объединить спрайты через TexturePacker (меньше HTTP-запросов, лучше GPU batching)
+- [x] **Texture atlas** — `scripts/build_atlas.py` (`npm run atlas`): 25 спрайтов → один 640×640 PNG; GameScene грузит через `load.atlas()`
 
 ### Бэклог — геймплей
 

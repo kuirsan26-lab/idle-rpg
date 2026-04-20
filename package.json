@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "balance": "node scripts/validate_balance.js"
+    "balance": "node scripts/validate_balance.js",
+    "atlas": "python -X utf8 scripts/build_atlas.py"
   },
   "dependencies": {
     "phaser": "^3.80.1"

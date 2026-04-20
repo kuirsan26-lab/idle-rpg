@@ -20,20 +20,8 @@ export class GameScene extends Phaser.Scene {
   }
 
   preload() {
-    // Мобы
-    for (const id of ['slime','goblin','skeleton','orc','troll','dragonling','demon','lich','dragon','archdemon']) {
-      this.load.image(`mob_${id}`, `/sprites/${id}.png`);
-    }
-    // Боссы
-    for (const id of ['boss_slime_king','boss_goblin_chief','boss_bone_king','boss_orc_warlord',
-                      'boss_troll_ancient','boss_fire_dragon','boss_demon_lord','boss_lich_king',
-                      'boss_dragon_ancient','boss_chaos_lord']) {
-      this.load.image(`mob_${id}`, `/sprites/${id}.png`);
-    }
-    // Герои
-    for (const branch of ['novice','warrior','rogue','archer','mage']) {
-      this.load.image(`hero_${branch}`, `/sprites/hero_${branch}.png`);
-    }
+    // Все спрайты мобов и героев — один атлас (25 фреймов, 640×640)
+    this.load.atlas('sprites', '/sprites/atlas.png', '/sprites/atlas.json');
     // Фоны
     for (const key of ['bg_01_10','bg_11_20','bg_21_30','bg_31_40','bg_41_50',
                        'bg_51_60','bg_61_70','bg_71_80','bg_81_90','bg_91_100']) {
@@ -44,6 +32,11 @@ export class GameScene extends Phaser.Scene {
                        'ground_51_60','ground_61_70','ground_71_80','ground_81_90','ground_91_100']) {
       this.load.image(key, `/backgrounds/${key}.png`);
     }
+  }
+
+  /** Проверяет наличие фрейма в атласе спрайтов */
+  _hasSprite(key) {
+    return this.textures.get('sprites').has(key);
   }
 
   create() {
@@ -232,8 +225,8 @@ export class GameScene extends Phaser.Scene {
   _buildPlayerSprite() {
     const branch = this._getBranch();
     const key    = `hero_${branch}`;
-    if (this.textures.exists(key)) {
-      const spr = this.add.image(0, 0, key);
+    if (this._hasSprite(key)) {
+      const spr = this.add.image(0, 0, 'sprites', key);
       spr.setScale(70 / spr.height).setOrigin(0.5, 1).setY(24);
       return spr;
     }
@@ -246,8 +239,8 @@ export class GameScene extends Phaser.Scene {
     if (this.playerBody?.type === 'Image') {
       const branch = this._getBranch();
       const key    = `hero_${branch}`;
-      if (this.textures.exists(key)) {
-        this.playerBody.setTexture(key);
+      if (this._hasSprite(key)) {
+        this.playerBody.setTexture('sprites', key);
         return;
       }
     }
@@ -464,8 +457,8 @@ export class GameScene extends Phaser.Scene {
   /** Создаёт визуальное тело моба: спрайт если есть, иначе Graphics */
   _createMobBody(data) {
     const key = this._MOB_SPRITES[data.id];
-    if (key && this.textures.exists(key)) {
-      const sprite = this.add.image(0, 0, key);
+    if (key && this._hasSprite(key)) {
+      const sprite = this.add.image(0, 0, 'sprites', key);
       // Масштаб: вписываем в ~70px высоту, ставим ноги на y=24
       const scale = 70 / sprite.height;
       sprite.setScale(scale).setOrigin(0.5, 1).setY(24);
