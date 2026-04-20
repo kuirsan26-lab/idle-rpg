@@ -24,8 +24,9 @@ export class CombatSystem {
 
     this._mobCallbacks = [];         // {onSpawn, onDeath, onDamage, onPlayerAttack, onPlayerHit}
     this._lastTick     = performance.now();
+    this._accumulated  = 0;
 
-    this._timerId = null;
+    this._rafId = null;
 
     // При престиже — сбросить текущих мобов и начать с новой волны
     state.on('prestige', () => {
@@ -42,11 +43,28 @@ export class CombatSystem {
 
   start() {
     this._spawnWave();
-    this._timerId = setInterval(() => this._tick(), TICK_MS);
+    this._rafId = requestAnimationFrame(this._loop.bind(this));
   }
 
   stop() {
-    if (this._timerId !== null) clearInterval(this._timerId);
+    if (this._rafId !== null) cancelAnimationFrame(this._rafId);
+  }
+
+  _loop() {
+    this._rafId = requestAnimationFrame(this._loop.bind(this));
+
+    const now     = performance.now();
+    // Panic cap: не более 10 сек за раз (защита от фоновых вкладок)
+    const elapsed = Math.min(now - this._lastTick, 10_000);
+    this._lastTick     = now;
+    this._accumulated += elapsed;
+
+    this.state.playTime += elapsed / 1000;
+
+    while (this._accumulated >= TICK_MS) {
+      this._accumulated -= TICK_MS;
+      this._tick();
+    }
   }
 
   /** Зарегистрировать callbacks (обычно из GameScene) */
@@ -54,13 +72,9 @@ export class CombatSystem {
     this._mobCallbacks.push(callbacks);
   }
 
-  // ── Тик логики ──────────────────────────────────────────────────────────────
+  // ── Тик логики (фиксированный шаг TICK_MS) ──────────────────────────────────
   _tick() {
-    const now  = performance.now();
-    const dt   = Math.min(now - this._lastTick, 500); // не более 500 ms за шаг
-    this._lastTick = now;
-
-    this.state.playTime += dt / 1000;
+    const dt = TICK_MS;
 
     if (!this.state.isAlive) {
       this.respawnTimer += dt;

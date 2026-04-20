@@ -126,7 +126,7 @@ GameState (EventBus)
 
 ### Боевая система
 
-- Тик каждые **200ms**
+- Тик каждые **200ms** (фиксированный шаг); цикл на `requestAnimationFrame` + accumulated delta + panic cap 10 сек
 - Смерть → таймер `RESPAWN_MS` → `_spawnWave()` с той же волной
 - Волна засчитана: все мобы мертвы + игрок жив
 - **Откат волны:** `deathsOnWave >= 3` → при следующем респавне `currentWave--`
@@ -181,7 +181,7 @@ GameState (EventBus)
 
 ### В работе / ближайшее
 
-- [ ] **Game loop: rAF + panic cap** — заменить `setInterval(200ms)` в `Combat.js` на `requestAnimationFrame` + accumulated delta + panic cap ≤10 сек (устраняет шквал обновлений после фоновой вкладки)
+- [x] **Game loop: rAF + panic cap** — заменить `setInterval(200ms)` в `Combat.js` на `requestAnimationFrame` + accumulated delta + panic cap ≤10 сек (устраняет шквал обновлений после фоновой вкладки)
 
 ### Бэклог — технический долг (из best practices)
 
