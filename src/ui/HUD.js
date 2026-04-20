@@ -11,27 +11,25 @@ export class HUD {
 
     this._update();
 
-    state.on('player:statsChanged',   () => this._update());
-    state.on('player:goldChanged',    () => this._updateGold());
-    state.on('player:hpChanged',      () => this._updateXp()); // XP бар заодно
-    state.on('player:levelUp',        (d) => { this._update(); this._log(`🎉 Уровень ${d.level}!`, 'level'); });
-    state.on('player:classChanged',   () => { this._update(); });
-    state.on('combat:killCountChanged', () => this._updateKills());
-    state.on('combat:waveCleared',    (d) => this._log(`✅ Волна ${d.wave} пройдена`, 'wave'));
-    state.on('combat:waveStarted',    (d) => {
-      const txt = d.isBoss
-        ? `⚠️ ВОЛНА ${d.wave} — появился БОСС!`
-        : `⚔️ Волна ${d.wave}`;
-      this._log(txt, d.isBoss ? 'kill' : 'wave');
-    });
-    state.on('player:death',          () => { this._log('💀 Вы погибли! -5% золота. Возрождение...', 'player:death'); this._updateGold(); });
-    state.on('player:respawn',        () => this._log('✨ Возрождение!', 'wave'));
-    state.on('player:prestige',       (d) => {
-      this._log(`⭐ ПЕРЕРОЖДЕНИЕ #${d.count}! Получено ${d.pp} ПО (всего: ${d.totalPp} ПО)`, 'player:prestige');
-      this._update();
-    });
-    state.on('combat:waveCleared',    () => this._updatePrestigeBtn());
-    state.on('player:levelUp',        () => this._updatePrestigeBtn());
+    this._unsubs = [
+      state.on('player:statsChanged',     () => this._update()),
+      state.on('player:goldChanged',      () => this._updateGold()),
+      state.on('player:hpChanged',        () => this._updateXp()),
+      state.on('player:levelUp',          (d) => { this._update(); this._updatePrestigeBtn(); this._log(`🎉 Уровень ${d.level}!`, 'level'); }),
+      state.on('player:classChanged',     () => this._update()),
+      state.on('combat:killCountChanged', () => this._updateKills()),
+      state.on('combat:waveCleared',      (d) => { this._log(`✅ Волна ${d.wave} пройдена`, 'wave'); this._updatePrestigeBtn(); }),
+      state.on('combat:waveStarted',      (d) => {
+        const txt = d.isBoss ? `⚠️ ВОЛНА ${d.wave} — появился БОСС!` : `⚔️ Волна ${d.wave}`;
+        this._log(txt, d.isBoss ? 'kill' : 'wave');
+      }),
+      state.on('player:death',    () => { this._log('💀 Вы погибли! -5% золота. Возрождение...', 'player:death'); this._updateGold(); }),
+      state.on('player:respawn',  () => this._log('✨ Возрождение!', 'wave')),
+      state.on('player:prestige', (d) => {
+        this._log(`⭐ ПЕРЕРОЖДЕНИЕ #${d.count}! Получено ${d.pp} ПО (всего: ${d.totalPp} ПО)`, 'player:prestige');
+        this._update();
+      }),
+    ];
 
     // Prestige modal
     document.getElementById('prestige-confirm-btn').addEventListener('click', () => {
@@ -45,6 +43,10 @@ export class HUD {
     // Экспозиция для кнопки в HTML (onclick)
     window.game = window.game || {};
     window.game.showPrestigeModal = () => this.showPrestigeModal();
+  }
+
+  destroy() {
+    this._unsubs.forEach(u => u());
   }
 
   showPrestigeModal() {

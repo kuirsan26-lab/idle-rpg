@@ -11,11 +11,17 @@ export class PrestigeShop {
     this._render();
     this._bindEvents();
 
-    state.on('player:prestigeShopChanged', () => this._refresh());
-    state.on('player:prestige',            () => this._refresh());
+    this._unsubs = [
+      state.on('player:prestigeShopChanged', () => this._refresh()),
+      state.on('player:prestige',            () => this._refresh()),
+    ];
 
     window.game = window.game || {};
     window.game.openPrestigeShop = () => this.open();
+  }
+
+  destroy() {
+    this._unsubs.forEach(u => u());
   }
 
   open() {

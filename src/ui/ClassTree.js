@@ -24,10 +24,16 @@ export class ClassTreePanel {
     this._bindEvents();
     this._render();
 
-    state.on('player:classChanged',  () => this._render());
-    state.on('player:statsChanged',  () => this._render());
-    state.on('player:goldChanged',   () => this._render());
-    state.on('player:levelUp',       () => this._render());
+    this._unsubs = [
+      state.on('player:classChanged', () => this._render()),
+      state.on('player:statsChanged', () => this._render()),
+      state.on('player:goldChanged',  () => this._render()),
+      state.on('player:levelUp',      () => this._render()),
+    ];
+  }
+
+  destroy() {
+    this._unsubs.forEach(u => u());
   }
 
   _bindEvents() {

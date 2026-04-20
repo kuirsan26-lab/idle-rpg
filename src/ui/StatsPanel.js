@@ -11,11 +11,14 @@ export class StatsPanel {
     this._renderUpgrades();
     this._updateStats();
 
-    state.on('player:statsChanged', () => this._updateStats());
-    state.on('player:goldChanged',  () => {
-      this._updateStats();
-      this._updateButtonStates();
-    });
+    this._unsubs = [
+      state.on('player:statsChanged', () => this._updateStats()),
+      state.on('player:goldChanged',  () => { this._updateStats(); this._updateButtonStates(); }),
+    ];
+  }
+
+  destroy() {
+    this._unsubs.forEach(u => u());
   }
 
   _updateStats() {
