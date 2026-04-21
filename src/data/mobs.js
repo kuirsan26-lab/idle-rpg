@@ -139,10 +139,10 @@ export const MOB_TYPES = [
 
 // Боссы (появляются каждые 10 волн)
 export const BOSS_TYPES = [
-  { id: 'boss_slime_king',   name: 'Король Слизней',    tier: 1,  color: 0x00ff88, shape: 'circle', hpMult: 8,  atkMult: 3,  defMult: 2,  xpMult: 10, goldMult: 8 },
-  { id: 'boss_goblin_chief', name: 'Вождь Гоблинов',    tier: 2,  color: 0xaaff00, shape: 'diamond',hpMult: 8,  atkMult: 3,  defMult: 2,  xpMult: 10, goldMult: 8 },
-  { id: 'boss_bone_king',    name: 'Костяной Король',   tier: 3,  color: 0xffffff, shape: 'rect',   hpMult: 8,  atkMult: 3,  defMult: 2,  xpMult: 10, goldMult: 8 },
-  { id: 'boss_orc_warlord',  name: 'Орочий Военачальник',tier: 4, color: 0x44aa00, shape: 'rect',   hpMult: 8,  atkMult: 3,  defMult: 2,  xpMult: 10, goldMult: 8 },
+  { id: 'boss_slime_king',   name: 'Король Слизней',    tier: 1,  color: 0x00ff88, shape: 'circle', hpMult: 8,  atkMult: 4,  defMult: 2,  xpMult: 10, goldMult: 8 },
+  { id: 'boss_goblin_chief', name: 'Вождь Гоблинов',    tier: 2,  color: 0xaaff00, shape: 'diamond',hpMult: 8,  atkMult: 4,  defMult: 2,  xpMult: 10, goldMult: 8 },
+  { id: 'boss_bone_king',    name: 'Костяной Король',   tier: 3,  color: 0xffffff, shape: 'rect',   hpMult: 8,  atkMult: 4,  defMult: 2,  xpMult: 10, goldMult: 8 },
+  { id: 'boss_orc_warlord',  name: 'Орочий Военачальник',tier: 4, color: 0x44aa00, shape: 'rect',   hpMult: 8,  atkMult: 4,  defMult: 2,  xpMult: 10, goldMult: 8 },
   { id: 'boss_troll_ancient',name: 'Древний Тролль',    tier: 5,  color: 0x336622, shape: 'rect',   hpMult: 10, atkMult: 4,  defMult: 3,  xpMult: 15, goldMult: 12 },
   { id: 'boss_fire_dragon',  name: 'Огненный Дракон',   tier: 6,  color: 0xff4400, shape: 'diamond',hpMult: 10, atkMult: 4,  defMult: 3,  xpMult: 15, goldMult: 12 },
   { id: 'boss_demon_lord',   name: 'Лорд Демонов',      tier: 7,  color: 0xdd0000, shape: 'circle', hpMult: 12, atkMult: 5,  defMult: 4,  xpMult: 20, goldMult: 15 },
@@ -153,7 +153,7 @@ export const BOSS_TYPES = [
 
 /** Масштабирование стат моба по волне */
 function waveScale(wave) {
-  return Math.pow(1.08, wave - 1);
+  return Math.pow(1.06, wave - 1);
 }
 
 /** Создать данные моба для заданной волны */
@@ -172,10 +172,10 @@ export function createMobData(wave) {
       shape: bossTemplate.shape,
       maxHp: Math.round(baseType.baseHp * scale * bossTemplate.hpMult),
       atk:   Math.round(baseType.baseAtk * scale * bossTemplate.atkMult),
-      def:   Math.round(baseType.baseDef * scale * bossTemplate.defMult),
+      def:   Math.round(baseType.baseDef * Math.sqrt(scale) * bossTemplate.defMult),
       xp:    Math.round(baseType.baseXp * scale * bossTemplate.xpMult),
       gold:  Math.round(baseType.baseGold * scale * bossTemplate.goldMult),
-      speed: baseType.speed * 0.7,
+      speed: baseType.speed * 1.1,
       isBoss: true,
       tier: bossTemplate.tier,
     };
@@ -195,7 +195,7 @@ export function createMobData(wave) {
     shape:  template.shape,
     maxHp:  Math.round(template.baseHp * scale),
     atk:    Math.round(template.baseAtk * scale),
-    def:    Math.round(template.baseDef * scale),
+    def:    Math.round(template.baseDef * Math.sqrt(scale)),
     xp:     Math.round(template.baseXp * scale),
     gold:   Math.round(template.baseGold * scale),
     speed:  template.speed,
@@ -207,5 +207,5 @@ export function createMobData(wave) {
 /** Количество мобов на волне */
 export function getMobCount(wave) {
   if (wave % 10 === 0) return 1; // босс — один
-  return Math.min(3 + Math.floor(wave / 3), 10);
+  return Math.min(3 + Math.floor(wave / 4), 8);
 }
