@@ -126,11 +126,9 @@ export class CombatSystem {
     // Атака игрока
     if (this.attackCooldown <= 0 && this.mobs.length > 0) {
       const stats = this.state.getStats();
-      // Интервал атаки в ms
       const attackInterval = Math.round(1000 / Math.max(0.1, stats.spd));
       this.attackCooldown = attackInterval;
 
-      // Бьём ближайшего моба (первый в массиве)
       const target = this.mobs[0];
       const isCrit = Math.random() * 100 < stats.crit;
       let dmg = Math.max(1, stats.atk - Math.round(target.data.def * 0.5));
@@ -138,6 +136,15 @@ export class CombatSystem {
 
       target.hp -= dmg;
       this._emit('onPlayerAttack', { mob: target, damage: dmg, isCrit });
+
+      // Lifesteal: восстанавливаем HP пропорционально урону
+      if (stats.lifesteal > 0) {
+        const heal = Math.round(dmg * stats.lifesteal / 100);
+        if (heal > 0) {
+          this.state.currentHp = Math.min(this.state.getStats().maxHp, this.state.currentHp + heal);
+          this.state.emit('player:hpChanged', { hp: this.state.currentHp });
+        }
+      }
 
       if (target.hp <= 0) {
         this._killMob(target);
@@ -151,18 +158,42 @@ export class CombatSystem {
         const mobInterval = Math.round(1200 / Math.max(0.5, mob.data.speed / 40));
         mob.attackCooldown = mobInterval;
 
-        // Только ближайший моб бьёт игрока (упрощение)
         if (mob === this.mobs[0]) {
           const stats = this.state.getStats();
           const dmg   = Math.max(1, mob.data.atk - Math.round(stats.def * 0.7));
-          const died  = this.state.takeDamage(dmg);
-          this._emit('onPlayerHit', { damage: dmg });
+
+          // Dodge: шанс полностью уклониться от удара
+          const dodged = stats.dodge > 0 && Math.random() * 100 < stats.dodge;
+          if (dodged) {
+            this._emit('onPlayerHit', { damage: 0, dodged: true });
+            continue;
+          }
+
+          const died = this.state.takeDamage(dmg);
+          this._emit('onPlayerHit', { damage: dmg, dodged: false });
+
+          // Thorns: отражаем часть урона обратно мобу
+          if (stats.thorns > 0) {
+            const reflect = Math.round(dmg * stats.thorns / 100);
+            if (reflect > 0) {
+              mob.hp -= reflect;
+              if (mob.hp <= 0) {
+                this._killMob(mob);
+                if (died) {
+                  this.deathsOnWave++;
+                  this._emit('onPlayerDeath', { deathsOnWave: this.deathsOnWave, maxDeaths: MAX_DEATHS_PER_WAVE });
+                  this.mobs = [];
+                  return;
+                }
+                break;
+              }
+            }
+          }
 
           if (died) {
             this.deathsOnWave++;
             this._emit('onPlayerDeath', { deathsOnWave: this.deathsOnWave, maxDeaths: MAX_DEATHS_PER_WAVE });
             this.mobs = [];
-            // waveState остаётся 'fighting' — после respawn та же волна (или откат) переспавнится
             return;
           }
         }
