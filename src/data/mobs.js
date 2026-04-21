@@ -139,10 +139,10 @@ export const MOB_TYPES = [
 
 // Боссы (появляются каждые 10 волн)
 export const BOSS_TYPES = [
-  { id: 'boss_slime_king',   name: 'Король Слизней',    tier: 1,  color: 0x00ff88, shape: 'circle', hpMult: 8,  atkMult: 3,  defMult: 2,  xpMult: 10, goldMult: 8 },
-  { id: 'boss_goblin_chief', name: 'Вождь Гоблинов',    tier: 2,  color: 0xaaff00, shape: 'diamond',hpMult: 8,  atkMult: 3,  defMult: 2,  xpMult: 10, goldMult: 8 },
-  { id: 'boss_bone_king',    name: 'Костяной Король',   tier: 3,  color: 0xffffff, shape: 'rect',   hpMult: 8,  atkMult: 3,  defMult: 2,  xpMult: 10, goldMult: 8 },
-  { id: 'boss_orc_warlord',  name: 'Орочий Военачальник',tier: 4, color: 0x44aa00, shape: 'rect',   hpMult: 8,  atkMult: 3,  defMult: 2,  xpMult: 10, goldMult: 8 },
+  { id: 'boss_slime_king',   name: 'Король Слизней',    tier: 1,  color: 0x00ff88, shape: 'circle', hpMult: 8,  atkMult: 4,  defMult: 2,  xpMult: 10, goldMult: 8 },
+  { id: 'boss_goblin_chief', name: 'Вождь Гоблинов',    tier: 2,  color: 0xaaff00, shape: 'diamond',hpMult: 8,  atkMult: 4,  defMult: 2,  xpMult: 10, goldMult: 8 },
+  { id: 'boss_bone_king',    name: 'Костяной Король',   tier: 3,  color: 0xffffff, shape: 'rect',   hpMult: 8,  atkMult: 4,  defMult: 2,  xpMult: 10, goldMult: 8 },
+  { id: 'boss_orc_warlord',  name: 'Орочий Военачальник',tier: 4, color: 0x44aa00, shape: 'rect',   hpMult: 8,  atkMult: 4,  defMult: 2,  xpMult: 10, goldMult: 8 },
   { id: 'boss_troll_ancient',name: 'Древний Тролль',    tier: 5,  color: 0x336622, shape: 'rect',   hpMult: 10, atkMult: 4,  defMult: 3,  xpMult: 15, goldMult: 12 },
   { id: 'boss_fire_dragon',  name: 'Огненный Дракон',   tier: 6,  color: 0xff4400, shape: 'diamond',hpMult: 10, atkMult: 4,  defMult: 3,  xpMult: 15, goldMult: 12 },
   { id: 'boss_demon_lord',   name: 'Лорд Демонов',      tier: 7,  color: 0xdd0000, shape: 'circle', hpMult: 12, atkMult: 5,  defMult: 4,  xpMult: 20, goldMult: 15 },
@@ -175,7 +175,7 @@ export function createMobData(wave) {
       def:   Math.round(baseType.baseDef * Math.sqrt(scale) * bossTemplate.defMult),
       xp:    Math.round(baseType.baseXp * scale * bossTemplate.xpMult),
       gold:  Math.round(baseType.baseGold * scale * bossTemplate.goldMult),
-      speed: baseType.speed * 0.7,
+      speed: baseType.speed * 1.1,
       isBoss: true,
       tier: bossTemplate.tier,
     };
