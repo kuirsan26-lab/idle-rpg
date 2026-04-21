@@ -24,21 +24,27 @@ export function upgradeCost(type, currentLevel) {
 
 // Базовый прирост характеристики за улучшение
 export const UPGRADE_BONUS = {
-  atk:    { atk: 0.06 },
-  def:    { def: 0.06 },
-  hp:     { hp: 0.08 },
-  spd:    { spd: 0.06 },
-  crit:   { crit: 0.02 },
-  critDmg:{ critDmg: 0.10 },
+  atk:      { atk: 0.06 },
+  def:      { def: 0.06 },
+  hp:       { hp: 0.08 },
+  spd:      { spd: 0.06 },
+  crit:     { crit: 0.02 },
+  critDmg:  { critDmg: 0.10 },
+  dodge:    { dodge: 0.02 },
+  lifesteal:{ lifesteal: 0.03 },
+  thorns:   { thorns: 0.03 },
 };
 
 export const UPGRADES_LIST = [
-  { id: 'atk',     name: '⚔️ Сила Удара',    desc: '+6% к урону за уровень' },
-  { id: 'def',     name: '🛡️ Крепость',      desc: '+6% к защите за уровень' },
-  { id: 'hp',      name: '❤️ Живучесть',     desc: '+8% к HP за уровень' },
-  { id: 'spd',     name: '⚡ Быстрота',       desc: '+6% к скорости атаки' },
-  { id: 'crit',    name: '🎯 Меткость',       desc: '+2% к шансу крита' },
-  { id: 'critDmg', name: '💥 Сокрушение',     desc: '+10% к урону крита' },
+  { id: 'atk',       name: '⚔️ Сила Удара',    desc: '+6% к урону за уровень' },
+  { id: 'def',       name: '🛡️ Крепость',      desc: '+6% к защите за уровень' },
+  { id: 'hp',        name: '❤️ Живучесть',     desc: '+8% к HP за уровень' },
+  { id: 'spd',       name: '⚡ Быстрота',       desc: '+6% к скорости атаки' },
+  { id: 'crit',      name: '🎯 Меткость',       desc: '+2% к шансу крита' },
+  { id: 'critDmg',   name: '💥 Сокрушение',     desc: '+10% к урону крита' },
+  { id: 'dodge',     name: '🌀 Уворот',         desc: '+2% к шансу уклонения' },
+  { id: 'lifesteal', name: '🩸 Вампиризм',      desc: '+3% вампиризм от урона' },
+  { id: 'thorns',    name: '🌵 Шипы',           desc: '+3% отражения урона' },
 ];
 
 // ── Постоянные улучшения престижа ─────────────────────────────────────────────
@@ -92,7 +98,7 @@ export class GameState extends EventBus {
     this.unlockedClasses = new Set(['novice']);
 
     // ── Улучшения (кол-во купленных уровней) ───────────────────────
-    this.upgrades = { atk: 0, def: 0, hp: 0, spd: 0, crit: 0, critDmg: 0 };
+    this.upgrades = { atk: 0, def: 0, hp: 0, spd: 0, crit: 0, critDmg: 0, dodge: 0, lifesteal: 0, thorns: 0 };
 
     // ── Инвентарь и снаряжение ──────────────────────────────────────────
     this.inventory  = [];                                      // макс 20 предметов
@@ -161,14 +167,17 @@ export class GameState extends EventBus {
     const spdMult  = 1 + (cb.spd  || 0) + (upgBonuses.spd || 0) + (eq.spd || 0);
 
     return {
-      maxHp:   Math.round(rawHp * hpMult),
-      atk:     Math.max(1, Math.round(rawAtk * atkMult)),
-      def:     Math.max(0, Math.round(rawDef * defMult)),
-      spd:     parseFloat((rawSpd * spdMult).toFixed(2)),
-      crit:    Math.min(95, 5  + (cb.crit    || 0) * 100 + (upgBonuses.crit    || 0) * 100 + (eq.crit    || 0) * 100),
-      critDmg: 150 + (cb.critDmg || 0) * 100 + (upgBonuses.critDmg || 0) * 100 + (eq.critDmg || 0) * 100,
-      xpMult:  parseFloat(((1 + (cb.xpMult   || 0) + (eq.xpMult   || 0)) * pXp).toFixed(3)),
-      goldMult:parseFloat(((1 + (cb.goldMult  || 0) + (eq.goldMult || 0)) * pGold).toFixed(3)),
+      maxHp:    Math.round(rawHp * hpMult),
+      atk:      Math.max(1, Math.round(rawAtk * atkMult)),
+      def:      Math.max(0, Math.round(rawDef * defMult)),
+      spd:      parseFloat((rawSpd * spdMult).toFixed(2)),
+      crit:     Math.min(95, 5  + (cb.crit    || 0) * 100 + (upgBonuses.crit    || 0) * 100 + (eq.crit    || 0) * 100),
+      critDmg:  150 + (cb.critDmg || 0) * 100 + (upgBonuses.critDmg || 0) * 100 + (eq.critDmg || 0) * 100,
+      xpMult:   parseFloat(((1 + (cb.xpMult   || 0) + (eq.xpMult   || 0)) * pXp).toFixed(3)),
+      goldMult: parseFloat(((1 + (cb.goldMult  || 0) + (eq.goldMult || 0)) * pGold).toFixed(3)),
+      dodge:     Math.min(75, (cb.dodge     || 0) * 100 + (upgBonuses.dodge     || 0) * 100 + (eq.dodge     || 0) * 100),
+      lifesteal: (cb.lifesteal || 0) * 100 + (upgBonuses.lifesteal || 0) * 100 + (eq.lifesteal || 0) * 100,
+      thorns:    (cb.thorns    || 0) * 100 + (upgBonuses.thorns    || 0) * 100 + (eq.thorns    || 0) * 100,
       hpMult, atkMult, defMult, spdMult,
     };
   }
@@ -255,7 +264,7 @@ export class GameState extends EventBus {
 
   /** Сколько ПО принесёт текущий ран */
   calcPrestigePoints() {
-    return Math.floor(this.currentWave / 2) + Math.floor(this.level / 2);
+    return Math.floor(Math.pow(this.currentWave, 1.45) / 15) + Math.floor(this.level / 20);
   }
 
   /** Можно ли совершить перерождение (минимум 1 ПО) */
@@ -457,7 +466,7 @@ export class GameState extends EventBus {
       this.prestigeShop    = data.prestigeShop ?? {};
       this.currentClass    = data.currentClass ?? 'novice';
       this.unlockedClasses = new Set(data.unlockedClasses ?? ['novice']);
-      this.upgrades        = { atk: 0, def: 0, hp: 0, spd: 0, crit: 0, critDmg: 0, ...data.upgrades };
+      this.upgrades        = { atk: 0, def: 0, hp: 0, spd: 0, crit: 0, critDmg: 0, dodge: 0, lifesteal: 0, thorns: 0, ...data.upgrades };
       this.currentWave     = data.currentWave ?? 1;
       this.inventory       = data.inventory ?? [];
       this.equipment       = { weapon: null, armor: null, accessory: null, ...(data.equipment ?? {}) };

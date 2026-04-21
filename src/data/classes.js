@@ -47,14 +47,14 @@ export const DEPTH_GOLD_COST = [
 const MANUAL_CLASSES = [
   // ── DEPTH 1 ──────────────────────────────────────────────────────
   { id: 'warrior', name: 'Воин',    parent: 'novice', branch: 'warrior', desc: 'Мастер ближнего боя, непоколебимый и выносливый', bonuses: { atk: 0.20, hp: 0.15, def: 0.10 } },
-  { id: 'rogue',   name: 'Плут',    parent: 'novice', branch: 'rogue',   desc: 'Быстрый и хитрый, специалист по критическим ударам', bonuses: { atk: 0.15, spd: 0.20, crit: 0.05 } },
+  { id: 'rogue',   name: 'Плут',    parent: 'novice', branch: 'rogue',   desc: 'Быстрый и хитрый, специалист по критическим ударам', bonuses: { atk: 0.15, spd: 0.20, crit: 0.05, dodge: 0.05 } },
   { id: 'archer',  name: 'Лучник',  parent: 'novice', branch: 'archer',  desc: 'Меткий стрелок, атакующий издалека', bonuses: { atk: 0.18, spd: 0.15, crit: 0.07 } },
   { id: 'mage',    name: 'Маг',     parent: 'novice', branch: 'mage',    desc: 'Повелитель магических сил, получает больше опыта', bonuses: { atk: 0.25, xpMult: 0.20, goldMult: 0.10 } },
 
   // ── DEPTH 2 ──────────────────────────────────────────────────────
   // Воин
   { id: 'berserker', name: 'Берсерк',  parent: 'warrior', branch: 'warrior', desc: 'Яростный боец, жертвующий защитой ради сокрушительных ударов', bonuses: { atk: 0.30, spd: 0.15, hp: 0.10 } },
-  { id: 'paladin',   name: 'Паладин',  parent: 'warrior', branch: 'warrior', desc: 'Священный воин, сочетающий силу и защиту', bonuses: { hp: 0.25, def: 0.25, atk: 0.10 } },
+  { id: 'paladin',   name: 'Паладин',  parent: 'warrior', branch: 'warrior', desc: 'Священный воин, сочетающий силу и защиту', bonuses: { hp: 0.25, def: 0.25, atk: 0.10, thorns: 0.06 } },
   // Плут
   { id: 'assassin',  name: 'Убийца',   parent: 'rogue',   branch: 'rogue',   desc: 'Специалист по молниеносным смертельным атакам', bonuses: { atk: 0.25, crit: 0.10, spd: 0.15 } },
   { id: 'thief',     name: 'Вор',      parent: 'rogue',   branch: 'rogue',   desc: 'Мастер по добыче золота и ценностей', bonuses: { spd: 0.20, goldMult: 0.30, crit: 0.05 } },
@@ -68,12 +68,12 @@ const MANUAL_CLASSES = [
   // ── DEPTH 3 ──────────────────────────────────────────────────────
   // Берсерк
   { id: 'destroyer',   name: 'Разрушитель', parent: 'berserker', branch: 'warrior', desc: 'Непреодолимая сила разрушения', bonuses: { atk: 0.35, hp: 0.15, spd: 0.10 } },
-  { id: 'bloodthirst', name: 'Кровожад',    parent: 'berserker', branch: 'warrior', desc: 'Восстанавливает жизнь с каждым убийством', bonuses: { atk: 0.30, hp: 0.20, crit: 0.10 } },
+  { id: 'bloodthirst', name: 'Кровожад',    parent: 'berserker', branch: 'warrior', desc: 'Восстанавливает жизнь с каждым убийством', bonuses: { atk: 0.30, hp: 0.20, crit: 0.10, lifesteal: 0.08 } },
   // Паладин
-  { id: 'crusader',    name: 'Крестоносец', parent: 'paladin',   branch: 'warrior', desc: 'Непоколебимый воин святого дела', bonuses: { def: 0.30, hp: 0.25, atk: 0.15 } },
+  { id: 'crusader',    name: 'Крестоносец', parent: 'paladin',   branch: 'warrior', desc: 'Непоколебимый воин святого дела', bonuses: { def: 0.30, hp: 0.25, atk: 0.15, thorns: 0.10 } },
   { id: 'inquisitor',  name: 'Инквизитор',  parent: 'paladin',   branch: 'warrior', desc: 'Неумолимый охотник на нечисть', bonuses: { atk: 0.30, crit: 0.10, def: 0.20 } },
   // Убийца
-  { id: 'ninja',       name: 'Ниндзя',      parent: 'assassin',  branch: 'rogue',   desc: 'Невидимый мастер теней', bonuses: { spd: 0.25, crit: 0.15, atk: 0.20 } },
+  { id: 'ninja',       name: 'Ниндзя',      parent: 'assassin',  branch: 'rogue',   desc: 'Невидимый мастер теней', bonuses: { spd: 0.25, crit: 0.15, atk: 0.20, dodge: 0.08 } },
   { id: 'mercenary',   name: 'Наёмник',     parent: 'assassin',  branch: 'rogue',   desc: 'Профессиональный боец, работающий за золото', bonuses: { atk: 0.25, goldMult: 0.20, spd: 0.15 } },
   // Вор
   { id: 'pickpocket',  name: 'Карманник',   parent: 'thief',     branch: 'rogue',   desc: 'Виртуоз быстрого обогащения', bonuses: { goldMult: 0.40, spd: 0.20, crit: 0.10 } },
@@ -96,17 +96,17 @@ const MANUAL_CLASSES = [
   { id: 'devastator',  name: 'Опустошитель',  parent: 'destroyer',   branch: 'warrior', desc: 'Оставляет за собой только руины', bonuses: { atk: 0.40, hp: 0.15, spd: 0.10 } },
   { id: 'thunderer',   name: 'Громовержец',   parent: 'destroyer',   branch: 'warrior', desc: 'Удары звучат как раскаты грома', bonuses: { atk: 0.35, crit: 0.10, spd: 0.15 } },
   // Кровожад
-  { id: 'vampire',     name: 'Вампир',        parent: 'bloodthirst', branch: 'warrior', desc: 'Пьёт жизненную силу врагов', bonuses: { atk: 0.25, hp: 0.30, crit: 0.15 } },
-  { id: 'bloodlord',   name: 'Лорд Крови',    parent: 'bloodthirst', branch: 'warrior', desc: 'Повелитель кровопролития', bonuses: { atk: 0.35, hp: 0.20, crit: 0.10 } },
+  { id: 'vampire',     name: 'Вампир',        parent: 'bloodthirst', branch: 'warrior', desc: 'Пьёт жизненную силу врагов', bonuses: { atk: 0.25, hp: 0.30, crit: 0.15, lifesteal: 0.12 } },
+  { id: 'bloodlord',   name: 'Лорд Крови',    parent: 'bloodthirst', branch: 'warrior', desc: 'Повелитель кровопролития', bonuses: { atk: 0.35, hp: 0.20, crit: 0.10, lifesteal: 0.10 } },
   // Крестоносец
-  { id: 'faith_guard', name: 'Страж Веры',    parent: 'crusader',    branch: 'warrior', desc: 'Несокрушимый защитник', bonuses: { def: 0.40, hp: 0.30, atk: 0.10 } },
+  { id: 'faith_guard', name: 'Страж Веры',    parent: 'crusader',    branch: 'warrior', desc: 'Несокрушимый защитник', bonuses: { def: 0.40, hp: 0.30, atk: 0.10, thorns: 0.15 } },
   { id: 'light_knight',name: 'Рыцарь Света',  parent: 'crusader',    branch: 'warrior', desc: 'Воин, освящённый светом', bonuses: { hp: 0.25, atk: 0.25, def: 0.25 } },
   // Инквизитор
   { id: 'dark_judge',    name: 'Тёмный Судья',       parent: 'inquisitor', branch: 'warrior', desc: 'Выносит смертные приговоры', bonuses: { atk: 0.35, crit: 0.15, def: 0.15 } },
   { id: 'witch_hunter',  name: 'Охотник на Ведьм',   parent: 'inquisitor', branch: 'warrior', desc: 'Специализируется на магических противниках', bonuses: { atk: 0.30, xpMult: 0.15, crit: 0.15 } },
   // Ниндзя
-  { id: 'shadow',      name: 'Тень',     parent: 'ninja',      branch: 'rogue', desc: 'Никто не видит его движений', bonuses: { spd: 0.30, crit: 0.20, atk: 0.15 } },
-  { id: 'ghost',       name: 'Призрак',  parent: 'ninja',      branch: 'rogue', desc: 'Движется сквозь стены', bonuses: { spd: 0.35, atk: 0.20, crit: 0.15 } },
+  { id: 'shadow',      name: 'Тень',     parent: 'ninja',      branch: 'rogue', desc: 'Никто не видит его движений', bonuses: { spd: 0.30, crit: 0.20, atk: 0.15, dodge: 0.10 } },
+  { id: 'ghost',       name: 'Призрак',  parent: 'ninja',      branch: 'rogue', desc: 'Движется сквозь стены', bonuses: { spd: 0.35, atk: 0.20, crit: 0.15, dodge: 0.12 } },
   // Наёмник
   { id: 'gladiator',      name: 'Гладиатор',          parent: 'mercenary', branch: 'rogue', desc: 'Ветеран кровавой арены', bonuses: { atk: 0.30, hp: 0.20, def: 0.15, goldMult: 0.15 } },
   { id: 'bounty_hunter',  name: 'Охотник за Головами', parent: 'mercenary', branch: 'rogue', desc: 'Получает бонус за каждое убийство', bonuses: { atk: 0.25, goldMult: 0.35, crit: 0.10 } },
@@ -252,7 +252,7 @@ export function getAncestors(classId) {
 /** Суммарные бонусы со всей ветки предков */
 export function getCumulativeBonuses(classId) {
   const ancestors = getAncestors(classId);
-  const total = { atk: 0, hp: 0, def: 0, spd: 0, crit: 0, critDmg: 0, xpMult: 0, goldMult: 0 };
+  const total = { atk: 0, hp: 0, def: 0, spd: 0, crit: 0, critDmg: 0, xpMult: 0, goldMult: 0, dodge: 0, lifesteal: 0, thorns: 0 };
   for (const id of ancestors) {
     const cls = CLASS_MAP.get(id);
     if (!cls?.bonuses) continue;
