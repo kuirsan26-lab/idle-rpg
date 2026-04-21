@@ -488,7 +488,15 @@ export class GameState extends EventBus {
   }
 
   _autoSave() {
-    setInterval(() => this.save(), 30_000);
-    window.addEventListener('beforeunload', () => this.save());
+    this._boundSave = () => this.save();
+    setInterval(this._boundSave, 30_000);
+    window.addEventListener('beforeunload', this._boundSave);
+  }
+
+  hardReset() {
+    window.removeEventListener('beforeunload', this._boundSave);
+    localStorage.removeItem('idle_rpg_save');
+    localStorage.removeItem('idle_rpg_seen_version');
+    window.location.reload();
   }
 }

@@ -249,10 +249,8 @@ export class SettingsMenu {
         this._updateResetBtn();
       }, 5000);
     } else if (this._resetPhase >= 3) {
-      // Выполняем сброс
       clearTimeout(this._resetTimer);
-      localStorage.removeItem('idle_rpg_save');
-      window.location.reload();
+      this.state.hardReset();
     }
   }
 
