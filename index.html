@@ -441,6 +441,31 @@
     /* Скрытый file input */
     #import-file-input { display: none; }
 
+    /* ═══════════════════════════ CHANGELOG TAB ════════════════════════════ */
+    .cl-version-block { margin-bottom: 20px; }
+    .cl-version-title {
+      font-size: 13px; font-weight: 700; color: #9988ff;
+      border-bottom: 1px solid #2a2a4a; padding-bottom: 6px; margin-bottom: 10px;
+      display: flex; justify-content: space-between;
+    }
+    .cl-version-date { font-size: 11px; color: #555; font-weight: 400; }
+    .cl-entry {
+      display: flex; gap: 8px; align-items: flex-start;
+      font-size: 12px; color: #bbb; margin-bottom: 6px; line-height: 1.4;
+    }
+    .cl-badge {
+      font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 3px;
+      flex-shrink: 0; margin-top: 1px; text-transform: uppercase;
+    }
+    .cl-badge.new     { background: #1a3a1a; color: #5d5; }
+    .cl-badge.changed { background: #2a2a10; color: #bb8; }
+    .cl-badge.fixed   { background: #1a1a3a; color: #88b; }
+    .cl-badge.balance { background: #2a1a2a; color: #c8c; }
+    .stab-new-dot {
+      display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+      background: #9988ff; margin-left: 5px; vertical-align: middle;
+    }
+
     /* ═══════════════════════════ PRESTIGE SHOP ═══════════════════════════ */
     /* ── Кнопка инвентаря ── */
     #inventory-btn {
@@ -762,6 +787,7 @@
       <div id="settings-tabs">
         <div class="stab active" data-tab="stats">📊 Статистика</div>
         <div class="stab" data-tab="manage">🗂️ Управление</div>
+        <div class="stab" data-tab="changelog" id="stab-changelog-btn">🆕 Что нового</div>
       </div>
 
       <div id="settings-body">
@@ -804,10 +830,15 @@
             <button class="settings-danger-btn" id="reset-progress-btn">🗑️ Сбросить прогресс</button>
           </div>
         </div>
+
+        <!-- Что нового -->
+        <div class="stab-content" id="stab-changelog">
+          <!-- заполняется SettingsMenu.js -->
+        </div>
       </div>
 
       <div id="settings-footer">
-        Сохранение: localStorage • Офлайн-прогресс: до 8 часов
+        Сохранение: localStorage • Офлайн-прогресс: до 8 часов • <span id="game-version-label"></span>
       </div>
     </div>
   </div>

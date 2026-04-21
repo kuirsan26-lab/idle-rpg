@@ -1,7 +1,8 @@
 /**
- * Меню настроек: статистика, сброс прогресса, экспорт/импорт сейва
+ * Меню настроек: статистика, сброс прогресса, экспорт/импорт сейва, что нового
  */
 import { CLASS_MAP } from '../data/classes.js';
+import { GAME_VERSION, CHANGELOG } from '../data/changelog.js';
 
 export class SettingsMenu {
   /** @param {import('../core/GameState.js').GameState} state */
@@ -13,10 +14,17 @@ export class SettingsMenu {
 
     this._initDOM();
     this._bindEvents();
+    this._renderChangelog();
 
     // Кнопка в HUD
     window.game = window.game || {};
     window.game.openSettings = () => this.open();
+
+    // Показать "Что нового" автоматически если версия обновилась
+    const seenVersion = localStorage.getItem('idle_rpg_seen_version');
+    if (seenVersion !== GAME_VERSION) {
+      setTimeout(() => this._openChangelog(), 800);
+    }
   }
 
   open() {
@@ -24,6 +32,16 @@ export class SettingsMenu {
     this._updateResetBtn();
     this._renderStats();
     document.getElementById('settings-overlay').classList.add('visible');
+  }
+
+  _openChangelog() {
+    document.getElementById('settings-overlay').classList.add('visible');
+    // Активируем вкладку changelog
+    document.querySelectorAll('.stab').forEach(t => t.classList.remove('active'));
+    document.getElementById('stab-changelog-btn')?.classList.add('active');
+    this._switchTab('changelog');
+    // Запомнить что видел эту версию
+    localStorage.setItem('idle_rpg_seen_version', GAME_VERSION);
   }
 
   close() {
@@ -86,6 +104,48 @@ export class SettingsMenu {
     document.querySelectorAll('.stab-content').forEach(c => c.classList.remove('active'));
     document.getElementById(`stab-${tab}`)?.classList.add('active');
     if (tab === 'stats') this._renderStats();
+    if (tab === 'changelog') {
+      // Убираем точку с вкладки когда открыли
+      const dot = document.querySelector('#stab-changelog-btn .stab-new-dot');
+      if (dot) dot.remove();
+      localStorage.setItem('idle_rpg_seen_version', GAME_VERSION);
+    }
+  }
+
+  // ── Changelog ─────────────────────────────────────────────────────────────────
+  _renderChangelog() {
+    const BADGE_LABEL = { new: 'Новое', changed: 'Изменено', fixed: 'Фикс', balance: 'Баланс' };
+
+    const el = document.getElementById('stab-changelog');
+    if (!el) return;
+
+    el.innerHTML = CHANGELOG.map(block => `
+      <div class="cl-version-block">
+        <div class="cl-version-title">
+          <span>v${block.version}</span>
+          <span class="cl-version-date">${block.date}</span>
+        </div>
+        ${block.entries.map(e => `
+          <div class="cl-entry">
+            <span class="cl-badge ${e.type}">${BADGE_LABEL[e.type] ?? e.type}</span>
+            <span>${e.text}</span>
+          </div>
+        `).join('')}
+      </div>
+    `).join('');
+
+    // Версия в футере
+    const versionLabel = document.getElementById('game-version-label');
+    if (versionLabel) versionLabel.textContent = `v${GAME_VERSION}`;
+
+    // Точка на вкладке если версия новая
+    const seenVersion = localStorage.getItem('idle_rpg_seen_version');
+    if (seenVersion !== GAME_VERSION) {
+      const tabBtn = document.getElementById('stab-changelog-btn');
+      if (tabBtn && !tabBtn.querySelector('.stab-new-dot')) {
+        tabBtn.insertAdjacentHTML('beforeend', '<span class="stab-new-dot"></span>');
+      }
+    }
   }
 
   // ── Статистика ────────────────────────────────────────────────────────────────
