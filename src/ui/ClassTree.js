@@ -227,6 +227,7 @@ export class ClassTreePanel {
       xpMult: '📚 Опыт',     goldMult: '💰 Золото',
       dodge: '🌀 Уворот',    lifesteal: '🩸 Вампиризм',
       thorns: '🌵 Шипы',     magicShield: '🔮 Маг. щит',
+      pierce: '🏹 Пробитие', deathblow: '💀 Смерт. удар',
     };
     const statsHtml = Object.entries(bonuses)
       .filter(([, v]) => v > 0)

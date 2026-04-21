@@ -547,34 +547,35 @@ export class GameScene extends Phaser.Scene {
     mobs.forEach((mob, i) => this._createMobVisual(mob, i, mobs.length));
   }
 
-  _onPlayerAttack({ mob, damage, isCrit }) {
+  _onPlayerAttack({ mob, damage, isCrit, isDeathblow }) {
     const v = this.mobVisuals.get(mob.id);
     if (!v) return;
 
     this._updateMobHpBar(v);
 
-    // Вспышка тела (работает и для спрайта и для Graphics)
     this.tweens.add({ targets: v.body, alpha: 0.25, duration: 55, yoyo: true });
 
-    // Отлёт моба
     const ox = v.container.x;
     this.tweens.add({
-      targets: v.container, x: ox + (isCrit ? 28 : 14),
+      targets: v.container, x: ox + (isDeathblow ? 40 : isCrit ? 28 : 14),
       duration: 75, yoyo: true, ease: 'Power2',
     });
 
-    // Рывок игрока
     this.tweens.add({
       targets: this.playerContainer, x: PLAYER_X + 18,
       duration: 70, yoyo: true,
     });
 
-    this._spawnDmgText(v.container.x, v.container.y - 55,
-      isCrit ? `💥 ${damage}!` : `${damage}`,
-      isCrit ? '#ff7755' : '#ffffff',
-      isCrit ? '17px' : '13px');
+    if (isDeathblow) {
+      this._spawnDmgText(v.container.x, v.container.y - 55, '☠️ СМЕРТЬ!', '#ff00ff', '18px');
+    } else {
+      this._spawnDmgText(v.container.x, v.container.y - 55,
+        isCrit ? `💥 ${damage}!` : `${damage}`,
+        isCrit ? '#ff7755' : '#ffffff',
+        isCrit ? '17px' : '13px');
+    }
 
-    this._drawAttackFX(v.container.x, v.container.y, isCrit);
+    this._drawAttackFX(v.container.x, v.container.y, isCrit || isDeathblow);
   }
 
   _onMobDeath({ mob, xpGained, goldGained }) {
