@@ -148,6 +148,7 @@ export class GameState extends EventBus {
     const upgBonuses = {};
     for (const [id, lvls] of Object.entries(upg)) {
       const b = UPGRADE_BONUS[id];
+      if (!b) continue;
       for (const [k, v] of Object.entries(b)) {
         upgBonuses[k] = (upgBonuses[k] || 0) + v * lvls;
       }
