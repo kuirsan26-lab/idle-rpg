@@ -39,9 +39,10 @@ export class StatsPanel {
     set('stat-goldmult', s.goldMult.toFixed(2));
     set('stat-prestmult', this.state.prestigeCount > 0 ? `#${this.state.prestigeCount} (${this.state.prestigePoints} ПО)` : '—');
 
-    this._setStatRow('stat-row-dodge',     'stat-dodge',     s.dodge     > 0, s.dodge.toFixed(1));
-    this._setStatRow('stat-row-lifesteal', 'stat-lifesteal', s.lifesteal > 0, s.lifesteal.toFixed(1));
-    this._setStatRow('stat-row-thorns',    'stat-thorns',    s.thorns    > 0, s.thorns.toFixed(1));
+    this._setStatRow('stat-row-dodge',       'stat-dodge',       s.dodge       > 0, s.dodge.toFixed(1));
+    this._setStatRow('stat-row-lifesteal',   'stat-lifesteal',   s.lifesteal   > 0, s.lifesteal.toFixed(1));
+    this._setStatRow('stat-row-thorns',      'stat-thorns',      s.thorns      > 0, s.thorns.toFixed(1));
+    this._setStatRow('stat-row-magicshield', 'stat-magicshield', s.magicShield > 0, s.magicShield.toFixed(1));
 
     // Множители
     const setMult = (id, val) => {

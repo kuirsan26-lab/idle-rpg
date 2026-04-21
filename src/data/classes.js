@@ -49,7 +49,7 @@ const MANUAL_CLASSES = [
   { id: 'warrior', name: 'Воин',    parent: 'novice', branch: 'warrior', desc: 'Мастер ближнего боя, непоколебимый и выносливый', bonuses: { atk: 0.20, hp: 0.15, def: 0.10 } },
   { id: 'rogue',   name: 'Плут',    parent: 'novice', branch: 'rogue',   desc: 'Быстрый и хитрый, специалист по критическим ударам', bonuses: { atk: 0.15, spd: 0.20, crit: 0.05, dodge: 0.05 } },
   { id: 'archer',  name: 'Лучник',  parent: 'novice', branch: 'archer',  desc: 'Меткий стрелок, атакующий издалека', bonuses: { atk: 0.18, spd: 0.15, crit: 0.07 } },
-  { id: 'mage',    name: 'Маг',     parent: 'novice', branch: 'mage',    desc: 'Повелитель магических сил, получает больше опыта', bonuses: { atk: 0.25, xpMult: 0.20, goldMult: 0.10 } },
+  { id: 'mage',    name: 'Маг',     parent: 'novice', branch: 'mage',    desc: 'Повелитель магических сил, получает больше опыта', bonuses: { atk: 0.25, xpMult: 0.20, goldMult: 0.10, magicShield: 0.05 } },
 
   // ── DEPTH 2 ──────────────────────────────────────────────────────
   // Воин
@@ -62,8 +62,8 @@ const MANUAL_CLASSES = [
   { id: 'ranger',    name: 'Рейнджер', parent: 'archer',  branch: 'archer',  desc: 'Страж природы, связанный с дикими землями', bonuses: { atk: 0.20, spd: 0.15, hp: 0.15, xpMult: 0.10 } },
   { id: 'sniper',    name: 'Снайпер',  parent: 'archer',  branch: 'archer',  desc: 'Мастер точных выстрелов с чудовищным критическим уроном', bonuses: { atk: 0.15, crit: 0.15, critDmg: 0.30 } },
   // Маг
-  { id: 'druid',     name: 'Друид',    parent: 'mage',    branch: 'mage',    desc: 'Хранитель природы, накапливающий опыт быстрее всех', bonuses: { xpMult: 0.30, hp: 0.20, atk: 0.15 } },
-  { id: 'alchemist', name: 'Алхимик',  parent: 'mage',    branch: 'mage',    desc: 'Мастер зелий, превращающий врагов в золото', bonuses: { atk: 0.20, goldMult: 0.30, crit: 0.10 } },
+  { id: 'druid',     name: 'Друид',    parent: 'mage',    branch: 'mage',    desc: 'Хранитель природы, накапливающий опыт быстрее всех', bonuses: { xpMult: 0.30, hp: 0.20, atk: 0.15, magicShield: 0.07 } },
+  { id: 'alchemist', name: 'Алхимик',  parent: 'mage',    branch: 'mage',    desc: 'Мастер зелий, превращающий врагов в золото', bonuses: { atk: 0.20, goldMult: 0.30, crit: 0.10, magicShield: 0.05 } },
 
   // ── DEPTH 3 ──────────────────────────────────────────────────────
   // Берсерк
@@ -85,11 +85,11 @@ const MANUAL_CLASSES = [
   { id: 'eagle_eye',   name: 'Орлиный Глаз',    parent: 'sniper',    branch: 'archer', desc: 'Никогда не промахивается', bonuses: { crit: 0.20, critDmg: 0.40, atk: 0.15 } },
   { id: 'dark_shot',   name: 'Тёмный Стрелок',  parent: 'sniper',    branch: 'archer', desc: 'Отравляет врагов своими стрелами', bonuses: { atk: 0.25, crit: 0.15, critDmg: 0.25 } },
   // Друид
-  { id: 'archdruid',   name: 'Архидруид',        parent: 'druid',     branch: 'mage',   desc: 'Высший адепт природной магии', bonuses: { xpMult: 0.35, hp: 0.25, atk: 0.15 } },
-  { id: 'shaman',      name: 'Шаман',             parent: 'druid',     branch: 'mage',   desc: 'Призывает силы духов предков', bonuses: { xpMult: 0.25, atk: 0.25, spd: 0.15 } },
+  { id: 'archdruid',   name: 'Архидруид',        parent: 'druid',     branch: 'mage',   desc: 'Высший адепт природной магии', bonuses: { xpMult: 0.35, hp: 0.25, atk: 0.15, magicShield: 0.10 } },
+  { id: 'shaman',      name: 'Шаман',             parent: 'druid',     branch: 'mage',   desc: 'Призывает силы духов предков', bonuses: { xpMult: 0.25, atk: 0.25, spd: 0.15, magicShield: 0.08 } },
   // Алхимик
-  { id: 'potion_master', name: 'Зельевар',  parent: 'alchemist', branch: 'mage', desc: 'Мастер зелий невероятной силы', bonuses: { atk: 0.25, goldMult: 0.25, hp: 0.20 } },
-  { id: 'bombardier',    name: 'Бомбардир', parent: 'alchemist', branch: 'mage', desc: 'Взрывчатые соединения сносят врагов', bonuses: { atk: 0.35, crit: 0.15, goldMult: 0.15 } },
+  { id: 'potion_master', name: 'Зельевар',  parent: 'alchemist', branch: 'mage', desc: 'Мастер зелий невероятной силы', bonuses: { atk: 0.25, goldMult: 0.25, hp: 0.20, magicShield: 0.08 } },
+  { id: 'bombardier',    name: 'Бомбардир', parent: 'alchemist', branch: 'mage', desc: 'Взрывчатые соединения сносят врагов', bonuses: { atk: 0.35, crit: 0.15, goldMult: 0.15, magicShield: 0.06 } },
 
   // ── DEPTH 4 ──────────────────────────────────────────────────────
   // Разрушитель
@@ -252,7 +252,7 @@ export function getAncestors(classId) {
 /** Суммарные бонусы со всей ветки предков */
 export function getCumulativeBonuses(classId) {
   const ancestors = getAncestors(classId);
-  const total = { atk: 0, hp: 0, def: 0, spd: 0, crit: 0, critDmg: 0, xpMult: 0, goldMult: 0, dodge: 0, lifesteal: 0, thorns: 0 };
+  const total = { atk: 0, hp: 0, def: 0, spd: 0, crit: 0, critDmg: 0, xpMult: 0, goldMult: 0, dodge: 0, lifesteal: 0, thorns: 0, magicShield: 0 };
   for (const id of ancestors) {
     const cls = CLASS_MAP.get(id);
     if (!cls?.bonuses) continue;

@@ -160,13 +160,18 @@ export class CombatSystem {
 
         if (mob === this.mobs[0]) {
           const stats = this.state.getStats();
-          const dmg   = Math.max(1, mob.data.atk - Math.round(stats.def * 0.7));
+          let dmg     = Math.max(1, mob.data.atk - Math.round(stats.def * 0.7));
 
           // Dodge: шанс полностью уклониться от удара
           const dodged = stats.dodge > 0 && Math.random() * 100 < stats.dodge;
           if (dodged) {
             this._emit('onPlayerHit', { damage: 0, dodged: true });
             continue;
+          }
+
+          // MagicShield: снижает входящий урон на %
+          if (stats.magicShield > 0) {
+            dmg = Math.max(1, Math.round(dmg * (1 - stats.magicShield / 100)));
           }
 
           const died = this.state.takeDamage(dmg);

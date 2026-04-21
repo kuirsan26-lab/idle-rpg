@@ -222,10 +222,11 @@ export class ClassTreePanel {
     // Бонусы
     const bonuses = cls.bonuses || {};
     const bKeys = {
-      atk: '⚔️ Урон', hp: '❤️ HP', def: '🛡️ Защита',
-      spd: '⚡ Скорость', crit: '🎯 Крит шанс',
-      critDmg: '💥 Крит урон', xpMult: '📚 Опыт',
-      goldMult: '💰 Золото',
+      atk: '⚔️ Урон',        hp: '❤️ HP',            def: '🛡️ Защита',
+      spd: '⚡ Скорость',     crit: '🎯 Крит шанс',   critDmg: '💥 Крит урон',
+      xpMult: '📚 Опыт',     goldMult: '💰 Золото',
+      dodge: '🌀 Уворот',    lifesteal: '🩸 Вампиризм',
+      thorns: '🌵 Шипы',     magicShield: '🔮 Маг. щит',
     };
     const statsHtml = Object.entries(bonuses)
       .filter(([, v]) => v > 0)
