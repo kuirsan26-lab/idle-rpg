@@ -29,6 +29,7 @@ export class HUD {
       state.on('player:prestige', (d) => {
         this._log(`⭐ ПЕРЕРОЖДЕНИЕ #${d.count}! Получено ${d.pp} ПО (всего: ${d.totalPp} ПО)`, 'player:prestige');
         this._update();
+        this._updateInvCount();
       }),
     ];
 

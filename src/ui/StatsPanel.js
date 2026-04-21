@@ -14,6 +14,7 @@ export class StatsPanel {
     this._unsubs = [
       state.on('player:statsChanged', () => this._updateStats()),
       state.on('player:goldChanged',  () => { this._updateStats(); this._updateButtonStates(); }),
+      state.on('player:prestige',     () => { this._updateStats(); for (const upg of UPGRADES_LIST) this._updateUpgradeItem(upg.id); }),
     ];
   }
 
