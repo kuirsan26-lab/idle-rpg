@@ -44,6 +44,8 @@ export class StatsPanel {
     this._setStatRow('stat-row-lifesteal',   'stat-lifesteal',   s.lifesteal   > 0, s.lifesteal.toFixed(1));
     this._setStatRow('stat-row-thorns',      'stat-thorns',      s.thorns      > 0, s.thorns.toFixed(1));
     this._setStatRow('stat-row-magicshield', 'stat-magicshield', s.magicShield > 0, s.magicShield.toFixed(1));
+    this._setStatRow('stat-row-pierce',      'stat-pierce',      s.pierce      > 0, s.pierce.toFixed(1));
+    this._setStatRow('stat-row-deathblow',   'stat-deathblow',   s.deathblow   > 0, s.deathblow.toFixed(1));
 
     // Множители
     const setMult = (id, val) => {

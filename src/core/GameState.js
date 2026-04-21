@@ -174,6 +174,8 @@ export class GameState extends EventBus {
       lifesteal:   (cb.lifesteal   || 0) * 100 + (eq.lifesteal   || 0) * 100,
       thorns:      (cb.thorns      || 0) * 100 + (eq.thorns      || 0) * 100,
       magicShield: Math.min(75, (cb.magicShield || 0) * 100 + (eq.magicShield || 0) * 100),
+      pierce:      Math.min(75, (cb.pierce      || 0) * 100),
+      deathblow:   Math.min(20, (cb.deathblow   || 0) * 100),
       hpMult, atkMult, defMult, spdMult,
     };
   }
@@ -486,7 +488,15 @@ export class GameState extends EventBus {
   }
 
   _autoSave() {
-    setInterval(() => this.save(), 30_000);
-    window.addEventListener('beforeunload', () => this.save());
+    this._boundSave = () => this.save();
+    setInterval(this._boundSave, 30_000);
+    window.addEventListener('beforeunload', this._boundSave);
+  }
+
+  hardReset() {
+    window.removeEventListener('beforeunload', this._boundSave);
+    localStorage.removeItem('idle_rpg_save');
+    localStorage.removeItem('idle_rpg_seen_version');
+    window.location.reload();
   }
 }

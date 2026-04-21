@@ -130,8 +130,23 @@ export class CombatSystem {
       this.attackCooldown = attackInterval;
 
       const target = this.mobs[0];
+
+      // Deathblow: мгновенное убийство (не работает на боссах)
+      if (stats.deathblow > 0 && !target.data.isBoss && Math.random() * 100 < stats.deathblow) {
+        const killingDmg = target.hp;
+        target.hp = 0;
+        this._emit('onPlayerAttack', { mob: target, damage: killingDmg, isCrit: false, isDeathblow: true });
+        this._killMob(target);
+        return;
+      }
+
+      // Pierce: снижает эффективную защиту моба
+      const effectiveDef = stats.pierce > 0
+        ? Math.round(target.data.def * (1 - stats.pierce / 100))
+        : target.data.def;
+
       const isCrit = Math.random() * 100 < stats.crit;
-      let dmg = Math.max(1, stats.atk - Math.round(target.data.def * 0.5));
+      let dmg = Math.max(1, stats.atk - Math.round(effectiveDef * 0.5));
       if (isCrit) dmg = Math.round(dmg * (stats.critDmg / 100));
 
       target.hp -= dmg;
