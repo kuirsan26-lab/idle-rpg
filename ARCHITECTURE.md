@@ -1,7 +1,7 @@
 # Idle RPG — Living Architecture
 
 > Живой документ. Обновлять при каждом значимом изменении структуры или планов.
-> Последнее обновление: 2026-04-24 (v1.5.0: кросс-ветковые способности — 11 классов)
+> Последнее обновление: 2026-04-24 (v1.5.1: perf — кеш getStats, частичный DOM, xpChanged)
 
 ---
 
@@ -108,17 +108,20 @@ GameState (EventBus)
 
 **Неймспейс `player:`** — состояние игрока
 
-| Событие | Когда |
-|---------|-------|
-| `player:statsChanged` | изменились характеристики |
-| `player:goldChanged` | изменилось золото |
-| `player:levelUp` | новый уровень |
-| `player:classChanged` | выбран класс |
-| `player:death` | смерть игрока |
-| `player:prestige` | перерождение |
-| `player:hpChanged` | изменилось HP |
-| `player:respawn` | респавн после смерти |
-| `player:prestigeShopChanged` | куплен апгрейд в магазине престижа |
+| Событие | Когда | Подписчики |
+|---------|-------|-----------|
+| `player:statsChanged` | **реальное** изменение статов: level-up, смена класса, апгрейд, престиж | StatsPanel, BattleStrip, GameScene (кеш maxHp), HUD |
+| `player:xpChanged` | XP прибавился без level-up (каждое убийство) | HUD (только XP-бар) |
+| `player:goldChanged` | изменилось золото | HUD, StatsPanel (кнопки апгрейдов) |
+| `player:levelUp` | новый уровень | HUD (лог + полный update), BattleStrip (уровень) |
+| `player:classChanged` | выбран класс | HUD, BattleStrip, GameScene (спрайт) |
+| `player:death` | смерть игрока | HUD (лог) |
+| `player:prestige` | перерождение | HUD, StatsPanel, BattleStrip |
+| `player:hpChanged` | изменилось текущее HP | HUD (XP-бар), BattleStrip (HP-бар), GameScene (HP-бар) |
+| `player:respawn` | респавн после смерти | HUD (лог), BattleStrip |
+| `player:prestigeShopChanged` | куплен апгрейд в магазине престижа | — |
+
+> **Правило:** `player:statsChanged` — дорогое событие (вызывает пересчёт всего UI). Не эмитить из горячего пути (убийство, удар). Только при реальном изменении статов.
 
 **Неймспейс `combat:`** — волны и бой
 
@@ -160,6 +163,7 @@ GameState (EventBus)
 ### Боевая система
 
 - Тик каждые **200ms** (фиксированный шаг); цикл на `requestAnimationFrame` + accumulated delta + panic cap 10 сек
+- **`getStats()` кешируется один раз в начале `_tick()`** — результат передаётся по всему тику. Прямых повторных вызовов внутри тика нет.
 - Смерть → таймер `RESPAWN_MS` → `_spawnWave()` с той же волной
 - Волна засчитана: все мобы мертвы + игрок жив
 - **Откат волны:** `deathsOnWave >= 3` → при следующем респавне `currentWave--`
@@ -206,6 +210,18 @@ onPlayerHit:    thorns    → mob.hp -= dmg * thorns/100 после takeDamage()
 ```
 
 `StatsPanel` скрывает строки dodge/lifesteal/thorns пока значение = 0 (`display:none`).
+
+### Паттерны производительности (hot path)
+
+**Правило:** горячий путь — `_tick()` каждые 200ms + `player:hpChanged` на каждый удар. Дорогие операции туда не идут.
+
+| Паттерн | Где применён |
+|---------|-------------|
+| `getStats()` кешируется **1 раз за `_tick()`** | `Combat.js` — результат передаётся всему тику |
+| `maxHp` кешируется, обновляется по `statsChanged` | `BattleStrip`, `GameScene` — не пересчитывается при каждом ударе |
+| `player:xpChanged` вместо `statsChanged` без level-up | `GameState.addXp()` — не тригерит полный перерасчёт UI |
+| Частичное DOM-обновление HP врагов | `BattleStrip.onPlayerAttack()` — только `fill.style.width`, без `innerHTML` |
+| Полный `innerHTML` врагов — только при смерти/новой волне | `BattleStrip.onMobDeath()`, `onWaveSpawn()` |
 
 ### Баланс мобов
 
