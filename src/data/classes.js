@@ -56,7 +56,7 @@ const MANUAL_CLASSES = [
   { id: 'berserker', name: 'Берсерк',  parent: 'warrior', branch: 'warrior', desc: 'Яростный боец, жертвующий защитой ради сокрушительных ударов', bonuses: { atk: 0.30, spd: 0.15, hp: 0.10 } },
   { id: 'paladin',   name: 'Паладин',  parent: 'warrior', branch: 'warrior', desc: 'Священный воин, сочетающий силу и защиту', bonuses: { hp: 0.25, def: 0.25, atk: 0.10, thorns: 0.06 } },
   // Плут
-  { id: 'assassin',  name: 'Убийца',   parent: 'rogue',   branch: 'rogue',   desc: 'Специалист по молниеносным смертельным атакам', bonuses: { atk: 0.25, crit: 0.10, spd: 0.15 } },
+  { id: 'assassin',  name: 'Убийца',   parent: 'rogue',   branch: 'rogue',   desc: 'Специалист по молниеносным смертельным атакам. Знает куда бить — насмерть', bonuses: { atk: 0.25, crit: 0.10, spd: 0.15, deathblow: 0.01 } },
   { id: 'thief',     name: 'Вор',      parent: 'rogue',   branch: 'rogue',   desc: 'Мастер по добыче золота и ценностей', bonuses: { spd: 0.20, goldMult: 0.30, crit: 0.05 } },
   // Лучник
   { id: 'ranger',    name: 'Рейнджер', parent: 'archer',  branch: 'archer',  desc: 'Страж природы, связанный с дикими землями', bonuses: { atk: 0.20, spd: 0.15, hp: 0.15, xpMult: 0.10, pierce: 0.03 } },
@@ -71,9 +71,9 @@ const MANUAL_CLASSES = [
   { id: 'bloodthirst', name: 'Кровожад',    parent: 'berserker', branch: 'warrior', desc: 'Восстанавливает жизнь с каждым убийством', bonuses: { atk: 0.30, hp: 0.20, crit: 0.10, lifesteal: 0.08 } },
   // Паладин
   { id: 'crusader',    name: 'Крестоносец', parent: 'paladin',   branch: 'warrior', desc: 'Непоколебимый воин святого дела', bonuses: { def: 0.30, hp: 0.25, atk: 0.15, thorns: 0.10 } },
-  { id: 'inquisitor',  name: 'Инквизитор',  parent: 'paladin',   branch: 'warrior', desc: 'Неумолимый охотник на нечисть', bonuses: { atk: 0.30, crit: 0.10, def: 0.20 } },
+  { id: 'inquisitor',  name: 'Инквизитор',  parent: 'paladin',   branch: 'warrior', desc: 'Неумолимый охотник на нечисть. Святая воля защищает от проклятий', bonuses: { atk: 0.30, crit: 0.10, def: 0.20, magicShield: 0.05 } },
   // Убийца
-  { id: 'ninja',       name: 'Ниндзя',      parent: 'assassin',  branch: 'rogue',   desc: 'Невидимый мастер теней', bonuses: { spd: 0.25, crit: 0.15, atk: 0.20, dodge: 0.08 } },
+  { id: 'ninja',       name: 'Ниндзя',      parent: 'assassin',  branch: 'rogue',   desc: 'Невидимый мастер теней. Удар в уязвимую точку — сквозь любую броню', bonuses: { spd: 0.25, crit: 0.15, atk: 0.20, dodge: 0.08, pierce: 0.04 } },
   { id: 'mercenary',   name: 'Наёмник',     parent: 'assassin',  branch: 'rogue',   desc: 'Профессиональный боец, работающий за золото', bonuses: { atk: 0.25, goldMult: 0.20, spd: 0.15 } },
   // Вор
   { id: 'pickpocket',  name: 'Карманник',   parent: 'thief',     branch: 'rogue',   desc: 'Виртуоз быстрого обогащения', bonuses: { goldMult: 0.40, spd: 0.20, crit: 0.10 } },
@@ -86,7 +86,7 @@ const MANUAL_CLASSES = [
   { id: 'dark_shot',   name: 'Тёмный Стрелок',  parent: 'sniper',    branch: 'archer', desc: 'Отравляет врагов своими стрелами', bonuses: { atk: 0.25, crit: 0.15, critDmg: 0.25, pierce: 0.08, deathblow: 0.02 } },
   // Друид
   { id: 'archdruid',   name: 'Архидруид',        parent: 'druid',     branch: 'mage',   desc: 'Высший адепт природной магии', bonuses: { xpMult: 0.35, hp: 0.25, atk: 0.15, magicShield: 0.10 } },
-  { id: 'shaman',      name: 'Шаман',             parent: 'druid',     branch: 'mage',   desc: 'Призывает силы духов предков', bonuses: { xpMult: 0.25, atk: 0.25, spd: 0.15, magicShield: 0.08 } },
+  { id: 'shaman',      name: 'Шаман',             parent: 'druid',     branch: 'mage',   desc: 'Призывает силы духов предков. Духи-хранители уводят удары', bonuses: { xpMult: 0.25, atk: 0.25, spd: 0.15, magicShield: 0.08, dodge: 0.04 } },
   // Алхимик
   { id: 'potion_master', name: 'Зельевар',  parent: 'alchemist', branch: 'mage', desc: 'Мастер зелий невероятной силы', bonuses: { atk: 0.25, goldMult: 0.25, hp: 0.20, magicShield: 0.08 } },
   { id: 'bombardier',    name: 'Бомбардир', parent: 'alchemist', branch: 'mage', desc: 'Взрывчатые соединения сносят врагов', bonuses: { atk: 0.35, crit: 0.15, goldMult: 0.15, magicShield: 0.06 } },
@@ -102,20 +102,20 @@ const MANUAL_CLASSES = [
   { id: 'faith_guard', name: 'Страж Веры',    parent: 'crusader',    branch: 'warrior', desc: 'Несокрушимый защитник', bonuses: { def: 0.40, hp: 0.30, atk: 0.10, thorns: 0.15 } },
   { id: 'light_knight',name: 'Рыцарь Света',  parent: 'crusader',    branch: 'warrior', desc: 'Воин, освящённый светом', bonuses: { hp: 0.25, atk: 0.25, def: 0.25 } },
   // Инквизитор
-  { id: 'dark_judge',    name: 'Тёмный Судья',       parent: 'inquisitor', branch: 'warrior', desc: 'Выносит смертные приговоры', bonuses: { atk: 0.35, crit: 0.15, def: 0.15 } },
-  { id: 'witch_hunter',  name: 'Охотник на Ведьм',   parent: 'inquisitor', branch: 'warrior', desc: 'Специализируется на магических противниках', bonuses: { atk: 0.30, xpMult: 0.15, crit: 0.15 } },
+  { id: 'dark_judge',    name: 'Тёмный Судья',       parent: 'inquisitor', branch: 'warrior', desc: 'Выносит смертные приговоры. Смертный удар — его привилегия', bonuses: { atk: 0.35, crit: 0.15, def: 0.15, deathblow: 0.03 } },
+  { id: 'witch_hunter',  name: 'Охотник на Ведьм',   parent: 'inquisitor', branch: 'warrior', desc: 'Изучил магию, чтобы её уничтожать. Устойчив к заклинаниям', bonuses: { atk: 0.30, xpMult: 0.15, crit: 0.15, magicShield: 0.08 } },
   // Ниндзя
-  { id: 'shadow',      name: 'Тень',     parent: 'ninja',      branch: 'rogue', desc: 'Никто не видит его движений', bonuses: { spd: 0.30, crit: 0.20, atk: 0.15, dodge: 0.10 } },
-  { id: 'ghost',       name: 'Призрак',  parent: 'ninja',      branch: 'rogue', desc: 'Движется сквозь стены', bonuses: { spd: 0.35, atk: 0.20, crit: 0.15, dodge: 0.12 } },
+  { id: 'shadow',      name: 'Тень',     parent: 'ninja',      branch: 'rogue', desc: 'Никто не видит его движений. Питается жизнью поверженных', bonuses: { spd: 0.30, crit: 0.20, atk: 0.15, dodge: 0.10, lifesteal: 0.04 } },
+  { id: 'ghost',       name: 'Призрак',  parent: 'ninja',      branch: 'rogue', desc: 'Движется сквозь стены. Нематериальная природа отражает магию', bonuses: { spd: 0.35, atk: 0.20, crit: 0.15, dodge: 0.12, magicShield: 0.05 } },
   // Наёмник
-  { id: 'gladiator',      name: 'Гладиатор',          parent: 'mercenary', branch: 'rogue', desc: 'Ветеран кровавой арены', bonuses: { atk: 0.30, hp: 0.20, def: 0.15, goldMult: 0.15 } },
-  { id: 'bounty_hunter',  name: 'Охотник за Головами', parent: 'mercenary', branch: 'rogue', desc: 'Получает бонус за каждое убийство', bonuses: { atk: 0.25, goldMult: 0.35, crit: 0.10 } },
+  { id: 'gladiator',      name: 'Гладиатор',          parent: 'mercenary', branch: 'rogue', desc: 'Ветеран кровавой арены. Шипастый щит наказывает атакующих', bonuses: { atk: 0.30, hp: 0.20, def: 0.15, goldMult: 0.15, thorns: 0.07 } },
+  { id: 'bounty_hunter',  name: 'Охотник за Головами', parent: 'mercenary', branch: 'rogue', desc: 'Получает бонус за каждое убийство. Знает единственный верный удар', bonuses: { atk: 0.25, goldMult: 0.35, crit: 0.10, deathblow: 0.02 } },
   // Карманник
   { id: 'swindler',    name: 'Мошенник',    parent: 'pickpocket', branch: 'rogue', desc: 'Обманывает всех на пути', bonuses: { goldMult: 0.45, spd: 0.20, crit: 0.10 } },
   { id: 'adventurer',  name: 'Авантюрист',  parent: 'pickpocket', branch: 'rogue', desc: 'Всегда в поисках приключений', bonuses: { xpMult: 0.20, goldMult: 0.25, atk: 0.15, spd: 0.15 } },
   // Разбойник
   { id: 'outlaw',  name: 'Изгой', parent: 'bandit', branch: 'rogue', desc: 'Вне закона и вне пощады', bonuses: { atk: 0.35, spd: 0.20, crit: 0.10 } },
-  { id: 'pirate',  name: 'Пират', parent: 'bandit', branch: 'rogue', desc: 'Грабитель морей и суши', bonuses: { atk: 0.25, goldMult: 0.25, spd: 0.15, hp: 0.10 } },
+  { id: 'pirate',  name: 'Пират', parent: 'bandit', branch: 'rogue', desc: 'Грабитель морей и суши. Кровожадный — восстанавливает силы в бою', bonuses: { atk: 0.25, goldMult: 0.25, spd: 0.15, hp: 0.10, lifesteal: 0.04 } },
   // Страж Леса
   { id: 'green_guardian', name: 'Зелёный Страж',    parent: 'forest_guard', branch: 'archer', desc: 'Защита леса — его призвание', bonuses: { hp: 0.30, def: 0.25, atk: 0.15, pierce: 0.05 } },
   { id: 'beast_tamer',    name: 'Укротитель Зверей', parent: 'forest_guard', branch: 'archer', desc: 'Повелевает дикими зверями', bonuses: { atk: 0.25, hp: 0.20, xpMult: 0.20, pierce: 0.05 } },
