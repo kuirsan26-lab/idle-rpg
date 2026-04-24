@@ -3,10 +3,19 @@
  * При каждом релизе: обновить GAME_VERSION и добавить запись в CHANGELOG.
  */
 
-export const GAME_VERSION = '1.5.0';
+export const GAME_VERSION = '1.5.1';
 
 // type: 'new' | 'changed' | 'fixed' | 'balance'
 export const CHANGELOG = [
+  {
+    version: '1.5.1',
+    date: '2026-04-24',
+    entries: [
+      { type: 'fixed', text: '⚡ Оптимизация боевого цикла: getStats() вычисляется 1 раз за тик вместо ~12 — меньше подтормаживаний на поздних волнах.' },
+      { type: 'fixed', text: '⚡ XP-бар обновляется лёгким событием без полного пересчёта UI на каждом убийстве.' },
+      { type: 'fixed', text: '⚡ HP врагов в BattleStrip обновляется точечно, без пересборки всего списка на каждом ударе.' },
+    ],
+  },
   {
     version: '1.5.0',
     date: '2026-04-24',
