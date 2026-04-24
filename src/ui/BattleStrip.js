@@ -13,13 +13,16 @@ export class BattleStrip {
     this._currentMobs = []; // { name, maxHp, hp, isBoss }
     this._killCount   = 0;
     this._totalMobs   = 0;
+    // Кешируем maxHp — обновляем только при реальном изменении статов
+    this._cachedMaxHp = state.getStats().maxHp;
 
     this._render();
 
     this._unsubs = [
       state.on('player:hpChanged',    () => this._updatePlayerHP()),
       state.on('player:classChanged', () => this._updatePlayer()),
-      state.on('player:statsChanged', () => this._updatePlayer()),
+      state.on('player:levelUp',      () => this._updatePlayer()),
+      state.on('player:statsChanged', () => { this._cachedMaxHp = state.getStats().maxHp; this._updatePlayer(); }),
       state.on('combat:waveStarted',  () => this._updateWave()),
       state.on('player:respawn',      () => this._updatePlayerHP()),
     ];
@@ -54,10 +57,11 @@ export class BattleStrip {
   }
 
   onPlayerAttack({ mob }) {
-    // Обновляем HP моба в нашем списке
     const entry = this._currentMobs.find(m => m.id === mob.id);
-    if (entry) entry.hp = mob.hp;
-    this._renderEnemies();
+    if (!entry) return;
+    entry.hp = mob.hp;
+    // Частичное обновление: меняем только ширину HP-бара нужной группы
+    this._updateGroupHpFill(entry.name);
   }
 
   onPlayerHit() {
@@ -159,11 +163,10 @@ export class BattleStrip {
   }
 
   _updatePlayerHP() {
-    const stats  = this.state.getStats();
-    const cur    = this.state.currentHp;
-    const max    = stats.maxHp;
-    const pct    = Math.max(0, Math.min(100, (cur / max) * 100));
-    const color  = pct > 50 ? '#44dd44' : pct > 25 ? '#ffaa00' : '#dd3333';
+    const cur   = this.state.currentHp;
+    const max   = this._cachedMaxHp;
+    const pct   = Math.max(0, Math.min(100, (cur / max) * 100));
+    const color = pct > 50 ? '#44dd44' : pct > 25 ? '#ffaa00' : '#dd3333';
 
     const fill = document.getElementById('bs-player-hp-fill');
     const text = document.getElementById('bs-player-hp-text');
@@ -187,6 +190,12 @@ export class BattleStrip {
     if (el) el.textContent = `${this._killCount}/${this._totalMobs}`;
   }
 
+  /** Преобразует имя моба в стабильный CSS-id */
+  _slug(name) {
+    return 'bs-fill-' + name.replace(/[^a-zA-Zа-яёА-ЯЁ0-9]/g, '_');
+  }
+
+  /** Полная перестройка списка врагов (только при смерти моба или новой волне) */
   _renderEnemies() {
     const list = document.getElementById('bs-enemies-list');
     if (!list) return;
@@ -197,7 +206,6 @@ export class BattleStrip {
       return;
     }
 
-    // Группируем одинаковых мобов
     const groups = new Map();
     for (const m of alive) {
       if (!groups.has(m.name)) groups.set(m.name, { count: 0, hp: 0, maxHp: 0, isBoss: m.isBoss });
@@ -208,17 +216,28 @@ export class BattleStrip {
     }
 
     list.innerHTML = [...groups.entries()].map(([name, g]) => {
-      const pct   = Math.max(0, (g.hp / g.maxHp) * 100);
-      const color = g.isBoss ? '#ff6644' : '#dd4444';
+      const pct      = Math.max(0, (g.hp / g.maxHp) * 100);
+      const color    = g.isBoss ? '#ff6644' : '#dd4444';
       const cntLabel = g.count > 1 ? ` ×${g.count}` : '';
+      const fillId   = this._slug(name);
       return `
         <div class="bs-enemy-chip ${g.isBoss ? 'bs-boss-chip' : ''}">
           <span class="bs-enemy-name">${g.isBoss ? '👑 ' : ''}${name}${cntLabel}</span>
           <div class="bs-enemy-hp-bar">
-            <div class="bs-enemy-hp-fill" style="width:${pct}%;background:${color}"></div>
+            <div class="bs-enemy-hp-fill" id="${fillId}" style="width:${pct}%;background:${color}"></div>
           </div>
         </div>`;
     }).join('');
+  }
+
+  /** Обновляет только HP-fill одной группы мобов без пересборки всего списка */
+  _updateGroupHpFill(name) {
+    const group = this._currentMobs.filter(m => m.name === name);
+    const hp    = group.reduce((s, m) => s + Math.max(0, m.hp), 0);
+    const maxHp = group.reduce((s, m) => s + m.maxHp, 0);
+    const pct   = maxHp > 0 ? Math.max(0, (hp / maxHp) * 100) : 0;
+    const fill  = document.getElementById(this._slug(name));
+    if (fill) fill.style.width = pct + '%';
   }
 
   _flashPlayer() {

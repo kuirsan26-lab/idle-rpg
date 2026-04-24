@@ -186,13 +186,22 @@ export class GameState extends EventBus {
     const gained = Math.round(amount * stats.xpMult);
     this.xp += gained;
 
+    let didLevelUp = false;
     while (this.xp >= xpForLevel(this.level) && this.level < 100) {
       this.xp -= xpForLevel(this.level);
       this.level++;
       this.currentHp = this.getStats().maxHp;
       this.emit('player:levelUp', { level: this.level });
+      didLevelUp = true;
     }
-    this.emit('player:statsChanged');
+
+    if (didLevelUp) {
+      // Полный пересчёт статов нужен только при смене уровня
+      this.emit('player:statsChanged');
+    } else {
+      // Только XP-бар — лёгкое обновление без пересчёта статов
+      this.emit('player:xpChanged', { xp: this.xp, xpNeeded: xpForLevel(this.level) });
+    }
     return gained;
   }
 

@@ -111,13 +111,16 @@ export class CombatSystem {
 
     this.attackCooldown -= dt;
 
+    // Кешируем stats один раз на тик — getStats() дорогой (обход дерева классов)
+    const stats = this.state.getStats();
+
     // Волна считается пройденной только если игрок ЖИВОЙ и мобы закончились
     if (this.mobs.length === 0 && this.waveState === 'fighting') {
       this.deathsOnWave = 0;
       this.waveState = 'paused';
       this.state.currentWave++;
       // Полное лечение между волнами
-      this.state.currentHp = this.state.getStats().maxHp;
+      this.state.currentHp = stats.maxHp;
       this.state.emit('player:hpChanged', { hp: this.state.currentHp });
       this.state.emit('combat:waveCleared', { wave: this.state.currentWave - 1 });
       return;
@@ -125,7 +128,6 @@ export class CombatSystem {
 
     // Атака игрока
     if (this.attackCooldown <= 0 && this.mobs.length > 0) {
-      const stats = this.state.getStats();
       const attackInterval = Math.round(1000 / Math.max(0.1, stats.spd));
       this.attackCooldown = attackInterval;
 
@@ -156,7 +158,7 @@ export class CombatSystem {
       if (stats.lifesteal > 0) {
         const heal = Math.round(dmg * stats.lifesteal / 100);
         if (heal > 0) {
-          this.state.currentHp = Math.min(this.state.getStats().maxHp, this.state.currentHp + heal);
+          this.state.currentHp = Math.min(stats.maxHp, this.state.currentHp + heal);
           this.state.emit('player:hpChanged', { hp: this.state.currentHp });
         }
       }
@@ -174,8 +176,7 @@ export class CombatSystem {
         mob.attackCooldown = mobInterval;
 
         if (mob === this.mobs[0]) {
-          const stats = this.state.getStats();
-          let dmg     = Math.max(1, mob.data.atk - Math.round(stats.def * 0.7));
+          let dmg = Math.max(1, mob.data.atk - Math.round(stats.def * 0.7));
 
           // Dodge: шанс полностью уклониться от удара
           const dodged = stats.dodge > 0 && Math.random() * 100 < stats.dodge;

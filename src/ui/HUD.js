@@ -15,7 +15,7 @@ export class HUD {
       state.on('player:inventoryChanged', () => this._updateInvCount()),
       state.on('player:statsChanged',     () => this._update()),
       state.on('player:goldChanged',      () => this._updateGold()),
-      state.on('player:hpChanged',        () => this._updateXp()),
+      state.on('player:xpChanged',        () => this._updateXp()),
       state.on('player:levelUp',          (d) => { this._update(); this._updatePrestigeBtn(); this._log(`🎉 Уровень ${d.level}!`, 'level'); }),
       state.on('player:classChanged',     () => this._update()),
       state.on('combat:killCountChanged', () => this._updateKills()),

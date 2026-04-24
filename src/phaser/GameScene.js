@@ -41,6 +41,8 @@ export class GameScene extends Phaser.Scene {
 
   create() {
     this.mobVisuals = new Map();
+    // Кешируем maxHp — обновляем только при реальном изменении статов
+    this._cachedMaxHp = this.gameState.getStats().maxHp;
 
     this._createBackground();
     this._createArena();
@@ -58,8 +60,9 @@ export class GameScene extends Phaser.Scene {
     });
 
     this.gameState.on('player:classChanged', () => this._updatePlayerVisual());
-    this.gameState.on('player:hpChanged',   () => this._updatePlayerHpBar());
-    this.gameState.on('combat:waveStarted', (d) => { this._showWaveBanner(d); this._updateBackground(d.wave); });
+    this.gameState.on('player:statsChanged', () => { this._cachedMaxHp = this.gameState.getStats().maxHp; });
+    this.gameState.on('player:hpChanged',    () => this._updatePlayerHpBar());
+    this.gameState.on('combat:waveStarted',  (d) => { this._showWaveBanner(d); this._updateBackground(d.wave); });
   }
 
   // ─────────────────────────────────────────────────────── ФОНЫ И АРЕНА ───────
@@ -354,11 +357,9 @@ export class GameScene extends Phaser.Scene {
   }
 
   _updatePlayerHpBar() {
-    if (!this.gameState) return;
-    const stats = this.gameState.getStats();
-    const pct   = Math.max(0, this.gameState.currentHp / stats.maxHp);
+    if (!this.gameState || !this.playerHpFill) return;
+    const pct   = Math.max(0, this.gameState.currentHp / this._cachedMaxHp);
     const color = pct > 0.5 ? 0x44dd44 : pct > 0.25 ? 0xffaa00 : 0xdd2222;
-    if (!this.playerHpFill) return;
     this.playerHpFill.setFillStyle(color);
     this.playerHpFill.setSize(52 * pct, 7);
     this.playerHpFill.x = -26;
