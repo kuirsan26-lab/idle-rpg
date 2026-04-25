@@ -100,6 +100,7 @@ export class GameState extends EventBus {
 
     // ── Бой ─────────────────────────────────────────────────────────
     this.currentWave    = 1;
+    this.maxWaveReached = 0;   // максимальная волна за все время (не сбрасывается при престиже)
     this.currentHp      = 0;   // заполняется после инициализации
     this.isAlive        = true;
     this.respawnTimer   = 0;
@@ -444,6 +445,7 @@ export class GameState extends EventBus {
       unlockedClasses: [...this.unlockedClasses],
       upgrades: { ...this.upgrades },
       currentWave: this.currentWave,
+      maxWaveReached: this.maxWaveReached,
       inventory:  this.inventory,
       equipment:  this.equipment,
       timestamp: Date.now(),
@@ -475,6 +477,8 @@ export class GameState extends EventBus {
       this.unlockedClasses = new Set(data.unlockedClasses ?? ['novice']);
       this.upgrades        = { atk: 0, def: 0, hp: 0, spd: 0, crit: 0, critDmg: 0, ...data.upgrades };
       this.currentWave     = data.currentWave ?? 1;
+      // Старые сейвы: инициализируем из currentWave, чтобы не повторять уже пройденные рубежи
+      this.maxWaveReached  = data.maxWaveReached ?? (data.currentWave ?? 0);
       this.inventory       = data.inventory ?? [];
       this.equipment       = { weapon: null, armor: null, accessory: null, ...(data.equipment ?? {}) };
 

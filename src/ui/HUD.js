@@ -31,7 +31,18 @@ export class HUD {
         this._update();
         this._updateInvCount();
       }),
+      state.on('combat:milestone', (d) => {
+        this._showMilestone(d);
+        if (d.isNewRecord) {
+          const bonusTxt = d.bonusGold > 0 ? ` +${this._fmt(d.bonusGold)}🪙` : '';
+          this._log(`🏆 НОВЫЙ РЕКОРД! Волна ${d.wave} пройдена!${bonusTxt}`, 'level');
+        } else {
+          this._log(`⭐ Рубеж: волна ${d.wave} пройдена!`, 'wave');
+        }
+      }),
     ];
+
+    this._milestoneTimeout = null;
 
     // Prestige modal
     document.getElementById('prestige-confirm-btn').addEventListener('click', () => {
@@ -49,6 +60,7 @@ export class HUD {
 
   destroy() {
     this._unsubs.forEach(u => u());
+    clearTimeout(this._milestoneTimeout);
   }
 
   _updateInvCount() {
@@ -140,6 +152,28 @@ export class HUD {
     if (btn)     btn.disabled         = !canDo;
     if (preview) preview.textContent  = pp;
     if (hudPp)   hudPp.textContent    = this.state.prestigePoints;
+  }
+
+  // ── Milestone overlay ─────────────────────────────────────────────────────────
+  _showMilestone({ wave, isNewRecord, bonusGold }) {
+    const overlay = document.getElementById('milestone-overlay');
+    if (!overlay) return;
+
+    overlay.querySelector('#milestone-wave-label').textContent = `ВОЛНА ${wave}`;
+
+    const recordEl = overlay.querySelector('#milestone-record');
+    const bonusEl  = overlay.querySelector('#milestone-bonus');
+
+    recordEl.style.display = isNewRecord ? '' : 'none';
+    bonusEl.style.display  = isNewRecord && bonusGold > 0 ? '' : 'none';
+    if (bonusGold > 0) bonusEl.textContent = `+${this._fmt(bonusGold)} 🪙`;
+
+    overlay.classList.remove('visible');
+    void overlay.offsetWidth; // force reflow для перезапуска анимации
+    overlay.classList.add('visible');
+
+    clearTimeout(this._milestoneTimeout);
+    this._milestoneTimeout = setTimeout(() => overlay.classList.remove('visible'), 3200);
   }
 
   // ── Журнал боя ────────────────────────────────────────────────────────────────

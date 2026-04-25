@@ -118,11 +118,23 @@ export class CombatSystem {
     if (this.mobs.length === 0 && this.waveState === 'fighting') {
       this.deathsOnWave = 0;
       this.waveState = 'paused';
+      const clearedWave = this.state.currentWave;
       this.state.currentWave++;
       // Полное лечение между волнами
       this.state.currentHp = stats.maxHp;
       this.state.emit('player:hpChanged', { hp: this.state.currentHp });
-      this.state.emit('combat:waveCleared', { wave: this.state.currentWave - 1 });
+      this.state.emit('combat:waveCleared', { wave: clearedWave });
+
+      // Milestone: каждая волна кратная 10
+      if (clearedWave % 10 === 0) {
+        const isNewRecord = clearedWave > this.state.maxWaveReached;
+        let bonusGold = 0;
+        if (isNewRecord) {
+          this.state.maxWaveReached = clearedWave;
+          bonusGold = this.state.addGold(clearedWave * 50);
+        }
+        this.state.emit('combat:milestone', { wave: clearedWave, isNewRecord, bonusGold });
+      }
       return;
     }
 

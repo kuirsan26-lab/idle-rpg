@@ -640,6 +640,64 @@
     .pshop-buy-btn:not(:disabled):hover { filter: brightness(1.15); }
     .pshop-cost { font-size: 11px; color: #b8860b; font-weight: 700; }
     .pshop-maxed-label { font-size: 11px; color: #7dda7d; font-weight: 700; }
+
+    /* ── Milestone overlay ──────────────────────────────────────── */
+    #milestone-overlay {
+      position: fixed;
+      left: 50%; top: 44%;
+      transform: translate(-50%, -50%);
+      z-index: 300;
+      pointer-events: none;
+      opacity: 0;
+    }
+    #milestone-overlay.visible {
+      animation: milestone-show 3.2s ease forwards;
+    }
+    @keyframes milestone-show {
+      0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.65); }
+      12%  { opacity: 1; transform: translate(-50%, -50%) scale(1.06); }
+      22%  { transform: translate(-50%, -50%) scale(1.0); }
+      70%  { opacity: 1; transform: translate(-50%, -50%) scale(1.0); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(0.92); }
+    }
+    #milestone-content {
+      background: linear-gradient(150deg, rgba(12,10,35,0.97), rgba(25,18,55,0.97));
+      border: 2px solid #ffd700;
+      border-radius: 14px;
+      padding: 22px 44px;
+      text-align: center;
+      min-width: 320px;
+      box-shadow: 0 0 50px rgba(255,215,0,0.35), 0 0 100px rgba(255,215,0,0.12);
+    }
+    #milestone-wave-label {
+      font-size: 11px;
+      letter-spacing: 4px;
+      color: #888;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    #milestone-title {
+      font-size: 30px;
+      font-weight: 900;
+      color: #ffd700;
+      letter-spacing: 3px;
+      text-shadow: 0 0 24px rgba(255,215,0,0.7);
+      margin-bottom: 4px;
+    }
+    #milestone-record {
+      font-size: 13px;
+      color: #ff9900;
+      font-weight: 700;
+      letter-spacing: 1px;
+      margin-top: 6px;
+    }
+    #milestone-bonus {
+      font-size: 22px;
+      color: #7dda7d;
+      font-weight: 700;
+      margin-top: 4px;
+      text-shadow: 0 0 12px rgba(125,218,125,0.5);
+    }
   </style>
 </head>
 <body>
@@ -863,6 +921,16 @@
           <div id="inv-grid"></div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Milestone overlay -->
+  <div id="milestone-overlay">
+    <div id="milestone-content">
+      <div id="milestone-wave-label">ВОЛНА 10</div>
+      <div id="milestone-title">ПРОЙДЕНА!</div>
+      <div id="milestone-record">🏆 НОВЫЙ РЕКОРД!</div>
+      <div id="milestone-bonus">+500 🪙</div>
     </div>
   </div>
 
