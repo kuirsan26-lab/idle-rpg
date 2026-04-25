@@ -3,10 +3,18 @@
  * При каждом релизе: обновить GAME_VERSION и добавить запись в CHANGELOG.
  */
 
-export const GAME_VERSION = '1.5.1';
+export const GAME_VERSION = '1.5.2';
 
 // type: 'new' | 'changed' | 'fixed' | 'balance'
 export const CHANGELOG = [
+  {
+    version: '1.5.2',
+    date: '2026-04-25',
+    entries: [
+      { type: 'new', text: '🏆 Milestone-уведомления — при первом прохождении волн 10, 20, 30... появляется флэш-оверлей «ВОЛНА X ПРОЙДЕНА!».' },
+      { type: 'new', text: '💰 Золотой бонус за новый рекорд: wave × 50 золота (с учётом вашего goldMult). Волна 10 → +500🪙, волна 50 → +2500🪙.' },
+    ],
+  },
   {
     version: '1.5.1',
     date: '2026-04-24',
