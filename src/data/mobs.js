@@ -152,11 +152,14 @@ export const BOSS_TYPES = [
 ];
 
 /**
- * Боевой масштаб: логарифмический — гладкий рост, без экспоненциальной стены.
- * wave 10 ≈ 2.04x | wave 40 ≈ 2.66x | wave 100 ≈ 3.07x
+ * Боевой масштаб: логарифм с нарастающим коэффициентом.
+ * k стартует с 0.55 и прибавляет 0.05 каждые 5 волн.
+ * wave 10 ≈ 2.38x | wave 20 ≈ 3.10x | wave 40 ≈ 4.32x | wave 100 ≈ 7.91x
  */
 function combatScale(wave) {
-  return 1 + 0.55 * Math.log(wave);
+  const tier = Math.floor((wave - 1) / 5);
+  const k = 0.55 + 0.05 * tier;
+  return 1 + k * Math.log(wave);
 }
 
 /**
