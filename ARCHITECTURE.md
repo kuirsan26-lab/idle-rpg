@@ -228,7 +228,7 @@ onPlayerHit:    thorns    → mob.hp -= dmg * thorns/100 после takeDamage()
 
 | Параметр | Значение |
 |----------|---------|
-| Масштаб HP/ATK мобов | `combatScale = 1 + 0.45*ln(wave)` — логарифм; wave 10≈2.04x, wave 40≈2.66x, wave 100≈3.07x |
+| Масштаб HP/ATK мобов | `combatScale = 1 + 0.55*ln(wave)` — логарифм; wave 10≈2.27x, wave 40≈3.03x, wave 100≈3.53x |
 | Масштаб DEF мобов | `sqrt(combatScale)` — растёт медленнее ATK/HP |
 | Масштаб XP/Gold мобов | `rewardScale = 1.06^(wave-1)` — экспоненциальный, независимо от боевого масштаба |
 | Макс. мобов на волне | 8 (прирост +1 каждые 4 волны, начиная с 3) |

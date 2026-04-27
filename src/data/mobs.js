@@ -156,7 +156,7 @@ export const BOSS_TYPES = [
  * wave 10 ≈ 2.04x | wave 40 ≈ 2.66x | wave 100 ≈ 3.07x
  */
 function combatScale(wave) {
-  return 1 + 0.45 * Math.log(wave);
+  return 1 + 0.55 * Math.log(wave);
 }
 
 /**

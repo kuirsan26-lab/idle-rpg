@@ -84,7 +84,7 @@ main.js
 
 ### Combat balance
 
-**Mob scaling (combat):** `1 + 0.45 * Math.log(wave)` (HP/ATK/DEF) — логарифм; DEF по `sqrt(scale)`.
+**Mob scaling (combat):** `1 + 0.55 * Math.log(wave)` (HP/ATK/DEF) — логарифм; DEF по `sqrt(scale)`.
 **Mob scaling (rewards):** `1.06^(wave-1)` (XP/Gold) — экспоненциальный, независимо от боевого.
 
 **Player base stats:** `{ hp: 130, atk: 14, def: 7, spd: 1.3 }` (атака ~769ms).
