@@ -151,8 +151,19 @@ export const BOSS_TYPES = [
   { id: 'boss_chaos_lord',   name: 'Повелитель Хаоса',  tier: 10, color: 0xff0088, shape: 'circle', hpMult: 20, atkMult: 8,  defMult: 6,  xpMult: 35, goldMult: 30 },
 ];
 
-/** Масштабирование стат моба по волне */
-function waveScale(wave) {
+/**
+ * Боевой масштаб: логарифмический — гладкий рост, без экспоненциальной стены.
+ * wave 10 ≈ 2.04x | wave 40 ≈ 2.66x | wave 100 ≈ 3.07x
+ */
+function combatScale(wave) {
+  return 1 + 0.45 * Math.log(wave);
+}
+
+/**
+ * Наградной масштаб: экспоненциальный — XP и золото растут быстро,
+ * чтобы прокачка и апгрейды оставались значимыми на любой волне.
+ */
+function rewardScale(wave) {
   return Math.pow(1.06, wave - 1);
 }
 
@@ -164,17 +175,18 @@ export function createMobData(wave) {
     const bossIdx = Math.min(Math.floor(wave / 10) - 1, BOSS_TYPES.length - 1);
     const bossTemplate = BOSS_TYPES[bossIdx];
     const baseType = MOB_TYPES[Math.min(bossIdx, MOB_TYPES.length - 1)];
-    const scale = waveScale(wave);
+    const cs = combatScale(wave);
+    const rs = rewardScale(wave);
     return {
       id: bossTemplate.id,
       name: bossTemplate.name,
       color: bossTemplate.color,
       shape: bossTemplate.shape,
-      maxHp: Math.round(baseType.baseHp * scale * bossTemplate.hpMult),
-      atk:   Math.round(baseType.baseAtk * scale * bossTemplate.atkMult),
-      def:   Math.round(baseType.baseDef * Math.sqrt(scale) * bossTemplate.defMult),
-      xp:    Math.round(baseType.baseXp * scale * bossTemplate.xpMult),
-      gold:  Math.round(baseType.baseGold * scale * bossTemplate.goldMult),
+      maxHp: Math.round(baseType.baseHp * cs * bossTemplate.hpMult),
+      atk:   Math.round(baseType.baseAtk * cs * bossTemplate.atkMult),
+      def:   Math.round(baseType.baseDef * Math.sqrt(cs) * bossTemplate.defMult),
+      xp:    Math.round(baseType.baseXp * rs * bossTemplate.xpMult),
+      gold:  Math.round(baseType.baseGold * rs * bossTemplate.goldMult),
       speed: baseType.speed * 1.1,
       isBoss: true,
       tier: bossTemplate.tier,
@@ -186,18 +198,19 @@ export function createMobData(wave) {
   const tierMin = Math.max(tierMax - 2, 0);
   const typeIdx = tierMin + Math.floor(Math.random() * (tierMax - tierMin + 1));
   const template = MOB_TYPES[Math.min(typeIdx, MOB_TYPES.length - 1)];
-  const scale = waveScale(wave);
+  const cs = combatScale(wave);
+  const rs = rewardScale(wave);
 
   return {
     id:     template.id,
     name:   template.name,
     color:  template.color,
     shape:  template.shape,
-    maxHp:  Math.round(template.baseHp * scale),
-    atk:    Math.round(template.baseAtk * scale),
-    def:    Math.round(template.baseDef * Math.sqrt(scale)),
-    xp:     Math.round(template.baseXp * scale),
-    gold:   Math.round(template.baseGold * scale),
+    maxHp:  Math.round(template.baseHp * cs),
+    atk:    Math.round(template.baseAtk * cs),
+    def:    Math.round(template.baseDef * Math.sqrt(cs)),
+    xp:     Math.round(template.baseXp * rs),
+    gold:   Math.round(template.baseGold * rs),
     speed:  template.speed,
     isBoss: false,
     tier:   template.tier,

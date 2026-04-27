@@ -345,9 +345,7 @@ export class GameState extends EventBus {
     this.emit('player:hpChanged', { hp: this.currentHp });
     if (this.currentHp <= 0) {
       this.isAlive = false;
-      this.gold = Math.max(0, Math.round(this.gold * 0.95));
       this.emit('player:death');
-      this.emit('player:goldChanged', { gold: this.gold });
       return true;
     }
     return false;
