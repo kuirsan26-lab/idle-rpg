@@ -158,7 +158,7 @@ export const BOSS_TYPES = [
  */
 function combatScale(wave) {
   const tier = Math.floor((wave - 1) / 5);
-  const k = 0.55 + 0.05 * tier;
+  const k = 0.55 + 0.10 * tier;
   return 1 + k * Math.log(wave);
 }
 
