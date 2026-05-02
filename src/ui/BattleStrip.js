@@ -6,6 +6,13 @@
 import { CLASS_MAP, BRANCH_COLORS } from '../data/classes.js';
 import { FLAG_ICONS } from '../data/mobs.js';
 
+const FLAG_DESC = {
+  shield:  'Щит — поглощает урон перед HP',
+  regen:   'Регенерация — +2% HP каждые 0.4с',
+  armored: 'Броня — DEF×1.5; крит пробивает насквозь',
+  swift:   'Стремительный — скорость×2, HP×0.5',
+};
+
 export class BattleStrip {
   constructor(state, combat) {
     this.state   = state;
@@ -46,6 +53,8 @@ export class BattleStrip {
       flags:    m.data.flags ?? [],
       shield:   m.shield ?? 0,
       shieldMax: m.data.shieldHp ?? 0,
+      icon:     m.data.icon ?? '❓',
+      atk:      m.data.atk,
     }));
     this._killCount = 0;
     this._totalMobs = mobs.length;
@@ -149,6 +158,57 @@ export class BattleStrip {
 
     this._updatePlayer();
     this._updateWave();
+    this._initTooltip();
+  }
+
+  _initTooltip() {
+    let tt = document.getElementById('bs-mob-tooltip');
+    if (!tt) {
+      tt = document.createElement('div');
+      tt.id = 'bs-mob-tooltip';
+      tt.className = 'bs-mob-tooltip';
+      document.body.appendChild(tt);
+    }
+    this._tooltip = tt;
+
+    const block = document.getElementById('bs-enemies-block');
+    if (!block) return;
+
+    block.addEventListener('mousemove', (e) => {
+      const chip = e.target.closest('[data-name]');
+      if (!chip) { tt.style.display = 'none'; return; }
+      const g = this._renderedGroups?.get(chip.dataset.name);
+      if (!g) return;
+      this._showTooltip(tt, chip, g);
+    });
+    block.addEventListener('mouseleave', () => { tt.style.display = 'none'; });
+  }
+
+  _showTooltip(tt, chip, g) {
+    const rect = chip.getBoundingClientRect();
+    const hpPct = g.maxHp > 0 ? Math.round((g.hp / g.maxHp) * 100) : 0;
+    const hpColor = hpPct > 50 ? '#55dd55' : hpPct > 25 ? '#ffaa00' : '#ff4444';
+
+    let html = `<div class="bstt-name">${g.icon} ${g.isBoss ? '👑 ' : ''}${chip.dataset.name}${g.count > 1 ? ' ×' + g.count : ''}</div>`;
+    html += `<div class="bstt-row">❤️ HP: <span style="color:${hpColor}">${this._fmt(g.hp)}</span> / ${this._fmt(g.maxHp)}</div>`;
+    if (g.shieldMax > 0) {
+      html += `<div class="bstt-row">🛡 Щит: <span style="color:#88aaff">${this._fmt(g.shield)}</span> / ${this._fmt(g.shieldMax)}</div>`;
+    }
+    html += `<div class="bstt-row">⚔️ Атака: ${this._fmt(g.atk)}</div>`;
+    if (g.flags.length > 0) {
+      html += '<div class="bstt-flags">' +
+        g.flags.map(f => `<div class="bstt-flag">${FLAG_ICONS[f]} ${FLAG_DESC[f] ?? f}</div>`).join('') +
+        '</div>';
+    }
+
+    tt.innerHTML = html;
+    tt.style.display = 'block';
+
+    // Позиционируем под чипом, но не уходим за экран
+    const ttW  = 210;
+    const left = Math.min(rect.left, window.innerWidth - ttW - 8);
+    tt.style.left = left + 'px';
+    tt.style.top  = (rect.bottom + 6) + 'px';
   }
 
   _updatePlayer() {
@@ -215,7 +275,8 @@ export class BattleStrip {
     for (const m of alive) {
       if (!groups.has(m.name)) {
         groups.set(m.name, { count: 0, hp: 0, maxHp: 0, shield: 0, shieldMax: 0,
-                             isBoss: m.isBoss, isElite: m.isElite, flags: m.flags });
+                             isBoss: m.isBoss, isElite: m.isElite, flags: m.flags,
+                             icon: m.icon, atk: m.atk });
       }
       const g = groups.get(m.name);
       g.count++;
@@ -224,6 +285,8 @@ export class BattleStrip {
       g.shield   += m.shield;
       g.shieldMax += m.shieldMax;
     }
+
+    this._renderedGroups = groups;
 
     list.innerHTML = [...groups.entries()].map(([name, g]) => {
       const pct      = Math.max(0, (g.hp / g.maxHp) * 100);
@@ -237,11 +300,11 @@ export class BattleStrip {
                style="width:${Math.max(0,(g.shield/g.shieldMax)*100)}%;background:#6699ff;transition:width 0.2s"></div>
            </div>`
         : '';
-      const prefix = g.isBoss ? '👑 ' : '';
-      const chipClass = g.isBoss ? 'bs-boss-chip' : g.isElite ? 'bs-elite-chip' : '';
+      const bossPrefix = g.isBoss ? '👑 ' : '';
+      const chipClass  = g.isBoss ? 'bs-boss-chip' : g.isElite ? 'bs-elite-chip' : '';
       return `
-        <div class="bs-enemy-chip ${chipClass}">
-          <span class="bs-enemy-name">${prefix}${name}${cntLabel}${flagStr ? ` <span class="bs-flags">${flagStr}</span>` : ''}</span>
+        <div class="bs-enemy-chip ${chipClass}" data-name="${name}">
+          <span class="bs-enemy-name">${g.icon} ${bossPrefix}${name}${cntLabel}${flagStr ? ` <span class="bs-flags">${flagStr}</span>` : ''}</span>
           <div class="bs-enemy-hp-bar">
             <div class="bs-enemy-hp-fill" id="${fillId}" style="width:${pct}%;background:${color}"></div>
           </div>

@@ -151,6 +151,17 @@ export const BOSS_TYPES = [
   { id: 'boss_chaos_lord',   name: 'Повелитель Хаоса',  tier: 10, color: 0xff0088, shape: 'circle', hpMult: 20, atkMult: 8,  defMult: 6,  xpMult: 35, goldMult: 30 },
 ];
 
+// Иконки для каждого типа моба
+export const MOB_ICONS = {
+  slime: '💧', goblin: '👺', skeleton: '💀', orc: '🐗',
+  troll: '🧌', dragonling: '🦎', demon: '😈', lich: '🧟',
+  dragon: '🐉', archdemon: '👿',
+  boss_slime_king: '💧', boss_goblin_chief: '👺', boss_bone_king: '💀',
+  boss_orc_warlord: '🐗', boss_troll_ancient: '🧌', boss_fire_dragon: '🔥',
+  boss_demon_lord: '😈', boss_lich_king: '🧟', boss_dragon_ancient: '🐉',
+  boss_chaos_lord: '💀',
+};
+
 // ── Флаги мобов ────────────────────────────────────────────────────────────────
 // shield  — поглощает shieldHp урона перед HP (pierce не помогает)
 // regen   — восстанавливает 2% maxHp каждые 400ms
@@ -211,6 +222,7 @@ export function createMobData(wave, isElite = false) {
     return {
       id: bossTemplate.id, name: bossTemplate.name,
       color: bossTemplate.color, shape: bossTemplate.shape,
+      icon: MOB_ICONS[bossTemplate.id] ?? '👹',
       maxHp, atk: Math.round(baseType.baseAtk * cs * bossTemplate.atkMult),
       def, xp: Math.round(baseType.baseXp * rs * bossTemplate.xpMult),
       gold: Math.round(baseType.baseGold * rs * bossTemplate.goldMult),
@@ -242,6 +254,7 @@ export function createMobData(wave, isElite = false) {
     name: isElite ? `⚡ ${template.name}` : template.name,
     color: isElite ? 0xffdd00 : template.color,
     shape: template.shape,
+    icon: MOB_ICONS[template.id] ?? '❓',
     maxHp, atk, def,
     xp:    Math.round(template.baseXp  * rs * (isElite ? 3 : 1)),
     gold:  Math.round(template.baseGold * rs * (isElite ? 3 : 1)),
