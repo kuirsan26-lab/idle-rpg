@@ -361,13 +361,15 @@ export class GameState extends EventBus {
 
   // ── Инвентарь ─────────────────────────────────────────────────────
 
-  /** Попытка дропа предмета с моба. isBoss — босс гарантирует rare+ */
-  rollItemDrop(wave, isBoss = false) {
-    const chance = isBoss ? 0.50 : 0.12;
+  /** Попытка дропа предмета с моба. isBoss/isElite гарантируют rare+ */
+  rollItemDrop(wave, isBoss = false, isElite = false) {
+    const chance = isBoss ? 0.50 : isElite ? 1.0 : 0.12;
     if (Math.random() > chance) return null;
     if (this.inventory.length >= 20) return null; // инвентарь полон
 
-    const forcedRarity = isBoss && Math.random() < 0.7 ? 'rare' : null;
+    let forcedRarity = null;
+    if (isBoss  && Math.random() < 0.7) forcedRarity = 'rare';
+    else if (isElite) forcedRarity = 'rare';
     const item = generateItem(wave, forcedRarity);
     this.inventory.push(item);
     this.emit('player:inventoryChanged', { item });

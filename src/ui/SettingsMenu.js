@@ -292,7 +292,7 @@ export class SettingsMenu {
     reader.onload = (e) => {
       try {
         const data = JSON.parse(e.target.result);
-        if (data.v !== 1) throw new Error('Неверная версия сейва');
+        if (data.v !== 1 && data.v !== 2) throw new Error('Неверная версия сейва');
         localStorage.setItem('idle_rpg_save', e.target.result);
         window.location.reload();
       } catch (err) {

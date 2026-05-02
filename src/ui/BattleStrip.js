@@ -4,6 +4,7 @@
  * Обновляется через callbacks CombatSystem.
  */
 import { CLASS_MAP, BRANCH_COLORS } from '../data/classes.js';
+import { FLAG_ICONS } from '../data/mobs.js';
 
 export class BattleStrip {
   constructor(state, combat) {
@@ -36,11 +37,15 @@ export class BattleStrip {
 
   onWaveSpawn({ wave, mobs }) {
     this._currentMobs = mobs.map(m => ({
-      id:    m.id,
-      name:  m.data.name,
-      maxHp: m.data.maxHp,
-      hp:    m.hp,
-      isBoss: m.data.isBoss,
+      id:       m.id,
+      name:     m.data.name,
+      maxHp:    m.data.maxHp,
+      hp:       m.hp,
+      isBoss:   m.data.isBoss,
+      isElite:  m.data.isElite ?? false,
+      flags:    m.data.flags ?? [],
+      shield:   m.shield ?? 0,
+      shieldMax: m.data.shieldHp ?? 0,
     }));
     this._killCount = 0;
     this._totalMobs = mobs.length;
@@ -59,8 +64,8 @@ export class BattleStrip {
   onPlayerAttack({ mob }) {
     const entry = this._currentMobs.find(m => m.id === mob.id);
     if (!entry) return;
-    entry.hp = mob.hp;
-    // Частичное обновление: меняем только ширину HP-бара нужной группы
+    entry.hp     = mob.hp;
+    entry.shield = mob.shield ?? 0;
     this._updateGroupHpFill(entry.name);
   }
 
@@ -208,36 +213,55 @@ export class BattleStrip {
 
     const groups = new Map();
     for (const m of alive) {
-      if (!groups.has(m.name)) groups.set(m.name, { count: 0, hp: 0, maxHp: 0, isBoss: m.isBoss });
+      if (!groups.has(m.name)) {
+        groups.set(m.name, { count: 0, hp: 0, maxHp: 0, shield: 0, shieldMax: 0,
+                             isBoss: m.isBoss, isElite: m.isElite, flags: m.flags });
+      }
       const g = groups.get(m.name);
       g.count++;
-      g.hp    += m.hp;
-      g.maxHp += m.maxHp;
+      g.hp       += m.hp;
+      g.maxHp    += m.maxHp;
+      g.shield   += m.shield;
+      g.shieldMax += m.shieldMax;
     }
 
     list.innerHTML = [...groups.entries()].map(([name, g]) => {
       const pct      = Math.max(0, (g.hp / g.maxHp) * 100);
-      const color    = g.isBoss ? '#ff6644' : '#dd4444';
+      const color    = g.isBoss ? '#ff6644' : g.isElite ? '#ffcc00' : '#dd4444';
       const cntLabel = g.count > 1 ? ` ×${g.count}` : '';
       const fillId   = this._slug(name);
+      const flagStr  = g.flags.map(f => FLAG_ICONS[f] ?? '').join('');
+      const shieldBar = g.shieldMax > 0
+        ? `<div class="bs-enemy-hp-bar" style="margin-top:1px">
+             <div class="bs-enemy-hp-fill" id="${fillId}_sh"
+               style="width:${Math.max(0,(g.shield/g.shieldMax)*100)}%;background:#6699ff;transition:width 0.2s"></div>
+           </div>`
+        : '';
+      const prefix = g.isBoss ? '👑 ' : '';
+      const chipClass = g.isBoss ? 'bs-boss-chip' : g.isElite ? 'bs-elite-chip' : '';
       return `
-        <div class="bs-enemy-chip ${g.isBoss ? 'bs-boss-chip' : ''}">
-          <span class="bs-enemy-name">${g.isBoss ? '👑 ' : ''}${name}${cntLabel}</span>
+        <div class="bs-enemy-chip ${chipClass}">
+          <span class="bs-enemy-name">${prefix}${name}${cntLabel}${flagStr ? ` <span class="bs-flags">${flagStr}</span>` : ''}</span>
           <div class="bs-enemy-hp-bar">
             <div class="bs-enemy-hp-fill" id="${fillId}" style="width:${pct}%;background:${color}"></div>
           </div>
+          ${shieldBar}
         </div>`;
     }).join('');
   }
 
-  /** Обновляет только HP-fill одной группы мобов без пересборки всего списка */
+  /** Обновляет только HP/shield-fill одной группы мобов без пересборки всего списка */
   _updateGroupHpFill(name) {
-    const group = this._currentMobs.filter(m => m.name === name);
-    const hp    = group.reduce((s, m) => s + Math.max(0, m.hp), 0);
-    const maxHp = group.reduce((s, m) => s + m.maxHp, 0);
-    const pct   = maxHp > 0 ? Math.max(0, (hp / maxHp) * 100) : 0;
-    const fill  = document.getElementById(this._slug(name));
-    if (fill) fill.style.width = pct + '%';
+    const group    = this._currentMobs.filter(m => m.name === name);
+    const hp       = group.reduce((s, m) => s + Math.max(0, m.hp), 0);
+    const maxHp    = group.reduce((s, m) => s + m.maxHp, 0);
+    const shield   = group.reduce((s, m) => s + Math.max(0, m.shield), 0);
+    const shieldMax = group.reduce((s, m) => s + m.shieldMax, 0);
+    const slug     = this._slug(name);
+    const fill     = document.getElementById(slug);
+    if (fill) fill.style.width = (maxHp > 0 ? Math.max(0, (hp / maxHp) * 100) : 0) + '%';
+    const shFill   = document.getElementById(slug + '_sh');
+    if (shFill) shFill.style.width = (shieldMax > 0 ? Math.max(0, (shield / shieldMax) * 100) : 0) + '%';
   }
 
   _flashPlayer() {

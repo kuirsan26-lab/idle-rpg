@@ -76,6 +76,19 @@ export class CombatSystem {
   _tick() {
     const dt = TICK_MS;
 
+    // Реген флаговых мобов (до всех атак)
+    for (const mob of this.mobs) {
+      if (mob.data.flags?.includes('regen') && mob.hp > 0 && mob.hp < mob.data.maxHp) {
+        mob.regenTimer = (mob.regenTimer ?? 0) + dt;
+        if (mob.regenTimer >= 400) {
+          mob.regenTimer -= 400;
+          const heal = Math.max(1, Math.ceil(mob.data.maxHp * 0.02));
+          mob.hp = Math.min(mob.data.maxHp, mob.hp + heal);
+          this._emit('onMobRegen', { mob, heal });
+        }
+      }
+    }
+
     if (!this.state.isAlive) {
       this.respawnTimer += dt;
       if (this.respawnTimer >= RESPAWN_MS) {
@@ -155,16 +168,27 @@ export class CombatSystem {
       }
 
       // Pierce: снижает эффективную защиту моба
-      const effectiveDef = stats.pierce > 0
+      const isCrit = Math.random() * 100 < stats.crit;
+      let effectiveDef = stats.pierce > 0
         ? Math.round(target.data.def * (1 - stats.pierce / 100))
         : target.data.def;
+      // Armored: крит обнуляет броню целиком (делает pierce+crit ценными против бронированных)
+      if (isCrit && target.data.flags?.includes('armored')) effectiveDef = 0;
 
-      const isCrit = Math.random() * 100 < stats.crit;
       let dmg = Math.max(1, stats.atk - Math.round(effectiveDef * 0.5));
       if (isCrit) dmg = Math.round(dmg * (stats.critDmg / 100));
 
+      // Shield: поглощает урон до HP
+      let shieldAbsorbed = 0;
+      if (target.shield > 0) {
+        shieldAbsorbed = Math.min(target.shield, dmg);
+        target.shield -= shieldAbsorbed;
+        dmg -= shieldAbsorbed;
+        if (target.shield === 0) this._emit('onShieldBreak', { mob: target });
+      }
+
       target.hp -= dmg;
-      this._emit('onPlayerAttack', { mob: target, damage: dmg, isCrit });
+      this._emit('onPlayerAttack', { mob: target, damage: dmg, isCrit, shieldAbsorbed });
 
       // Lifesteal: восстанавливаем HP пропорционально урону
       if (stats.lifesteal > 0) {
@@ -210,6 +234,7 @@ export class CombatSystem {
             const reflect = Math.round(dmg * stats.thorns / 100);
             if (reflect > 0) {
               mob.hp -= reflect;
+              this._emit('onThornsReflect', { mob, damage: reflect });
               if (mob.hp <= 0) {
                 this._killMob(mob);
                 if (died) {
@@ -240,7 +265,7 @@ export class CombatSystem {
     const goldGained = this.state.addGold(mob.data.gold);
     this.state.totalKills++;
 
-    const itemDrop = this.state.rollItemDrop(this.state.currentWave, mob.data.isBoss);
+    const itemDrop = this.state.rollItemDrop(this.state.currentWave, mob.data.isBoss, mob.data.isElite ?? false);
 
     this.mobs = this.mobs.filter(m => m !== mob);
     this._emit('onMobDeath', { mob, xpGained, goldGained, itemDrop });
@@ -249,22 +274,27 @@ export class CombatSystem {
 
   // ── Спавн волны ─────────────────────────────────────────────────────────────
   _spawnWave() {
-    const wave  = this.state.currentWave;
+    const wave        = this.state.currentWave;
+    const isBoss      = wave % 10 === 0;
+    const isEliteWave = wave % 5 === 0 && !isBoss;
     const count = getMobCount(wave);
     this.mobs   = [];
 
     for (let i = 0; i < count; i++) {
-      const data = createMobData(wave);
+      const isElite = isEliteWave && i === 0;
+      const data = createMobData(wave, isElite);
       this.mobs.push({
-        id:              this.nextMobId++,
+        id:             this.nextMobId++,
         data,
-        hp:              data.maxHp,
-        attackCooldown:  1000 + Math.random() * 800,
+        hp:             data.maxHp,
+        shield:         data.shieldHp ?? 0,
+        regenTimer:     0,
+        attackCooldown: 1000 + Math.random() * 800,
       });
     }
 
     this._emit('onWaveSpawn', { wave, mobs: this.mobs });
-    this.state.emit('combat:waveStarted', { wave, isBoss: wave % 10 === 0 });
+    this.state.emit('combat:waveStarted', { wave, isBoss, isEliteWave });
   }
 
   // ── Emit ─────────────────────────────────────────────────────────────────────

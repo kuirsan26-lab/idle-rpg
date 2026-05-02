@@ -151,6 +151,21 @@ export const BOSS_TYPES = [
   { id: 'boss_chaos_lord',   name: 'Повелитель Хаоса',  tier: 10, color: 0xff0088, shape: 'circle', hpMult: 20, atkMult: 8,  defMult: 6,  xpMult: 35, goldMult: 30 },
 ];
 
+// ── Флаги мобов ────────────────────────────────────────────────────────────────
+// shield  — поглощает shieldHp урона перед HP (pierce не помогает)
+// regen   — восстанавливает 2% maxHp каждые 400ms
+// armored — DEF×1.5; крит полностью игнорирует броню (pierce становится ценен)
+// swift   — speed×2, HP×0.5
+export const FLAG_ICONS = { shield: '🛡', regen: '💚', armored: '⚔', swift: '⚡' };
+const ALL_FLAGS = ['shield', 'regen', 'armored', 'swift'];
+
+function rollFlags(isBoss, isElite) {
+  const shuffled = [...ALL_FLAGS].sort(() => Math.random() - 0.5);
+  if (isBoss)   return shuffled.slice(0, Math.random() < 0.5 ? 2 : 1);
+  if (isElite)  return shuffled.slice(0, Math.random() < 0.5 ? 2 : 1);
+  return Math.random() < 0.30 ? [shuffled[0]] : [];
+}
+
 /**
  * Боевой масштаб: логарифм с нарастающим коэффициентом.
  * k стартует с 0.55 и прибавляет 0.05 каждые 5 волн.
@@ -170,53 +185,68 @@ function rewardScale(wave) {
   return Math.pow(1.06, wave - 1);
 }
 
-/** Создать данные моба для заданной волны */
-export function createMobData(wave) {
+/**
+ * Создать данные моба для заданной волны.
+ * @param {number} wave
+ * @param {boolean} [isElite] — элита: HP×3, ATK×1.8, гарантированный дроп редкого предмета
+ */
+export function createMobData(wave, isElite = false) {
   const isBoss = wave % 10 === 0;
+  const flags  = rollFlags(isBoss, isElite);
 
   if (isBoss) {
-    const bossIdx = Math.min(Math.floor(wave / 10) - 1, BOSS_TYPES.length - 1);
+    const bossIdx      = Math.min(Math.floor(wave / 10) - 1, BOSS_TYPES.length - 1);
     const bossTemplate = BOSS_TYPES[bossIdx];
-    const baseType = MOB_TYPES[Math.min(bossIdx, MOB_TYPES.length - 1)];
+    const baseType     = MOB_TYPES[Math.min(bossIdx, MOB_TYPES.length - 1)];
     const cs = combatScale(wave);
     const rs = rewardScale(wave);
+
+    let maxHp = Math.round(baseType.baseHp * cs * bossTemplate.hpMult);
+    let def   = Math.round(baseType.baseDef * Math.sqrt(cs) * bossTemplate.defMult);
+    let speed = baseType.speed * 1.1;
+    if (flags.includes('armored')) def   = Math.round(def * 1.5);
+    if (flags.includes('swift'))   { speed *= 2; maxHp = Math.round(maxHp * 0.5); }
+    const shieldHp = flags.includes('shield') ? Math.ceil(maxHp * 0.25) : 0;
+
     return {
-      id: bossTemplate.id,
-      name: bossTemplate.name,
-      color: bossTemplate.color,
-      shape: bossTemplate.shape,
-      maxHp: Math.round(baseType.baseHp * cs * bossTemplate.hpMult),
-      atk:   Math.round(baseType.baseAtk * cs * bossTemplate.atkMult),
-      def:   Math.round(baseType.baseDef * Math.sqrt(cs) * bossTemplate.defMult),
-      xp:    Math.round(baseType.baseXp * rs * bossTemplate.xpMult),
-      gold:  Math.round(baseType.baseGold * rs * bossTemplate.goldMult),
-      speed: baseType.speed * 1.1,
-      isBoss: true,
-      tier: bossTemplate.tier,
+      id: bossTemplate.id, name: bossTemplate.name,
+      color: bossTemplate.color, shape: bossTemplate.shape,
+      maxHp, atk: Math.round(baseType.baseAtk * cs * bossTemplate.atkMult),
+      def, xp: Math.round(baseType.baseXp * rs * bossTemplate.xpMult),
+      gold: Math.round(baseType.baseGold * rs * bossTemplate.goldMult),
+      speed, isBoss: true, isElite: false, tier: bossTemplate.tier,
+      flags, shieldHp,
     };
   }
 
   // Выбор типа моба в зависимости от волны
-  const tierMax = Math.min(Math.ceil(wave / 5), MOB_TYPES.length);
-  const tierMin = Math.max(tierMax - 2, 0);
-  const typeIdx = tierMin + Math.floor(Math.random() * (tierMax - tierMin + 1));
+  const tierMax  = Math.min(Math.ceil(wave / 5), MOB_TYPES.length);
+  const tierMin  = Math.max(tierMax - 2, 0);
+  const typeIdx  = tierMin + Math.floor(Math.random() * (tierMax - tierMin + 1));
   const template = MOB_TYPES[Math.min(typeIdx, MOB_TYPES.length - 1)];
   const cs = combatScale(wave);
   const rs = rewardScale(wave);
 
+  let maxHp = Math.round(template.baseHp * cs);
+  let def   = Math.round(template.baseDef * Math.sqrt(cs));
+  let speed = template.speed;
+  let atk   = Math.round(template.baseAtk * cs);
+
+  if (isElite) { maxHp = Math.round(maxHp * 3); atk = Math.round(atk * 1.8); }
+  if (flags.includes('armored')) def   = Math.round(def * 1.5);
+  if (flags.includes('swift'))   { speed *= 2; maxHp = Math.round(maxHp * 0.5); }
+  const shieldHp = flags.includes('shield') ? Math.ceil(maxHp * 0.25) : 0;
+
   return {
-    id:     template.id,
-    name:   template.name,
-    color:  template.color,
-    shape:  template.shape,
-    maxHp:  Math.round(template.baseHp * cs),
-    atk:    Math.round(template.baseAtk * cs),
-    def:    Math.round(template.baseDef * Math.sqrt(cs)),
-    xp:     Math.round(template.baseXp * rs),
-    gold:   Math.round(template.baseGold * rs),
-    speed:  template.speed,
-    isBoss: false,
-    tier:   template.tier,
+    id: template.id,
+    name: isElite ? `⚡ ${template.name}` : template.name,
+    color: isElite ? 0xffdd00 : template.color,
+    shape: template.shape,
+    maxHp, atk, def,
+    xp:    Math.round(template.baseXp  * rs * (isElite ? 3 : 1)),
+    gold:  Math.round(template.baseGold * rs * (isElite ? 3 : 1)),
+    speed, isBoss: false, isElite, tier: template.tier,
+    flags, shieldHp,
   };
 }
 

@@ -51,12 +51,15 @@ export class GameScene extends Phaser.Scene {
 
     // Callbacks боевой системы
     this.combat.register({
-      onWaveSpawn:    (d) => this._onWaveSpawn(d),
-      onMobDeath:     (d) => this._onMobDeath(d),
-      onPlayerAttack: (d) => this._onPlayerAttack(d),
-      onPlayerHit:    (d) => this._onPlayerHit(d),
-      onPlayerDeath:  ()  => this._onPlayerDeath(),
-      onRespawn:      ()  => this._onRespawn(),
+      onWaveSpawn:     (d) => this._onWaveSpawn(d),
+      onMobDeath:      (d) => this._onMobDeath(d),
+      onPlayerAttack:  (d) => this._onPlayerAttack(d),
+      onPlayerHit:     (d) => this._onPlayerHit(d),
+      onPlayerDeath:   ()  => this._onPlayerDeath(),
+      onRespawn:       ()  => this._onRespawn(),
+      onThornsReflect: (d) => this._onThornsReflect(d),
+      onMobRegen:      (d) => this._onMobRegen(d),
+      onShieldBreak:   (d) => this._onShieldBreak(d),
     });
 
     this.gameState.on('player:classChanged', () => this._updatePlayerVisual());
@@ -548,7 +551,7 @@ export class GameScene extends Phaser.Scene {
     mobs.forEach((mob, i) => this._createMobVisual(mob, i, mobs.length));
   }
 
-  _onPlayerAttack({ mob, damage, isCrit, isDeathblow }) {
+  _onPlayerAttack({ mob, damage, isCrit, isDeathblow, shieldAbsorbed }) {
     const v = this.mobVisuals.get(mob.id);
     if (!v) return;
 
@@ -569,10 +572,14 @@ export class GameScene extends Phaser.Scene {
 
     if (isDeathblow) {
       this._spawnDmgText(v.container.x, v.container.y - 55, '☠️ СМЕРТЬ!', '#ff00ff', '18px');
+    } else if (shieldAbsorbed > 0 && damage === 0) {
+      this._spawnDmgText(v.container.x, v.container.y - 55, `🛡 ${shieldAbsorbed}`, '#6699ff', '13px');
+    } else if (shieldAbsorbed > 0) {
+      this._spawnDmgText(v.container.x, v.container.y - 55, `${damage} 🛡`, isCrit ? '#ff7755' : '#ffeecc', isCrit ? '17px' : '13px');
     } else {
       this._spawnDmgText(v.container.x, v.container.y - 55,
         isCrit ? `💥 ${damage}!` : `${damage}`,
-        isCrit ? '#ff7755' : '#ffffff',
+        isCrit ? '#ff7755' : '#ffeecc',
         isCrit ? '17px' : '13px');
     }
 
@@ -595,13 +602,39 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
-  _onPlayerHit({ damage }) {
-    // Красная вспышка экрана
+  _onPlayerHit({ damage, dodged }) {
+    if (dodged) {
+      this._spawnDmgText(PLAYER_X, PLAYER_Y - 60, 'MISS', '#888888', '14px');
+      return;
+    }
+
+    const isBossHit = this.combat.mobs[0]?.data?.isBoss ?? false;
+    if (isBossHit) this.cameras.main.shake(110, 0.012);
+
     const flash = this.add.rectangle(0, 0, SCENE_W, SCENE_H, 0xff0000, 0.15).setOrigin(0).setDepth(15);
     this.tweens.add({ targets: flash, alpha: 0, duration: 220, onComplete: () => flash.destroy() });
 
     this._spawnDmgText(PLAYER_X, PLAYER_Y - 60, `-${damage}`, '#ff5555', '13px');
     this._updatePlayerHpBar();
+  }
+
+  _onThornsReflect({ mob, damage }) {
+    this._spawnDmgText(PLAYER_X, PLAYER_Y - 60, 'БЛОК', '#4488ff', '14px');
+    const v = this.mobVisuals.get(mob.id);
+    if (v) this._spawnDmgText(v.container.x, v.container.y - 40, `🔥 ${damage}`, '#4488ff', '12px');
+  }
+
+  _onMobRegen({ mob, heal }) {
+    const v = this.mobVisuals.get(mob.id);
+    if (v) {
+      this._updateMobHpBar(v);
+      this._spawnDmgText(v.container.x, v.container.y - 30, `+${heal}`, '#44dd88', '11px');
+    }
+  }
+
+  _onShieldBreak({ mob }) {
+    const v = this.mobVisuals.get(mob.id);
+    if (v) this._spawnDmgText(v.container.x, v.container.y - 55, '🛡 ЩИТ СЛОМАН!', '#aaccff', '13px');
   }
 
   _onPlayerDeath() {
