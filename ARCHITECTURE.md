@@ -44,22 +44,25 @@
 
 ```
 src/
-  main.js              (102 строки)  — точка входа, монтирование Phaser + UI
+  main.js              (108 строки)  — точка входа, монтирование Phaser + UI
   core/
-    GameState.js       (403)  — центральное состояние + EventBus
-    Combat.js          (197)  — игровой цикл (setInterval 200ms)
+    GameState.js       (515)  — центральное состояние + EventBus
+    Combat.js          (306)  — игровой цикл (rAF + накопленный dt)
   data/
     classes.js         (269)  — 60 ручных классов + generateDeepClasses()
-    mobs.js            (211)  — данные мобов и боссов
+    mobs.js            (270)  — данные мобов, боссов, флаги, иконки
+    items.js            (95)  — генерация предметов, редкости, бонусы
+    changelog.js       (107)  — GAME_VERSION + история версий
   phaser/
-    GameScene.js       (733)  — Phaser-сцена: спрайты, анимации, фоны, земля
+    GameScene.js       (764)  — Phaser-сцена: спрайты, анимации, фоны, эффекты ⚠️ кандидат на разбивку
   ui/
-    HUD.js             (165)  — верхняя панель (класс, XP, золото, волна)
-    BattleStrip.js     (230)  — полоса боя: HP-бар, чипы врагов, прогресс волны
-    ClassTree.js       (248)  — HTML-дерево классов (280px, левая колонка)
-    StatsPanel.js      (106)  — правая панель: статы + магазин апгрейдов
-    PrestigeShop.js    (102)  — модалка магазина престижа (10 апгрейдов)
-    SettingsMenu.js    (253)  — настройки (статистика, сброс, экспорт/импорт)
+    HUD.js             (208)  — верхняя панель (класс, XP, золото, волна)
+    BattleStrip.js     (342)  — полоса боя: HP-бар, чипы с флагами, tooltip
+    ClassTree.js       (256)  — HTML-дерево классов (280px, левая колонка)
+    StatsPanel.js      (124)  — правая панель: статы + магазин апгрейдов
+    PrestigeShop.js    (108)  — модалка магазина престижа (10 апгрейдов)
+    SettingsMenu.js    (311)  — настройки (статистика, сброс, changelog, экспорт/импорт)
+    InventoryPanel.js  (185)  — инвентарь: 3 слота, список предметов, продажа
 
 public/
   sprites/             — 25 PNG: 10 мобов + 10 боссов + 5 героев
@@ -345,10 +348,23 @@ onPlayerHit:    thorns    → mob.hp -= dmg * thorns/100 после takeDamage()
 
 ### Бэклог — технический
 
+- [ ] **🔴 Рефакторинг крупных файлов** — разбить файлы >400 строк на модули для снижения стоимости чтения при разработке. Приоритет: сначала `GameScene.js`, затем `GameState.js`.
+
+  **`GameScene.js` (764 строки) → 3 файла:**
+  - `phaser/GameScene.js` (~220 строк) — init, create, update, event wiring, background/arena
+  - `phaser/MobVisuals.js` (~230 строк) — `_createMobVisual`, `_createMobBody`, `_drawMobBody`, `_updateMobHpBar`, `_onWaveSpawn`, `_onMobDeath`, `_onPlayerAttack`
+  - `phaser/SceneEffects.js` (~200 строк) — `_spawnDmgText`, `_drawAttackFX`, `_spawnDeathParticles`, `_onPlayerHit`, `_onPlayerDeath`, `_onRespawn`, `_onThornsReflect`, `_onMobRegen`, `_onShieldBreak`, `_showWaveBanner`
+
+  **`GameState.js` (515 строк) → 2 файла:**
+  - `core/gameConfig.js` (~80 строк) — `BASE_STATS`, `LEVEL_GROWTH`, `UPGRADE_BONUS`, `UPGRADES_LIST`, `PRESTIGE_UPGRADES`, `PRESTIGE_UPGRADES_MAP`, `xpForLevel`, `upgradeCost`
+  - `core/GameState.js` (~435 строк) — `EventBus` + `GameState` (импортирует константы из gameConfig)
+
+  Итог: ни один файл не превышает ~230 строк; `GameScene.js` из 764 строк → 3×~220.
+
 - [ ] **Анимации спрайтов** — spritesheet вместо static PNG (idle/attack/hit/death)
 - [ ] **Звук** — Web Audio API: фоновая музыка по тиру фона + SFX ударов/крита/смерти/уровня
 - [ ] **Мобильная адаптация** — responsive layout для экранов < 768px
-- [ ] **Рефакторинг Combat.js** — вынести формулы урона в отдельный `DamageCalc.js` (актуально перед добавлением флагов мобов)
+- [ ] **Рефакторинг Combat.js** — вынести формулы урона в отдельный `DamageCalc.js`
 
 ### Бэклог — контент
 
