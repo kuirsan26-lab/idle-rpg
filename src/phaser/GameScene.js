@@ -4,6 +4,7 @@
  */
 import Phaser from 'phaser';
 import { BRANCH_HEX } from '../data/classes.js';
+import { FLAG_ICONS } from '../data/mobs.js';
 
 const SCENE_W  = 620;
 const SCENE_H  = 480;
@@ -422,11 +423,13 @@ export class GameScene extends Phaser.Scene {
       mob.data.isBoss ? 0xff5500 : 0xdd2222);
     hpFill.setOrigin(0, 0.5);
 
-    // Имя
+    // Имя + иконки флагов
+    const flagStr  = (mob.data.flags ?? []).map(f => FLAG_ICONS[f] ?? '').join('');
     const nameStyle = mob.data.isBoss
       ? { fontSize: '11px', fill: '#ffaa44', stroke: '#000', strokeThickness: 2, fontStyle: 'bold' }
       : { fontSize: '10px', fill: '#cc8866', stroke: '#000', strokeThickness: 2 };
-    const nameText = this.add.text(0, -56, mob.data.name, { fontFamily: 'Segoe UI', ...nameStyle })
+    const label    = flagStr ? `${mob.data.name} ${flagStr}` : mob.data.name;
+    const nameText = this.add.text(0, -56, label, { fontFamily: 'Segoe UI', ...nameStyle })
       .setOrigin(0.5);
 
     container.add([shadow, body, hpBg, hpFill, nameText]);
