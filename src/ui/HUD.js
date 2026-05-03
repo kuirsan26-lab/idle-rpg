@@ -10,6 +10,7 @@ export class HUD {
     this.state = state;
 
     this._update();
+    this._updateSkillBtn();
 
     this._unsubs = [
       state.on('player:inventoryChanged', () => this._updateInvCount()),
@@ -17,19 +18,20 @@ export class HUD {
       state.on('player:goldChanged',      () => this._updateGold()),
       state.on('player:xpChanged',        () => this._updateXp()),
       state.on('player:levelUp',          (d) => { this._update(); this._updatePrestigeBtn(); this._log(`🎉 Уровень ${d.level}!`, 'level'); }),
-      state.on('player:classChanged',     () => this._update()),
+      state.on('player:classChanged',     () => { this._update(); this._updateSkillBtn(); }),
       state.on('combat:killCountChanged', () => this._updateKills()),
       state.on('combat:waveCleared',      (d) => { this._log(`✅ Волна ${d.wave} пройдена`, 'wave'); this._updatePrestigeBtn(); }),
       state.on('combat:waveStarted',      (d) => {
         const txt = d.isBoss ? `⚠️ ВОЛНА ${d.wave} — появился БОСС!` : `⚔️ Волна ${d.wave}`;
         this._log(txt, d.isBoss ? 'kill' : 'wave');
       }),
-      state.on('player:death',    () => { this._log('💀 Вы погибли! -5% золота. Возрождение...', 'player:death'); this._updateGold(); }),
+      state.on('player:death',    () => { this._log('💀 Вы погибли! Возрождение...', 'player:death'); this._updateGold(); }),
       state.on('player:respawn',  () => this._log('✨ Возрождение!', 'wave')),
       state.on('player:prestige', (d) => {
         this._log(`⭐ ПЕРЕРОЖДЕНИЕ #${d.count}! Получено ${d.pp} ПО (всего: ${d.totalPp} ПО)`, 'player:prestige');
         this._update();
         this._updateInvCount();
+        this._updateSkillBtn();
       }),
       state.on('combat:milestone', (d) => {
         this._showMilestone(d);
@@ -40,9 +42,13 @@ export class HUD {
           this._log(`⭐ Рубеж: волна ${d.wave} пройдена!`, 'wave');
         }
       }),
+      state.on('player:skillTriggered', ({ skill }) => {
+        this._log(`⚡ Скилл: ${skill.icon} ${skill.name}!`, 'wave');
+      }),
     ];
 
     this._milestoneTimeout = null;
+    this._skillCdTimer = setInterval(() => this._updateSkillCd(), 100);
 
     // Prestige modal
     document.getElementById('prestige-confirm-btn').addEventListener('click', () => {
@@ -61,6 +67,47 @@ export class HUD {
   destroy() {
     this._unsubs.forEach(u => u());
     clearTimeout(this._milestoneTimeout);
+    clearInterval(this._skillCdTimer);
+  }
+
+  _updateSkillBtn() {
+    const skill = this.state.getActiveSkill();
+    const icon  = document.getElementById('skill-btn-icon');
+    const name  = document.getElementById('skill-btn-name');
+    const desc  = document.getElementById('skill-zone-desc');
+    if (icon) icon.textContent = skill.icon;
+    if (name) name.textContent = skill.name;
+    if (desc) desc.textContent = skill.desc;
+
+    const btn = document.getElementById('skill-btn');
+    if (btn && !btn.dataset.bound) {
+      btn.dataset.bound = '1';
+      btn.addEventListener('click', () => this.state.triggerSkill());
+    }
+    this._updateSkillCd();
+  }
+
+  _updateSkillCd() {
+    const btn  = document.getElementById('skill-btn');
+    const fill = document.getElementById('skill-cd-fill');
+    const cd   = document.getElementById('skill-btn-cd');
+    if (!btn) return;
+
+    const pct   = this.state.getSkillCooldownPct();
+    const ready = pct >= 1;
+
+    btn.disabled = !ready || !this.state.isAlive;
+    if (fill) fill.style.width = (pct * 100) + '%';
+    if (cd) {
+      if (ready) {
+        cd.textContent = 'ГОТОВО';
+        cd.style.color = '#88ff88';
+      } else {
+        const sec = ((this.state._skillCdEnd - performance.now()) / 1000).toFixed(1);
+        cd.textContent = `${sec}с`;
+        cd.style.color = '#888';
+      }
+    }
   }
 
   _updateInvCount() {

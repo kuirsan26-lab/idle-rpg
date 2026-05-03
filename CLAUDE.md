@@ -33,14 +33,18 @@ npm run preview   # предпросмотр production сборки
 
 ```
 main.js
- ├── GameState (core/GameState.js)    — центральное состояние + EventEmitter
- ├── CombatSystem (core/Combat.js)    — игровой цикл (setInterval 200ms)
- ├── GameScene (phaser/GameScene.js)  — Phaser scene, рендер персонажа и мобов
- ├── ClassTreePanel (ui/ClassTree.js) — HTML-панель дерева классов
- ├── StatsPanel (ui/StatsPanel.js)    — правая панель (статы + магазин)
- ├── HUD (ui/HUD.js)                  — верхняя панель + боевой журнал
- ├── BattleStrip (ui/BattleStrip.js)  — полоса «кто с кем дерётся»
- └── SettingsMenu (ui/SettingsMenu.js)— меню настроек (статистика, сброс, экспорт/импорт)
+ ├── GameState (core/GameState.js)       — состояние + EventEmitter + скилы (getBranch/triggerSkill)
+ │    └── [mixin] GameStateSave (core/GameStateSave.js) — save/load/autosave/hardReset
+ ├── CombatSystem (core/Combat.js)       — цикл боя, _applySkill, DOT (яд/горение), стан
+ ├── GameScene (phaser/GameScene.js)     — тонкий Phaser-оркестратор (76 строк)
+ │    ├── [mixin] SceneBackground (phaser/scene/SceneBackground.js) — фон, арена, оверлей
+ │    ├── [mixin] SceneEntities (phaser/scene/SceneEntities.js)     — визуалы игрока + мобов
+ │    └── [mixin] SceneFX (phaser/scene/SceneFX.js)                — FX + combat callbacks
+ ├── ClassTreePanel (ui/ClassTree.js)    — HTML-панель дерева классов
+ ├── StatsPanel (ui/StatsPanel.js)       — правая панель (статы + магазин)
+ ├── HUD (ui/HUD.js)                     — верхняя панель + журнал + кнопка скилла
+ ├── BattleStrip (ui/BattleStrip.js)     — полоса «кто с кем дерётся»
+ └── SettingsMenu (ui/SettingsMenu.js)   — меню настроек
 ```
 
 ### Phaser init (critical)
@@ -66,7 +70,22 @@ main.js
 
 **Откат волны**: счётчик `deathsOnWave` инкрементируется при каждой смерти и сбрасывается при прохождении волны. Если `deathsOnWave >= MAX_DEATHS_PER_WAVE (3)` — при следующем респавне `currentWave--` и спавн предыдущей волны. Минимум — волна 1.
 
-Колбэки наблюдателей: `onWaveSpawn`, `onMobDeath`, `onPlayerAttack`, `onPlayerHit`, `onPlayerDeath`, `onRespawn`, `onWaveRollback`.
+Колбэки наблюдателей: `onWaveSpawn`, `onMobDeath`, `onPlayerAttack`, `onPlayerHit`, `onPlayerDeath`, `onRespawn`, `onWaveRollback`, `onSkillUsed`, `onMobDot`.
+
+### Active Skills (data/skills.js)
+
+По одному активному скиллу на ветку класса. Нажать кнопку `#skill-btn` в `#skill-zone` (строка между HUD и battle-strip).
+
+| Ветка   | Скилл          | Эффект                                | CD    |
+|---------|----------------|---------------------------------------|-------|
+| novice  | Концентрация   | +25% макс. HP                         | 20 s  |
+| warrior | Удар щитом     | Стан первого врага (5 тиков = 1 сек)  | 8 s   |
+| rogue   | Отравить       | +80% урон + яд 3 тика (15% ATK/тик)  | 10 s  |
+| archer  | Залп           | 50% ATK по всем врагам                | 12 s  |
+| mage    | Огненный шар   | 80% ATK по всем + горение 3 тика      | 15 s  |
+
+`state.triggerSkill()` — активировать. `state.isSkillReady()` / `state.getSkillCooldownPct()` — состояние.
+Скилл-эффекты в Combat: `_pendingPoison`, `mob.stunTicks`, `mob.poisonTicks/poisonDmg`, `mob.burnTicks/burnDmg`.
 
 Мобы в `combat.mobs[]` — чистые данные. Их визуальные аналоги живут в `GameScene.mobVisuals` (Map<mobId, visual>).
 

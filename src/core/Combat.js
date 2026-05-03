@@ -22,23 +22,27 @@ export class CombatSystem {
     this.waveState      = 'fighting';// 'fighting' | 'paused' | 'spawning'
     this.deathsOnWave   = 0;        // счётчик смертей на текущей волне
 
-    this._mobCallbacks = [];         // {onSpawn, onDeath, onDamage, onPlayerAttack, onPlayerHit}
-    this._lastTick     = performance.now();
-    this._accumulated  = 0;
-
-    this._rafId = null;
+    this._mobCallbacks  = [];
+    this._lastTick      = performance.now();
+    this._accumulated   = 0;
+    this._rafId         = null;
+    this._pendingPoison = null; // { dmg, ticks } — устанавливается скиллом rogue
 
     // При престиже — сбросить текущих мобов и начать с новой волны
     state.on('player:prestige', () => {
-      this.mobs          = [];
+      this.mobs           = [];
       this.attackCooldown = 0;
       this.deathsOnWave   = 0;
       this.waveState      = 'fighting';
+      this._pendingPoison = null;
       this.state.isAlive  = true;
       this.state.currentHp = this.state.getStats().maxHp;
       this._emit('onRespawn', {});
       this._spawnWave();
     });
+
+    // Применить скилл при активации игроком
+    state.on('player:skillTriggered', ({ skill }) => this._applySkill(skill));
   }
 
   start() {
@@ -75,6 +79,22 @@ export class CombatSystem {
   // ── Тик логики (фиксированный шаг TICK_MS) ──────────────────────────────────
   _tick() {
     const dt = TICK_MS;
+
+    // DOT: яд и горение (обрабатываем до атак, копируем массив т.к. _killMob меняет this.mobs)
+    for (const mob of [...this.mobs]) {
+      if (mob.poisonTicks > 0) {
+        mob.poisonTicks--;
+        mob.hp -= mob.poisonDmg;
+        this._emit('onMobDot', { mob, damage: mob.poisonDmg, type: 'poison' });
+        if (mob.hp <= 0) { this._killMob(mob); continue; }
+      }
+      if (mob.burnTicks > 0) {
+        mob.burnTicks--;
+        mob.hp -= mob.burnDmg;
+        this._emit('onMobDot', { mob, damage: mob.burnDmg, type: 'burn' });
+        if (mob.hp <= 0) { this._killMob(mob); continue; }
+      }
+    }
 
     // Реген флаговых мобов (до всех атак)
     for (const mob of this.mobs) {
@@ -178,6 +198,15 @@ export class CombatSystem {
       let dmg = Math.max(1, stats.atk - Math.round(effectiveDef * 0.5));
       if (isCrit) dmg = Math.round(dmg * (stats.critDmg / 100));
 
+      // Яд от скилла rogue: бонус +80% к текущей атаке + вешаем яд на цель
+      if (this._pendingPoison) {
+        const p = this._pendingPoison;
+        this._pendingPoison = null;
+        dmg = Math.round(dmg * 1.8);
+        target.poisonTicks = p.ticks;
+        target.poisonDmg   = p.dmg;
+      }
+
       // Shield: поглощает урон до HP
       let shieldAbsorbed = 0;
       if (target.shield > 0) {
@@ -206,6 +235,9 @@ export class CombatSystem {
 
     // Атаки мобов по игроку
     for (const mob of this.mobs) {
+      // Стан от shield_bash: уменьшаем счётчик, пропускаем атаку
+      if (mob.stunTicks > 0) { mob.stunTicks--; continue; }
+
       mob.attackCooldown = (mob.attackCooldown ?? 0) - dt;
       if (mob.attackCooldown <= 0) {
         const mobInterval = Math.round(1200 / Math.max(0.5, mob.data.speed / 40));
@@ -255,6 +287,55 @@ export class CombatSystem {
             return;
           }
         }
+      }
+    }
+  }
+
+  // ── Активные скилы ──────────────────────────────────────────────────────────
+  _applySkill(skill) {
+    const stats = this.state.getStats();
+
+    switch (skill.id) {
+      case 'focus': {
+        const healAmt = Math.round(stats.maxHp * 0.25);
+        this.state.currentHp = Math.min(stats.maxHp, this.state.currentHp + healAmt);
+        this.state.emit('player:hpChanged', { hp: this.state.currentHp });
+        this._emit('onSkillUsed', { skill, healAmt });
+        break;
+      }
+      case 'shield_bash': {
+        const target = this.mobs[0];
+        if (target) {
+          target.stunTicks = 5; // 5 тиков × 200ms = 1 сек
+          this._emit('onSkillUsed', { skill, target });
+        }
+        break;
+      }
+      case 'poison_stab': {
+        this._pendingPoison = { dmg: Math.round(stats.atk * 0.15), ticks: 3 };
+        this._emit('onSkillUsed', { skill });
+        break;
+      }
+      case 'volley': {
+        const dmg = Math.max(1, Math.round(stats.atk * 0.5));
+        for (const mob of [...this.mobs]) {
+          mob.hp -= dmg;
+          this._emit('onPlayerAttack', { mob, damage: dmg, isCrit: false });
+          if (mob.hp <= 0) this._killMob(mob);
+        }
+        break;
+      }
+      case 'fireball': {
+        const fbDmg   = Math.max(1, Math.round(stats.atk * 0.8));
+        const burnDmg = Math.max(1, Math.round(stats.atk * 0.1));
+        for (const mob of [...this.mobs]) {
+          mob.hp -= fbDmg;
+          mob.burnTicks = (mob.burnTicks ?? 0) + 3;
+          mob.burnDmg   = burnDmg;
+          this._emit('onPlayerAttack', { mob, damage: fbDmg, isCrit: false });
+          if (mob.hp <= 0) this._killMob(mob);
+        }
+        break;
       }
     }
   }

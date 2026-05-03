@@ -5,6 +5,19 @@
 
 ---
 
+## [1.7.0] — 2026-05-03
+
+### Добавлено
+- **Активные скиллы классов** — одна активная способность на ветку с кулдауном: `focus` (Новичок, 20с), `shield_bash` (Воин, 8с), `poison_stab` (Плут, 10с), `volley` (Лучник, 12с), `fireball` (Маг, 15с). Кнопка скилла в `#skill-zone`, кулдаун-бар обновляется каждые 100мс.
+- **DoT эффекты** — яд (`poisonTicks`, `poisonDmg`) и горение (`burnTicks`, `burnDmg`) на мобах; обрабатываются в начале каждого тика `Combat.js`; `_applySkill()` вешает DoT при использовании скиллов. Стан (`stunTicks`) для `shield_bash`.
+
+### Изменено
+- **GameScene.js** рефакторинг: 764 строки → тонкий оркестратор (76 строк) + 3 mixin-файла: `scene/SceneFX.js` (227), `scene/SceneBackground.js` (175), `scene/SceneEntities.js` (264). Паттерн `installXxx(GameScene.prototype)`.
+- **GameState.js** рефакторинг: методы save/load/autosave/hardReset вынесены в `core/GameStateSave.js` (89 строк) через mixin `installSave(GameState.prototype)`.
+- `src/data/skills.js` — новый файл с таблицей `SKILLS_BY_BRANCH`.
+
+---
+
 ## [1.6.0] — 2026-05-02
 
 ### Добавлено

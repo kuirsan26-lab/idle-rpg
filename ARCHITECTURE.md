@@ -1,7 +1,7 @@
 # Idle RPG — Living Architecture
 
 > Живой документ. Обновлять при каждом значимом изменении структуры или планов.
-> Последнее обновление: 2026-04-25 (v1.5.2: milestone-уведомления, maxWaveReached, золотой бонус)
+> Последнее обновление: 2026-05-03 (v1.7.0: активные скиллы классов, рефакторинг GameScene/GameState)
 
 ---
 
@@ -46,17 +46,23 @@
 src/
   main.js              (108 строки)  — точка входа, монтирование Phaser + UI
   core/
-    GameState.js       (515)  — центральное состояние + EventBus
-    Combat.js          (306)  — игровой цикл (rAF + накопленный dt)
+    GameState.js       (475)  — центральное состояние + EventBus + скиллы
+    GameStateSave.js    (89)  — mixin: save/load/autosave/hardReset
+    Combat.js          (387)  — игровой цикл (rAF + накопленный dt), DoT, скиллы
   data/
     classes.js         (269)  — 60 ручных классов + generateDeepClasses()
     mobs.js            (270)  — данные мобов, боссов, флаги, иконки
     items.js            (95)  — генерация предметов, редкости, бонусы
-    changelog.js       (107)  — GAME_VERSION + история версий
+    changelog.js       (120)  — GAME_VERSION + история версий
+    skills.js           (12)  — SKILLS_BY_BRANCH (5 активных скиллов по веткам)
   phaser/
-    GameScene.js       (764)  — Phaser-сцена: спрайты, анимации, фоны, эффекты ⚠️ кандидат на разбивку
+    GameScene.js        (76)  — тонкий оркестратор: init, create, update, event wiring
+    scene/
+      SceneFX.js       (227)  — combat callbacks, floating text, эффекты, helpers
+      SceneBackground.js(175) — фон, земля, арена, факелы, wave banner
+      SceneEntities.js (264)  — игрок и мобы: спрайты, HP-бары, обновление визуалов
   ui/
-    HUD.js             (208)  — верхняя панель (класс, XP, золото, волна)
+    HUD.js             (255)  — верхняя панель + скилл-кнопка с кулдауном
     BattleStrip.js     (342)  — полоса боя: HP-бар, чипы с флагами, tooltip
     ClassTree.js       (256)  — HTML-дерево классов (280px, левая колонка)
     StatsPanel.js      (124)  — правая панель: статы + магазин апгрейдов
@@ -78,6 +84,8 @@ public/
 ```
 ┌─────────────────────────── #hud (52px) ───────────────────────────┐
 │  класс · уровень · XP · золото · волна · убийства · prestige · ⚙️  │
+├─────────────────────────── #skill-zone (40px) ─────────────────────┤
+│  [кнопка скилла: иконка · название · кулдаун-бар]  описание скилла │
 ├─────────────────────────── #battle-strip (52px) ──────────────────┤
 │  [HP игрока] ⚔️  [прогресс волны X/N]  [чипы врагов 👑]            │
 ├──────────────┬────────────────────────┬────────────────────────────┤
@@ -253,6 +261,23 @@ onPlayerHit:    thorns    → mob.hp -= dmg * thorns/100 после takeDamage()
 - Ачивки (в планах) будут давать ПО напрямую — дополнительный источник помимо раунда
 - Магазин: 10 апгрейдов (стартовое золото, XP×5, золото×5, ATK×5, HP×5, скорость×3, сохранить улучшения 30 ПО, стартовая волна 20 ПО)
 
+### Активные скиллы (v1.7.0)
+
+| Ветка | Скилл | Эффект | Кулдаун |
+|-------|-------|--------|---------|
+| novice | ✨ Концентрация | +25% maxHp лечение | 20с |
+| warrior | 🛡️ Удар щитом | стан первого врага 1с (5 тиков) | 8с |
+| rogue | ☠️ Отравить | следующая атака ×1.8 + яд 3 тика | 10с |
+| archer | 🏹 Залп | 50% ATK по всем мобам | 12с |
+| mage | 🔥 Огненный шар | 80% ATK по всем + горение 3 тика | 15с |
+
+**Реализация:**
+- `src/data/skills.js` — `SKILLS_BY_BRANCH`: таблица скиллов по ветке
+- `GameState`: `getBranch()`, `getActiveSkill()`, `triggerSkill()`, `getSkillCooldownPct()` — кулдаун через `performance.now()`
+- `Combat.js`: `_applySkill(skill)` — логика каждого скилла; DoT (`poisonTicks/Dmg`, `burnTicks/Dmg`) обрабатывается в начале `_tick()`; стан: `mob.stunTicks` пропускает атаку
+- `HUD.js`: `#skill-zone` между `#hud` и `#battle-strip`; `setInterval 100ms` обновляет кулдаун-бар
+- Событие `player:skillTriggered { skill }` — связывает GameState → Combat → HUD
+
 ### Milestone-система (v1.5.2)
 
 - Каждая волна кратная 10 — milestone-рубеж
@@ -343,23 +368,20 @@ onPlayerHit:    thorns    → mob.hp -= dmg * thorns/100 после takeDamage()
 
 #### 🟢 Низкий приоритет
 - [ ] **Событийные волны** — раз в ~7 волн случайный модификатор: "Двойная волна", "Ускоренные мобы", "Золотая волна (×3 золото)"; добавляет реиграбельность
-- [ ] **Скиллы классов** — 1 активная способность с кулдауном на ветку (не только пассивные бонусы)
+- [x] **Скиллы классов** — 1 активная способность с кулдауном на ветку (не только пассивные бонусы). Реализовано в v1.7.0.
 - [ ] **Ручные классы depth 5** — заменить авто-генерацию (~28 классов) вручную; текущий паттерн "Великий/Тёмный + имя родителя" выглядит шаблонно
 
 ### Бэклог — технический
 
-- [ ] **🔴 Рефакторинг крупных файлов** — разбить файлы >400 строк на модули для снижения стоимости чтения при разработке. Приоритет: сначала `GameScene.js`, затем `GameState.js`.
+- [x] **🔴 Рефакторинг крупных файлов** — разбить файлы >400 строк на модули. Реализовано в v1.7.0.
 
-  **`GameScene.js` (764 строки) → 3 файла:**
-  - `phaser/GameScene.js` (~220 строк) — init, create, update, event wiring, background/arena
-  - `phaser/MobVisuals.js` (~230 строк) — `_createMobVisual`, `_createMobBody`, `_drawMobBody`, `_updateMobHpBar`, `_onWaveSpawn`, `_onMobDeath`, `_onPlayerAttack`
-  - `phaser/SceneEffects.js` (~200 строк) — `_spawnDmgText`, `_drawAttackFX`, `_spawnDeathParticles`, `_onPlayerHit`, `_onPlayerDeath`, `_onRespawn`, `_onThornsReflect`, `_onMobRegen`, `_onShieldBreak`, `_showWaveBanner`
+  **`GameScene.js` (764 → 76 строк) + 3 mixin-файла через `installXxx(GameScene.prototype)`:**
+  - `phaser/scene/SceneFX.js` (227) — combat callbacks, floating text, helpers
+  - `phaser/scene/SceneBackground.js` (175) — фон, арена, wave banner
+  - `phaser/scene/SceneEntities.js` (264) — спрайты игрока и мобов, HP-бары
 
-  **`GameState.js` (515 строк) → 2 файла:**
-  - `core/gameConfig.js` (~80 строк) — `BASE_STATS`, `LEVEL_GROWTH`, `UPGRADE_BONUS`, `UPGRADES_LIST`, `PRESTIGE_UPGRADES`, `PRESTIGE_UPGRADES_MAP`, `xpForLevel`, `upgradeCost`
-  - `core/GameState.js` (~435 строк) — `EventBus` + `GameState` (импортирует константы из gameConfig)
-
-  Итог: ни один файл не превышает ~230 строк; `GameScene.js` из 764 строк → 3×~220.
+  **`GameState.js` (515 → 475 строк) + mixin:**
+  - `core/GameStateSave.js` (89) — `installSave(GameState.prototype)`: save/load/autosave/hardReset
 
 - [ ] **Анимации спрайтов** — spritesheet вместо static PNG (idle/attack/hit/death)
 - [ ] **Звук** — Web Audio API: фоновая музыка по тиру фона + SFX ударов/крита/смерти/уровня
@@ -405,8 +427,6 @@ onPlayerHit:    thorns    → mob.hp -= dmg * thorns/100 после takeDamage()
 
 | # | Описание |
 |---|---------|
-| 1 | `GameScene.js` (733 строки) — монолит, стоит разбить на `SceneBackground`, `SceneCharacters` |
-| 2 | Все моды апгрейдов хардкодированы в `PrestigeShop.js`, нет data-файла |
-| 3 | Нет обработки ошибок при загрузке спрайтов (fallback только для текстур) |
-| 4 | `generateDeepClasses()` выполняется синхронно при старте — может тормозить на слабых устройствах |
-| 5 | `SettingsMenu._importSave()` проверяет только `data.v !== 1`, но формат сейва v2 — импорт своих сейвов падает с ошибкой |
+| 1 | Все моды апгрейдов хардкодированы в `PrestigeShop.js`, нет data-файла |
+| 2 | Нет обработки ошибок при загрузке спрайтов (fallback только для текстур) |
+| 3 | `generateDeepClasses()` выполняется синхронно при старте — может тормозить на слабых устройствах |

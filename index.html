@@ -74,6 +74,55 @@
     }
     #settings-btn:hover { background: rgba(255,255,255,0.14); color: #fff; }
 
+    /* ═══════════════════════════ SKILL ZONE ═══════════════════════════ */
+    #skill-zone {
+      height: 40px;
+      background: linear-gradient(180deg, #0d0d20, #0a0a1c);
+      border-bottom: 1px solid #1a1a30;
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    #skill-zone-label {
+      font-size: 9px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px; color: #444; white-space: nowrap;
+    }
+    #skill-btn {
+      display: flex; align-items: center; gap: 7px;
+      padding: 4px 12px 4px 9px;
+      background: rgba(100, 80, 200, 0.12);
+      border: 1px solid rgba(120, 100, 220, 0.28);
+      border-radius: 6px; cursor: pointer; color: #ccc;
+      font-family: 'Segoe UI', sans-serif;
+      transition: background 0.15s, border-color 0.15s;
+      position: relative; overflow: hidden; min-width: 170px;
+    }
+    #skill-btn:not(:disabled):hover {
+      background: rgba(120, 100, 220, 0.22);
+      border-color: rgba(140, 120, 255, 0.5);
+    }
+    #skill-btn:disabled { opacity: 0.55; cursor: default; }
+    #skill-btn-icon  { font-size: 18px; line-height: 1; }
+    #skill-btn-text  { display: flex; flex-direction: column; gap: 1px; }
+    #skill-btn-name  { font-size: 11px; font-weight: 700; color: #c8c0ff; line-height: 1.1; }
+    #skill-btn-cd    { font-size: 9px; color: #888; }
+    #skill-btn-ready { font-size: 9px; color: #88ff88; font-weight: 700; }
+    /* Полоска кулдауна снизу кнопки */
+    #skill-cd-bar {
+      position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+      background: rgba(255,255,255,0.06);
+    }
+    #skill-cd-fill {
+      height: 100%; background: #7755ff;
+      transition: width 0.1s linear;
+    }
+    #skill-zone-desc {
+      font-size: 10px; color: #555; flex: 1; overflow: hidden;
+      text-overflow: ellipsis; white-space: nowrap;
+    }
+
     /* ═══════════════════════════ BATTLE STRIP ═══════════════════════════ */
     #battle-strip {
       height: 52px;
@@ -741,6 +790,20 @@
       </div>
       <button id="inventory-btn" onclick="window.game && window.game.openInventory()" title="Инвентарь">🎒 <span id="hud-inv-count"></span></button>
       <button id="settings-btn" onclick="window.game && window.game.openSettings()" title="Настройки">⚙️</button>
+    </div>
+
+    <!-- SKILL ZONE -->
+    <div id="skill-zone">
+      <span id="skill-zone-label">Скилл</span>
+      <button id="skill-btn" disabled>
+        <span id="skill-btn-icon">✨</span>
+        <span id="skill-btn-text">
+          <span id="skill-btn-name">Концентрация</span>
+          <span id="skill-btn-cd">—</span>
+        </span>
+        <div id="skill-cd-bar"><div id="skill-cd-fill" style="width:100%"></div></div>
+      </button>
+      <span id="skill-zone-desc"></span>
     </div>
 
     <!-- BATTLE STRIP -->

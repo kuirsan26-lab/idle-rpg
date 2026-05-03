@@ -1,9 +1,12 @@
 /**
  * Центральное состояние игры + система событий
  * Единственный источник истины; все системы читают и пишут только сюда.
+ * Save/load вынесено в GameStateSave.js
  */
 import { getCumulativeBonuses, CLASS_MAP, CHILDREN_MAP, DEPTH_LEVEL_REQ, DEPTH_GOLD_COST } from '../data/classes.js';
 import { generateItem, SELL_VALUE } from '../data/items.js';
+import { SKILLS_BY_BRANCH } from '../data/skills.js';
+import { installSave } from './GameStateSave.js';
 
 // Базовые статы на 1-м уровне
 const BASE_STATS = { hp: 130, atk: 14, def: 7, spd: 1.3 };
@@ -107,6 +110,9 @@ export class GameState extends EventBus {
 
     // ── Метаданные сохранения ────────────────────────────────────────
     this._lastSave = Date.now();
+
+    // ── Скилы ────────────────────────────────────────────────────────
+    this._skillCdEnd = 0; // performance.now() когда скилл будет готов
   }
 
   /** Все суммарные бонусы от класса */
@@ -419,6 +425,41 @@ export class GameState extends EventBus {
     return gold;
   }
 
+  // ── Скилы ──────────────────────────────────────────────────────────────────
+
+  /** Ветка класса текущего персонажа */
+  getBranch() {
+    const cls = CLASS_MAP.get(this.currentClass);
+    return cls?.branch ?? 'novice';
+  }
+
+  /** Активный скилл по текущей ветке */
+  getActiveSkill() {
+    return SKILLS_BY_BRANCH[this.getBranch()] ?? SKILLS_BY_BRANCH.novice;
+  }
+
+  /** Скилл готов к использованию */
+  isSkillReady() {
+    return performance.now() >= this._skillCdEnd;
+  }
+
+  /** Доля прогресса кулдауна [0..1], где 1 = готово */
+  getSkillCooldownPct() {
+    if (this.isSkillReady()) return 1;
+    const skill   = this.getActiveSkill();
+    const elapsed = skill.cdMs - (this._skillCdEnd - performance.now());
+    return Math.max(0, elapsed / skill.cdMs);
+  }
+
+  /** Активировать скилл. Возвращает объект скилла или null если не готов */
+  triggerSkill() {
+    if (!this.isSkillReady() || !this.isAlive) return null;
+    const skill      = this.getActiveSkill();
+    this._skillCdEnd = performance.now() + skill.cdMs;
+    this.emit('player:skillTriggered', { skill });
+    return skill;
+  }
+
   /** Начальная инициализация / загрузка */
   initialize() {
     const loaded = this._load();
@@ -428,88 +469,7 @@ export class GameState extends EventBus {
     this._autoSave();
   }
 
-  // ── Сохранение ─────────────────────────────────────────────────────
-  save() {
-    const data = {
-      v: 2,
-      level: this.level,
-      xp: this.xp,
-      gold: this.gold,
-      totalKills: this.totalKills,
-      totalGold: this.totalGold,
-      playTime: this.playTime,
-      prestigeCount: this.prestigeCount,
-      prestigePoints: this.prestigePoints,
-      prestigeShop: { ...this.prestigeShop },
-      currentClass: this.currentClass,
-      unlockedClasses: [...this.unlockedClasses],
-      upgrades: { ...this.upgrades },
-      currentWave: this.currentWave,
-      maxWaveReached: this.maxWaveReached,
-      inventory:  this.inventory,
-      equipment:  this.equipment,
-      timestamp: Date.now(),
-    };
-    try {
-      localStorage.setItem('idle_rpg_save', JSON.stringify(data));
-    } catch (e) {
-      console.warn('Save failed:', e);
-    }
-  }
-
-  _load() {
-    try {
-      const raw = localStorage.getItem('idle_rpg_save');
-      if (!raw) return false;
-      const data = JSON.parse(raw);
-      if (!data || (data.v !== 1 && data.v !== 2)) return false;
-
-      this.level           = data.level ?? 1;
-      this.xp              = data.xp ?? 0;
-      this.gold            = data.gold ?? 0;
-      this.totalKills      = data.totalKills ?? 0;
-      this.totalGold       = data.totalGold ?? 0;
-      this.playTime        = data.playTime ?? 0;
-      this.prestigeCount   = data.prestigeCount ?? 0;
-      this.prestigePoints  = data.prestigePoints ?? 0;
-      this.prestigeShop    = data.prestigeShop ?? {};
-      this.currentClass    = data.currentClass ?? 'novice';
-      this.unlockedClasses = new Set(data.unlockedClasses ?? ['novice']);
-      this.upgrades        = { atk: 0, def: 0, hp: 0, spd: 0, crit: 0, critDmg: 0, ...data.upgrades };
-      this.currentWave     = data.currentWave ?? 1;
-      // Старые сейвы: инициализируем из currentWave, чтобы не повторять уже пройденные рубежи
-      this.maxWaveReached  = data.maxWaveReached ?? (data.currentWave ?? 0);
-      this.inventory       = data.inventory ?? [];
-      this.equipment       = { weapon: null, armor: null, accessory: null, ...(data.equipment ?? {}) };
-
-      // Офлайн-прогресс (до 8 часов)
-      const elapsed = Math.min((Date.now() - (data.timestamp ?? Date.now())) / 1000, 8 * 3600);
-      if (elapsed > 10) {
-        const dps = this.getStats().atk * this.getStats().spd;
-        const goldPerSec = dps * 0.5 * this.getStats().goldMult;
-        const xpPerSec   = dps * 0.3 * this.getStats().xpMult;
-        this.addGold(Math.round(goldPerSec * elapsed));
-        this.addXp(Math.round(xpPerSec * elapsed));
-      }
-
-      this.currentHp = this.getStats().maxHp;
-      return true;
-    } catch (e) {
-      console.warn('Load failed:', e);
-      return false;
-    }
-  }
-
-  _autoSave() {
-    this._boundSave = () => this.save();
-    setInterval(this._boundSave, 30_000);
-    window.addEventListener('beforeunload', this._boundSave);
-  }
-
-  hardReset() {
-    window.removeEventListener('beforeunload', this._boundSave);
-    localStorage.removeItem('idle_rpg_save');
-    localStorage.removeItem('idle_rpg_seen_version');
-    window.location.reload();
-  }
 }
+
+// Save/load/autosave/hardReset вынесены в GameStateSave.js
+installSave(GameState.prototype);
