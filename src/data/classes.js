@@ -63,7 +63,7 @@ const MANUAL_CLASSES = [
   { id: 'sniper',    name: 'Снайпер',  parent: 'archer',  branch: 'archer',  desc: 'Мастер точных выстрелов. Пробивает броню и может убить одним ударом', bonuses: { atk: 0.15, crit: 0.15, critDmg: 0.30, pierce: 0.08, deathblow: 0.02 } },
   // Маг
   { id: 'druid',     name: 'Друид',    parent: 'mage',    branch: 'mage',    desc: 'Хранитель природы, накапливающий опыт быстрее всех', bonuses: { xpMult: 0.30, hp: 0.20, atk: 0.15, magicShield: 0.07 } },
-  { id: 'alchemist', name: 'Алхимик',  parent: 'mage',    branch: 'mage',    desc: 'Мастер зелий, превращающий врагов в золото', bonuses: { atk: 0.20, goldMult: 0.30, crit: 0.10, magicShield: 0.05 } },
+  { id: 'alchemist', name: 'Алхимик',  parent: 'mage',    branch: 'mage',    desc: 'Мастер зелий, превращающий врагов в золото', bonuses: { atk: 0.20, goldMult: 0.30, crit: 0.10, magicShield: 0.05, poison: 0.03 } },
 
   // ── DEPTH 3 ──────────────────────────────────────────────────────
   // Берсерк
@@ -83,13 +83,14 @@ const MANUAL_CLASSES = [
   { id: 'tracker',      name: 'Следопыт',   parent: 'ranger',   branch: 'archer',  desc: 'Неуловимый охотник, всегда находящий добычу', bonuses: { spd: 0.25, atk: 0.25, xpMult: 0.15, pierce: 0.04 } },
   // Снайпер
   { id: 'eagle_eye',   name: 'Орлиный Глаз',    parent: 'sniper',    branch: 'archer', desc: 'Никогда не промахивается. Каждый выстрел может стать смертельным', bonuses: { crit: 0.20, critDmg: 0.40, atk: 0.15, pierce: 0.10, deathblow: 0.03 } },
-  { id: 'dark_shot',   name: 'Тёмный Стрелок',  parent: 'sniper',    branch: 'archer', desc: 'Отравляет врагов своими стрелами', bonuses: { atk: 0.25, crit: 0.15, critDmg: 0.25, pierce: 0.08, deathblow: 0.02 } },
+  { id: 'dark_shot',   name: 'Тёмный Стрелок',  parent: 'sniper',    branch: 'archer', desc: 'Отравляет врагов своими стрелами', bonuses: { atk: 0.25, crit: 0.15, critDmg: 0.25, pierce: 0.08, deathblow: 0.02, poison: 0.04 } },
   // Друид
   { id: 'archdruid',   name: 'Архидруид',        parent: 'druid',     branch: 'mage',   desc: 'Высший адепт природной магии', bonuses: { xpMult: 0.35, hp: 0.25, atk: 0.15, magicShield: 0.10 } },
   { id: 'shaman',      name: 'Шаман',             parent: 'druid',     branch: 'mage',   desc: 'Призывает силы духов предков. Духи-хранители уводят удары', bonuses: { xpMult: 0.25, atk: 0.25, spd: 0.15, magicShield: 0.08, dodge: 0.04 } },
   // Алхимик
-  { id: 'potion_master', name: 'Зельевар',  parent: 'alchemist', branch: 'mage', desc: 'Мастер зелий невероятной силы', bonuses: { atk: 0.25, goldMult: 0.25, hp: 0.20, magicShield: 0.08 } },
-  { id: 'bombardier',    name: 'Бомбардир', parent: 'alchemist', branch: 'mage', desc: 'Взрывчатые соединения сносят врагов', bonuses: { atk: 0.35, crit: 0.15, goldMult: 0.15, magicShield: 0.06 } },
+  { id: 'potion_master', name: 'Зельевар',   parent: 'alchemist', branch: 'mage', desc: 'Мастер зелий невероятной силы', bonuses: { atk: 0.25, goldMult: 0.25, hp: 0.20, magicShield: 0.08 } },
+  { id: 'bombardier',    name: 'Бомбардир',  parent: 'alchemist', branch: 'mage', desc: 'Взрывчатые соединения сносят врагов', bonuses: { atk: 0.35, crit: 0.15, goldMult: 0.15, magicShield: 0.06 } },
+  { id: 'toxicologist',  name: 'Токсиколог', parent: 'alchemist', branch: 'mage', desc: 'Превращает яды в оружие. Каждый удар может стать смертным приговором', bonuses: { atk: 0.20, goldMult: 0.20, crit: 0.08, poison: 0.06 } },
 
   // ── DEPTH 4 ──────────────────────────────────────────────────────
   // Разрушитель
@@ -126,7 +127,7 @@ const MANUAL_CLASSES = [
   { id: 'marksman',    name: 'Меткий Стрелок', parent: 'eagle_eye', branch: 'archer', desc: 'Попадает с любого расстояния. Смерть от одного выстрела — не редкость', bonuses: { crit: 0.25, critDmg: 0.45, atk: 0.10, pierce: 0.12, deathblow: 0.04 } },
   { id: 'crossbowman', name: 'Арбалетчик',     parent: 'eagle_eye', branch: 'archer', desc: 'Мощные болты пробивают любую броню', bonuses: { atk: 0.35, crit: 0.15, def: 0.10, pierce: 0.12, deathblow: 0.03 } },
   // Тёмный Стрелок
-  { id: 'poison_arrow',  name: 'Отравленная Стрела', parent: 'dark_shot', branch: 'archer', desc: 'Яд медленно съедает врага', bonuses: { atk: 0.30, crit: 0.20, critDmg: 0.20, pierce: 0.10, deathblow: 0.03 } },
+  { id: 'poison_arrow',  name: 'Отравленная Стрела', parent: 'dark_shot', branch: 'archer', desc: 'Яд медленно съедает врага', bonuses: { atk: 0.30, crit: 0.20, critDmg: 0.20, pierce: 0.10, deathblow: 0.03, poison: 0.07 } },
   { id: 'shadow_archer', name: 'Теневой Лучник',     parent: 'dark_shot', branch: 'archer', desc: 'Стреляет из кромешной тьмы', bonuses: { atk: 0.25, spd: 0.20, crit: 0.15, critDmg: 0.20, pierce: 0.10, deathblow: 0.02 } },
   // Архидруид
   { id: 'nature_warden',  name: 'Хранитель Природы', parent: 'archdruid', branch: 'mage', desc: 'Природа подчиняется его слову', bonuses: { xpMult: 0.40, hp: 0.30, atk: 0.10 } },
@@ -136,10 +137,12 @@ const MANUAL_CLASSES = [
   { id: 'spirit_lord',  name: 'Повелитель Духов', parent: 'shaman', branch: 'mage', desc: 'Командует легионами духов', bonuses: { atk: 0.30, xpMult: 0.25, hp: 0.15 } },
   // Зельевар
   { id: 'brew_master', name: 'Мастер Зелий', parent: 'potion_master', branch: 'mage', desc: 'Зелья чудовищной силы', bonuses: { atk: 0.30, goldMult: 0.25, hp: 0.20 } },
-  { id: 'apothecary',  name: 'Аптекарь',    parent: 'potion_master', branch: 'mage', desc: 'Лечит и отравляет с равным мастерством', bonuses: { hp: 0.30, atk: 0.25, goldMult: 0.20 } },
+  { id: 'apothecary',  name: 'Аптекарь',    parent: 'potion_master', branch: 'mage', desc: 'Лечит и отравляет с равным мастерством', bonuses: { hp: 0.30, atk: 0.25, goldMult: 0.20, poison: 0.05 } },
   // Бомбардир
-  { id: 'pyromaniac',      name: 'Пиротехник',  parent: 'bombardier', branch: 'mage', desc: 'Обожает взрывы и огонь', bonuses: { atk: 0.40, crit: 0.15, goldMult: 0.10 } },
-  { id: 'explosive_expert', name: 'Взрывотехник', parent: 'bombardier', branch: 'mage', desc: 'Мастер разрушительных веществ', bonuses: { atk: 0.35, crit: 0.20, goldMult: 0.15 } },
+  { id: 'pyromaniac',      name: 'Пиротехник',    parent: 'bombardier',   branch: 'mage', desc: 'Обожает взрывы и огонь', bonuses: { atk: 0.40, crit: 0.15, goldMult: 0.10 } },
+  { id: 'explosive_expert', name: 'Взрывотехник', parent: 'bombardier',   branch: 'mage', desc: 'Мастер разрушительных веществ', bonuses: { atk: 0.35, crit: 0.20, goldMult: 0.15 } },
+  { id: 'poison_master',   name: 'Мастер Ядов',  parent: 'toxicologist', branch: 'mage', desc: 'Знает тысячу ядов. Ни один враг не уходит без отравы в крови', bonuses: { atk: 0.25, goldMult: 0.15, crit: 0.10, poison: 0.08 } },
+  { id: 'plague_doctor',   name: 'Чумной Доктор', parent: 'toxicologist', branch: 'mage', desc: 'Несёт болезнь и смерть под маской целителя', bonuses: { hp: 0.20, goldMult: 0.25, atk: 0.15, poison: 0.08 } },
 ];
 
 // ── ГЕНЕРАЦИЯ БОНУСОВ ДЛЯ ГЛУБИН 5–10 ───────────────────────────────────────
@@ -252,7 +255,7 @@ export function getAncestors(classId) {
 /** Суммарные бонусы со всей ветки предков */
 export function getCumulativeBonuses(classId) {
   const ancestors = getAncestors(classId);
-  const total = { atk: 0, hp: 0, def: 0, spd: 0, crit: 0, critDmg: 0, xpMult: 0, goldMult: 0, dodge: 0, lifesteal: 0, thorns: 0, magicShield: 0, pierce: 0, deathblow: 0 };
+  const total = { atk: 0, hp: 0, def: 0, spd: 0, crit: 0, critDmg: 0, xpMult: 0, goldMult: 0, dodge: 0, lifesteal: 0, thorns: 0, magicShield: 0, pierce: 0, deathblow: 0, poison: 0 };
   for (const id of ancestors) {
     const cls = CLASS_MAP.get(id);
     if (!cls?.bonuses) continue;

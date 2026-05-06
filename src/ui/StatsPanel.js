@@ -46,6 +46,7 @@ export class StatsPanel {
     this._setStatRow('stat-row-magicshield', 'stat-magicshield', s.magicShield > 0, s.magicShield.toFixed(1));
     this._setStatRow('stat-row-pierce',      'stat-pierce',      s.pierce      > 0, s.pierce.toFixed(1));
     this._setStatRow('stat-row-deathblow',   'stat-deathblow',   s.deathblow   > 0, s.deathblow.toFixed(1));
+    this._setStatRow('stat-row-poison',      'stat-poison',      s.poison      > 0, s.poison.toFixed(1));
 
     // Множители
     const setMult = (id, val) => {

@@ -228,6 +228,12 @@ export class CombatSystem {
         }
       }
 
+      // Poison stat: шанс наложить DoT (игнорирует броню); не стакается, освежает таймер
+      if (stats.poison > 0 && Math.random() * 100 < stats.poison) {
+        target.poisonTicks = 12;
+        target.poisonDmg   = Math.round(stats.atk * 0.15);
+      }
+
       if (target.hp <= 0) {
         this._killMob(target);
       }
