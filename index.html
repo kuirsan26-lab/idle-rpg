@@ -764,6 +764,166 @@
       margin-top: 4px;
       text-shadow: 0 0 12px rgba(125,218,125,0.5);
     }
+
+    /* ═══════════════════════════ MAIN MENU ═══════════════════════════ */
+    #main-menu-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 500;
+      background: radial-gradient(ellipse at 50% 25%, #1a1040 0%, #080810 65%, #050508 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.45s ease;
+    }
+    #main-menu-overlay.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
+    #main-menu-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 22px;
+      width: 500px;
+    }
+    .mm-title-block { text-align: center; }
+    .mm-title {
+      font-size: 52px;
+      font-weight: 900;
+      letter-spacing: 4px;
+      background: linear-gradient(135deg, #b09fff 0%, #ffd700 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+    }
+    .mm-subtitle {
+      font-size: 13px;
+      color: #555;
+      letter-spacing: 5px;
+      text-transform: uppercase;
+      margin-top: 8px;
+    }
+    .mm-changelog {
+      width: 100%;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 10px;
+      padding: 14px 16px;
+      max-height: 148px;
+      overflow-y: auto;
+    }
+    .mm-changelog::-webkit-scrollbar { width: 3px; }
+    .mm-changelog::-webkit-scrollbar-track { background: transparent; }
+    .mm-changelog::-webkit-scrollbar-thumb { background: #2a2a4a; border-radius: 2px; }
+    .mm-cl-header {
+      font-size: 10px;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 10px;
+    }
+    .mm-cl-version { color: #9988ff; font-weight: 700; }
+    .mm-cl-entry {
+      font-size: 11px;
+      color: #999;
+      padding: 4px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      line-height: 1.45;
+    }
+    .mm-cl-entry:last-child { border-bottom: none; }
+    .mm-buttons {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+    }
+    .mm-btn-primary {
+      width: 260px;
+      padding: 13px 24px;
+      background: linear-gradient(135deg, #4a3a9a, #7755ff);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: filter 0.15s, transform 0.1s;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    .mm-btn-primary:hover { filter: brightness(1.2); transform: translateY(-1px); }
+    .mm-btn-secondary {
+      width: 260px;
+      padding: 10px 24px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px;
+      color: #999;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    .mm-btn-secondary:hover {
+      background: rgba(255,80,60,0.1);
+      border-color: rgba(255,80,60,0.28);
+      color: #ff9988;
+    }
+    .mm-btn-danger {
+      padding: 8px 18px;
+      background: rgba(220,60,40,0.2);
+      border: 1px solid rgba(220,60,40,0.45);
+      border-radius: 6px;
+      color: #ff9988;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'Segoe UI', sans-serif;
+      transition: background 0.15s;
+    }
+    .mm-btn-danger:hover { background: rgba(220,60,40,0.38); }
+    .mm-warn-text {
+      font-size: 12px;
+      color: #ff9966;
+      text-align: center;
+      margin-bottom: 4px;
+    }
+    .mm-confirm-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: center;
+    }
+    .mm-lang {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .mm-lang-label { font-size: 11px; color: #444; }
+    .mm-lang-btn {
+      padding: 4px 14px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 4px;
+      color: #666;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    .mm-lang-btn:hover:not(.mm-lang-active) { background: rgba(255,255,255,0.09); color: #aaa; }
+    .mm-lang-active {
+      background: rgba(100,80,200,0.18) !important;
+      border-color: rgba(120,100,220,0.4) !important;
+      color: #c8b0ff !important;
+    }
   </style>
 </head>
 <body>
@@ -866,6 +1026,10 @@
       <div id="log-header">📜 Журнал Боя</div>
       <div id="log-entries"></div>
     </div>
+
+    <!-- MAIN MENU OVERLAY (поверх всего, внутри #app для масштабирования) -->
+    <div id="main-menu-overlay"></div>
+
   </div>
 
   <!-- ══════ CLASS MODAL ══════ -->

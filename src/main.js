@@ -15,6 +15,7 @@ import { BattleStrip }   from './ui/BattleStrip.js';
 import { SettingsMenu }  from './ui/SettingsMenu.js';
 import { PrestigeShop }  from './ui/PrestigeShop.js';
 import { InventoryPanel } from './ui/InventoryPanel.js';
+import { MainMenu }       from './ui/MainMenu.js';
 import { CLASS_MAP }     from './data/classes.js';
 
 window._classMap = CLASS_MAP;
@@ -92,8 +93,12 @@ combat.register({
   onWaveRollback:  (d) => battleStrip.onWaveRollback(d),
 });
 
-// ── 5. Старт боя ──────────────────────────────────────────────────────────────
-setTimeout(() => combat.start(), 700);
+// ── 5. Главное меню → старт боя ───────────────────────────────────────────────
+const menu = new MainMenu({
+  onStart:   () => setTimeout(() => combat.start(), 200),
+  onNewGame: () => state.hardReset(),
+});
+menu.show();
 
 // ── 6. Resize ─────────────────────────────────────────────────────────────────
 function handleResize() {
