@@ -54,7 +54,7 @@ export const PRESTIGE_UPGRADES = [
   { id: 'baseAtk',      name: '⚔️ Базовый удар',         desc: '+15% базового урона за ранг',       cost: 8,  max: 5, group: 'stats' },
   { id: 'baseHp',       name: '❤️ Базовое здоровье',     desc: '+15% базового HP за ранг',          cost: 8,  max: 5, group: 'stats' },
   { id: 'baseSpd',      name: '⚡ Скорость ветерана',    desc: '+10% базовой скорости за ранг',     cost: 12, max: 3, group: 'stats' },
-  { id: 'keepUpgrades', name: '🔒 Сохранить улучшения',  desc: 'Апгрейды магазина не сбрасываются', cost: 30, max: 1, group: 'qol'   },
+  { id: 'keepUpgrades', name: '🔒 Сохранить улучшения',  desc: 'Апгрейды магазина не сбрасываются', cost: 100, max: 1, group: 'qol'   },
   { id: 'startWave',    name: '🌊 Стартовая волна',      desc: 'Начинать каждый ран с волны 5',     cost: 20, max: 1, group: 'qol'   },
 ];
 export const PRESTIGE_UPGRADES_MAP = new Map(PRESTIGE_UPGRADES.map(u => [u.id, u]));
@@ -92,7 +92,8 @@ export class GameState extends EventBus {
 
     // ── Классы ─────────────────────────────────────────────────────
     this.currentClass    = 'novice';
-    this.unlockedClasses = new Set(['novice']);
+    this.unlockedClasses  = new Set(['novice']);
+    this.discoveredClasses = new Set(['novice']); // не сбрасывается при престиже
 
     // ── Улучшения (кол-во купленных уровней) ───────────────────────
     this.upgrades = { atk: 0, def: 0, hp: 0, spd: 0, crit: 0, critDmg: 0 };
@@ -266,6 +267,14 @@ export class GameState extends EventBus {
     this.gold -= cost;
     this.currentClass = classId;
     this.unlockedClasses.add(classId);
+
+    // Ачивка: первое открытие класса → +1 ПО
+    if (!this.discoveredClasses.has(classId)) {
+      this.discoveredClasses.add(classId);
+      this.prestigePoints += 1;
+      this.emit('player:classDiscovered', { classId, totalDiscovered: this.discoveredClasses.size });
+    }
+
     this.emit('player:classChanged', { classId });
     this.emit('player:statsChanged');
     this.emit('player:goldChanged', { gold: this.gold });

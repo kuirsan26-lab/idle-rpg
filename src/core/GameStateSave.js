@@ -18,8 +18,9 @@ export function installSave(proto) {
       prestigeCount:  this.prestigeCount,
       prestigePoints: this.prestigePoints,
       prestigeShop:   { ...this.prestigeShop },
-      currentClass:   this.currentClass,
-      unlockedClasses: [...this.unlockedClasses],
+      currentClass:    this.currentClass,
+      unlockedClasses:  [...this.unlockedClasses],
+      discoveredClasses: [...this.discoveredClasses],
       upgrades:       { ...this.upgrades },
       currentWave:    this.currentWave,
       maxWaveReached: this.maxWaveReached,
@@ -65,6 +66,11 @@ export function installSave(proto) {
       // Фильтруем удалённые авто-генерируемые ID из разблокированных
       this.unlockedClasses = new Set([...this.unlockedClasses].filter(id => CLASS_MAP.has(id)));
       if (!this.unlockedClasses.has('novice')) this.unlockedClasses.add('novice');
+
+      // Миграция: старые сейвы без discoveredClasses — заполняем из unlockedClasses
+      const rawDiscovered = data.discoveredClasses ?? [...this.unlockedClasses];
+      this.discoveredClasses = new Set(rawDiscovered.filter(id => CLASS_MAP.has(id)));
+      if (!this.discoveredClasses.has('novice')) this.discoveredClasses.add('novice');
       this.upgrades = { atk: 0, def: 0, hp: 0, spd: 0, crit: 0, critDmg: 0, ...data.upgrades };
       this.currentWave    = data.currentWave ?? 1;
       this.maxWaveReached = data.maxWaveReached ?? (data.currentWave ?? 0);

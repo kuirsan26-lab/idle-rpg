@@ -45,6 +45,10 @@ export class HUD {
       state.on('player:skillTriggered', ({ skill }) => {
         this._log(`⚡ Скилл: ${skill.icon} ${skill.name}!`, 'wave');
       }),
+      state.on('player:classDiscovered', ({ totalDiscovered }) => {
+        this._log(`🔍 Новый класс открыт! +1 ПО (открыто: ${totalDiscovered})`, 'level');
+        this._updatePrestigeBtn();
+      }),
     ];
 
     this._milestoneTimeout = null;

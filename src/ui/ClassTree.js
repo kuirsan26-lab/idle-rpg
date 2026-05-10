@@ -25,10 +25,11 @@ export class ClassTreePanel {
     this._render();
 
     this._unsubs = [
-      state.on('player:classChanged', () => this._render()),
-      state.on('player:statsChanged', () => this._render()),
-      state.on('player:goldChanged',  () => this._render()),
-      state.on('player:levelUp',      () => this._render()),
+      state.on('player:classChanged',    () => this._render()),
+      state.on('player:statsChanged',    () => this._render()),
+      state.on('player:goldChanged',     () => this._render()),
+      state.on('player:levelUp',         () => this._render()),
+      state.on('player:classDiscovered', () => this._render()),
     ];
   }
 
@@ -63,6 +64,9 @@ export class ClassTreePanel {
     document.getElementById('class-modal-overlay').addEventListener('click', (e) => {
       if (e.target === document.getElementById('class-modal-overlay')) this._closeModal();
     });
+
+    window.game = window.game || {};
+    window.game.openClassModal = (id) => this._openModal(id);
   }
 
   // ── Рендер дерева ─────────────────────────────────────────────────────────────
@@ -75,8 +79,9 @@ export class ClassTreePanel {
     let nodesToShow = [];
 
     if (searchQuery) {
-      // Режим поиска: все классы, имя которых содержит запрос
+      // Режим поиска: только открытые классы (неоткрытые — ???, их имя неизвестно)
       for (const [id, cls] of CLASS_MAP) {
+        if (!this.state.discoveredClasses.has(id)) continue;
         if (cls.name.toLowerCase().includes(searchQuery)) {
           nodesToShow.push(cls);
           if (nodesToShow.length >= 60) break; // лимит отображения
@@ -157,23 +162,44 @@ export class ClassTreePanel {
 
   // ── Рендер одного узла ────────────────────────────────────────────────────────
   _renderNode(cls, ancestors, currentClass) {
-    const isCurrent   = cls.id === currentClass;
-    const isAncestor  = ancestors.has(cls.id) && !isCurrent;
-    const isAvailable = this._isAvailable(cls);
-    const isLocked    = !isCurrent && !isAncestor && !isAvailable;
-
-    let nodeClass = 'tree-node';
-    if (isCurrent)  nodeClass += ' current';
-    else if (isAncestor)  nodeClass += ' ancestor';
-    else if (isAvailable) nodeClass += ' available';
-    else nodeClass += ' locked';
+    const isCurrent    = cls.id === currentClass;
+    const isAncestor   = ancestors.has(cls.id) && !isCurrent;
+    const isAvailable  = this._isAvailable(cls);
+    const isDiscovered = this.state.discoveredClasses.has(cls.id);
+    const isLocked     = !isCurrent && !isAncestor && !isAvailable;
 
     const depth  = cls.depth ?? 0;
     const indent = Math.min(depth, 6) * 10;
-    const color  = BRANCH_COLORS[cls.branch] ?? '#aaa';
 
-    const cost = DEPTH_GOLD_COST[depth] ?? 0;
-    const lvl  = DEPTH_LEVEL_REQ[depth] ?? 0;
+    // Mystery-нода: ещё ни разу не открывался
+    if (!isDiscovered && !isCurrent && !isAncestor) {
+      const cost = DEPTH_GOLD_COST[depth] ?? 0;
+      const lvl  = DEPTH_LEVEL_REQ[depth] ?? 0;
+      const nodeClass = 'tree-node mystery' + (isAvailable ? ' available' : ' locked');
+      const costStr = isAvailable
+        ? `<span style="color:#ffd700">${this._formatNum(cost)}g</span>`
+        : depth > 0 ? `<span style="color:#333">${this._formatNum(cost)}g</span>` : '';
+      return `
+        <div class="${nodeClass}" data-id="${cls.id}" title="Неизвестный класс\nОткройте, чтобы узнать\nНужен уровень: ${lvl}">
+          <div class="node-row">
+            <span class="node-indent" style="width:${indent}px"></span>
+            <span class="node-specialty-dot" style="background:#222;border:1px solid #444"></span>
+            <span class="node-name" style="color:#444">⊡ ???</span>
+            <span class="node-depth" style="color:#333">${depth > 0 ? 'Ур.' + depth : ''}</span>
+            <span style="margin-left:auto;font-size:10px">${costStr}</span>
+          </div>
+        </div>`;
+    }
+
+    let nodeClass = 'tree-node';
+    if (isCurrent)        nodeClass += ' current';
+    else if (isAncestor)  nodeClass += ' ancestor';
+    else if (isAvailable) nodeClass += ' available';
+    else                  nodeClass += ' locked';
+
+    const color  = BRANCH_COLORS[cls.branch] ?? '#aaa';
+    const cost   = DEPTH_GOLD_COST[depth] ?? 0;
+    const lvl    = DEPTH_LEVEL_REQ[depth] ?? 0;
     const costStr = isAvailable
       ? `<span style="color:#ffd700">${this._formatNum(cost)}g</span>`
       : isLocked && depth > 0
@@ -210,17 +236,17 @@ export class ClassTreePanel {
     if (!cls) return;
     this.pendingClass = classId;
 
-    const cost  = DEPTH_GOLD_COST[cls.depth] ?? 0;
-    const lvReq = DEPTH_LEVEL_REQ[cls.depth] ?? 0;
-    const color = BRANCH_COLORS[cls.branch] ?? '#aaa';
+    const cost        = DEPTH_GOLD_COST[cls.depth] ?? 0;
+    const lvReq       = DEPTH_LEVEL_REQ[cls.depth] ?? 0;
+    const isDiscovered = this.state.discoveredClasses.has(classId);
+    const color       = isDiscovered ? (BRANCH_COLORS[cls.branch] ?? '#aaa') : '#444';
 
-    document.getElementById('modal-class-name').textContent = cls.name;
+    document.getElementById('modal-class-name').textContent = isDiscovered ? cls.name : '??? Неизвестный класс';
     document.getElementById('modal-class-name').style.color = color;
-    document.getElementById('modal-class-desc').textContent = cls.desc;
+    document.getElementById('modal-class-desc').textContent = isDiscovered ? cls.desc : 'Откройте этот класс, чтобы узнать его секреты. Каждый новый класс приносит +1 ПО.';
     document.getElementById('modal-class-cost').textContent = this._formatNum(cost);
 
-    // Бонусы
-    const bonuses = cls.bonuses || {};
+    // Бонусы — скрываем для неоткрытых классов
     const bKeys = {
       atk: '⚔️ Урон',        hp: '❤️ HP',            def: '🛡️ Защита',
       spd: '⚡ Скорость',     crit: '🎯 Крит шанс',   critDmg: '💥 Крит урон',
@@ -229,16 +255,22 @@ export class ClassTreePanel {
       thorns: '🌵 Шипы',     magicShield: '🔮 Маг. щит',
       pierce: '🏹 Пробитие', deathblow: '💀 Смерт. удар',
     };
-    const statsHtml = Object.entries(bonuses)
-      .filter(([, v]) => v > 0)
-      .map(([k, v]) => `
-        <div class="modal-stat-row">
-          <span class="msr-name">${bKeys[k] ?? k}</span>
-          <span class="msr-val">+${Math.round(v * 100)}%</span>
-        </div>`).join('');
+    let statsHtml;
+    if (isDiscovered) {
+      const bonuses = cls.bonuses || {};
+      statsHtml = Object.entries(bonuses)
+        .filter(([, v]) => v > 0)
+        .map(([k, v]) => `
+          <div class="modal-stat-row">
+            <span class="msr-name">${bKeys[k] ?? k}</span>
+            <span class="msr-val">+${Math.round(v * 100)}%</span>
+          </div>`).join('');
+      if (!statsHtml) statsHtml = '<div class="modal-stat-row"><span class="msr-name">Базовые бонусы</span></div>';
+    } else {
+      statsHtml = '<div class="modal-stat-row" style="color:#444"><span class="msr-name">??? ??? ???</span></div>';
+    }
 
-    document.getElementById('modal-class-stats').innerHTML =
-      statsHtml || '<div class="modal-stat-row"><span class="msr-name">Базовые бонусы</span></div>';
+    document.getElementById('modal-class-stats').innerHTML = statsHtml;
 
     document.getElementById('class-modal-overlay').classList.add('visible');
   }
