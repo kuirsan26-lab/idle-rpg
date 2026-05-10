@@ -53,8 +53,8 @@ main.js
 
 ### Class tree (data/classes.js)
 
-- **60 ручных классов** (depth 1–4): Новичок → Воин/Плут/Лучник/Маг → …
-- **~4000 генерируемых классов** (depth 5–10): `generateDeepClasses()` при старте
+- **128 ручных классов** (depth 1–5): Новичок → Воин/Плут/Лучник/Маг → … → 68 именных depth-5 мастер-классов
+- **~3000 генерируемых классов** (depth 6–10): `generateDeepClasses()` при старте — запускается от ручных depth-5 как сидов
 - `CLASS_MAP` (Map<id,cls>), `CHILDREN_MAP` (Map<parentId, childId[]>) — O(1) поиск
 - `getCumulativeBonuses(classId)` — суммирует бонусы всей цепочки предков
 - `DEPTH_LEVEL_REQ` и `DEPTH_GOLD_COST` — требования для разблокировки по глубине

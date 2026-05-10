@@ -143,6 +143,151 @@ const MANUAL_CLASSES = [
   { id: 'explosive_expert', name: 'Взрывотехник', parent: 'bombardier',   branch: 'mage', desc: 'Мастер разрушительных веществ', bonuses: { atk: 0.35, crit: 0.20, goldMult: 0.15 } },
   { id: 'poison_master',   name: 'Мастер Ядов',  parent: 'toxicologist', branch: 'mage', desc: 'Знает тысячу ядов. Ни один враг не уходит без отравы в крови', bonuses: { atk: 0.25, goldMult: 0.15, crit: 0.10, poison: 0.08 } },
   { id: 'plague_doctor',   name: 'Чумной Доктор', parent: 'toxicologist', branch: 'mage', desc: 'Несёт болезнь и смерть под маской целителя', bonuses: { hp: 0.20, goldMult: 0.25, atk: 0.15, poison: 0.08 } },
+
+  // ── DEPTH 5 ──────────────────────────────────────────────────────
+  // ⚔️ WARRIOR
+
+  // Опустошитель
+  { id: 'colossus',               name: 'Колосс',                 parent: 'devastator',        branch: 'warrior', desc: 'Не атакует первым — стоит, пока враги разбиваются об него',               bonuses: { hp: 0.45, def: 0.35, atk: 0.10, thorns: 0.18 } },
+  { id: 'war_incarnation',        name: 'Воплощение Войны',       parent: 'devastator',        branch: 'warrior', desc: 'Война сама обрела форму — и эта форма неудержима',                        bonuses: { atk: 0.55, spd: 0.30, hp: 0.10 } },
+
+  // Громовержец
+  { id: 'stormbird',              name: 'Буревестник',            parent: 'thunderer',         branch: 'warrior', desc: 'Бьёт так часто, что раны успевают затянуться между ударами',              bonuses: { spd: 0.40, lifesteal: 0.15, atk: 0.20, crit: 0.10 } },
+  { id: 'thunder_avatar',         name: 'Аватар Грома',           parent: 'thunderer',         branch: 'warrior', desc: 'Гром решил, что быть звуком недостаточно',                               bonuses: { atk: 0.35, spd: 0.40, crit: 0.25 } },
+
+  // Вампир
+  { id: 'forefather',             name: 'Праотец',                parent: 'vampire',           branch: 'warrior', desc: 'Первый. Пил кровь ещё до того, как появилось слово «смерть»',            bonuses: { lifesteal: 0.30, hp: 0.50, atk: 0.15, crit: 0.10 } },
+  { id: 'blood_bride',            name: 'Кровавая Невеста',       parent: 'vampire',           branch: 'warrior', desc: 'Элегантна. Смертоносна. Оставляет тела красивее, чем находит',           bonuses: { crit: 0.30, lifesteal: 0.20, spd: 0.25, atk: 0.20 } },
+
+  // Лорд Крови
+  { id: 'blood_archon',           name: 'Архонт Крови',           parent: 'bloodlord',         branch: 'warrior', desc: 'Управляет кровью как жидкостью — чужой не меньше, чем своей',            bonuses: { lifesteal: 0.25, deathblow: 0.05, atk: 0.30, hp: 0.20 } },
+  { id: 'eternal_reaper',         name: 'Жнец Вечности',          parent: 'bloodlord',         branch: 'warrior', desc: 'Собирает жизни так же методично, как крестьянин — урожай',               bonuses: { lifesteal: 0.25, hp: 0.40, atk: 0.25, crit: 0.10 } },
+
+  // Страж Веры
+  { id: 'living_fortress',        name: 'Живая Крепость',         parent: 'faith_guard',       branch: 'warrior', desc: 'Стены города падали. Он — никогда',                                       bonuses: { def: 0.55, thorns: 0.30, hp: 0.30, atk: 0.05 } },
+  { id: 'doomed_defender',        name: 'Защитник Обречённых',    parent: 'faith_guard',       branch: 'warrior', desc: 'Принимает удары, предназначенные другим. Каким-то образом не умирает',  bonuses: { thorns: 0.25, lifesteal: 0.12, hp: 0.40, def: 0.30 } },
+
+  // Рыцарь Света
+  { id: 'sun_paladin',            name: 'Солнечный Паладин',      parent: 'light_knight',      branch: 'warrior', desc: 'Свет и сталь — одно. Заклинания разбиваются о его броню как волны',     bonuses: { atk: 0.40, magicShield: 0.20, def: 0.25, hp: 0.20 } },
+  { id: 'justice',                name: 'Правосудие',             parent: 'light_knight',      branch: 'warrior', desc: 'У правосудия нет лица. Есть только приговор',                            bonuses: { atk: 0.40, def: 0.35, deathblow: 0.04, hp: 0.15 } },
+
+  // Тёмный Судья
+  { id: 'supreme_judge',          name: 'Верховный Судья',        parent: 'dark_judge',        branch: 'warrior', desc: 'Приговор произносится один раз. Исполняется мгновенно',                   bonuses: { crit: 0.35, critDmg: 0.60, deathblow: 0.08, atk: 0.20 } },
+  { id: 'silent_tribunal',        name: 'Молчаливый Трибунал',    parent: 'dark_judge',        branch: 'warrior', desc: 'Тысяча голосов вынесли один приговор. Он их единственный голос',         bonuses: { atk: 0.45, def: 0.30, deathblow: 0.06, crit: 0.10 } },
+
+  // Охотник на Ведьм
+  { id: 'wizard_slayer',          name: 'Истребитель Колдунов',   parent: 'witch_hunter',      branch: 'warrior', desc: 'Каждое отражённое заклинание — урок. Он учился тысячи лет',               bonuses: { magicShield: 0.35, xpMult: 0.40, atk: 0.20, crit: 0.10 } },
+  { id: 'word_burner',            name: 'Сжигатель Слов',         parent: 'witch_hunter',      branch: 'warrior', desc: 'Магия существует, потому что её называют по имени. Он забирает имена',  bonuses: { crit: 0.30, magicShield: 0.20, atk: 0.35, xpMult: 0.10 } },
+
+  // 🗡️ ROGUE
+
+  // Тень
+  { id: 'shadow_lord',            name: 'Владыка Теней',          parent: 'shadow',            branch: 'rogue',   desc: 'Удары проходят сквозь него. Его удары — нет',                            bonuses: { dodge: 0.30, lifesteal: 0.20, spd: 0.25, atk: 0.15 } },
+  { id: 'blade_dancer',           name: 'Танцующий с Клинками',   parent: 'shadow',            branch: 'rogue',   desc: 'Смотрит на бой как на танец. Партнёры не выживают',                      bonuses: { spd: 0.40, crit: 0.25, atk: 0.30, pierce: 0.10 } },
+
+  // Призрак
+  { id: 'incorporeal',            name: 'Бесплотный',             parent: 'ghost',             branch: 'rogue',   desc: 'Физика для него необязательна',                                          bonuses: { dodge: 0.35, magicShield: 0.30, spd: 0.30, atk: 0.15 } },
+  { id: 'dream_reaper',           name: 'Жнец Грёз',              parent: 'ghost',             branch: 'rogue',   desc: 'Убивает в тот момент, когда враг думает, что в безопасности',            bonuses: { dodge: 0.25, deathblow: 0.07, spd: 0.30, atk: 0.25, crit: 0.15 } },
+
+  // Гладиатор
+  { id: 'undefeated',             name: 'Непобеждённый',          parent: 'gladiator',         branch: 'rogue',   desc: 'Сотни боёв. Ни одного поражения. Просто факт',                           bonuses: { thorns: 0.20, atk: 0.35, hp: 0.30, def: 0.15 } },
+  { id: 'arena_blood',            name: 'Кровь Арены',            parent: 'gladiator',         branch: 'rogue',   desc: 'Чем больнее бьют — тем богаче становится. Боль — его валюта',           bonuses: { thorns: 0.20, goldMult: 0.35, atk: 0.25, hp: 0.20 } },
+
+  // Охотник за Головами
+  { id: 'boss_bane',              name: 'Гроза Боссов',           parent: 'bounty_hunter',     branch: 'rogue',   desc: 'Специализируется на невозможных целях. На лёгких — скучает',             bonuses: { deathblow: 0.12, goldMult: 0.50, atk: 0.20, crit: 0.10 } },
+  { id: 'soul_collector',         name: 'Коллекционер Душ',       parent: 'bounty_hunter',     branch: 'rogue',   desc: 'Записывает имя каждой жертвы. Список очень длинный',                     bonuses: { goldMult: 0.45, deathblow: 0.08, spd: 0.20, atk: 0.20 } },
+
+  // Мошенник
+  { id: 'thief_baron',            name: 'Барон Воров',            parent: 'swindler',          branch: 'rogue',   desc: 'Управляет преступным миром не силой — золотом',                          bonuses: { goldMult: 0.70, spd: 0.15, crit: 0.10, atk: 0.05 } },
+  { id: 'illusion_master',        name: 'Мастер Иллюзий',         parent: 'swindler',          branch: 'rogue',   desc: 'Пока ты его видишь — он уже в другом месте и с твоими деньгами',        bonuses: { goldMult: 0.45, dodge: 0.20, crit: 0.25, spd: 0.15 } },
+
+  // Авантюрист
+  { id: 'legend_chronicler',      name: 'Хроникёр Легенд',        parent: 'adventurer',        branch: 'rogue',   desc: 'Записывает историю сражений. Его версия — единственно верная',           bonuses: { xpMult: 0.45, goldMult: 0.40, atk: 0.10, spd: 0.10 } },
+  { id: 'eternal_wanderer',       name: 'Вечный Странник',        parent: 'adventurer',        branch: 'rogue',   desc: 'Был везде. Знает всё. Никуда не торопится — кроме боя',                  bonuses: { xpMult: 0.30, spd: 0.30, goldMult: 0.30, atk: 0.15 } },
+
+  // Изгой
+  { id: 'road_beast',             name: 'Зверь Дороги',           parent: 'outlaw',            branch: 'rogue',   desc: 'Дорога сделала его диким. Теперь дорога его боится',                     bonuses: { atk: 0.45, spd: 0.35, crit: 0.10, hp: 0.10 } },
+  { id: 'nameless',               name: 'Безымянный',             parent: 'outlaw',            branch: 'rogue',   desc: 'Имя стёрто из всех записей. Слишком опасно его произносить',             bonuses: { atk: 0.45, crit: 0.25, deathblow: 0.05, spd: 0.15 } },
+
+  // Пират
+  { id: 'cursed_admiral',         name: 'Адмирал Проклятых',      parent: 'pirate',            branch: 'rogue',   desc: 'Командует флотом мертвецов. Сам давно должен был умереть',                bonuses: { goldMult: 0.40, lifesteal: 0.15, hp: 0.30, atk: 0.15 } },
+  { id: 'sea_devil',              name: 'Морской Дьявол',         parent: 'pirate',            branch: 'rogue',   desc: 'Море сделало его чем-то большим, чем человек. И меньшим',                bonuses: { atk: 0.35, lifesteal: 0.15, spd: 0.25, poison: 0.08, goldMult: 0.10 } },
+
+  // 🏹 ARCHER
+
+  // Зелёный Страж
+  { id: 'eternal_forest_warden',  name: 'Страж Вечного Леса',     parent: 'green_guardian',    branch: 'archer',  desc: 'Лес сражается вместе с ним. Каждое дерево — союзник',                    bonuses: { pierce: 0.20, thorns: 0.15, def: 0.30, hp: 0.35, atk: 0.10 } },
+  { id: 'grove_keeper',           name: 'Хранитель Рощ',          parent: 'green_guardian',    branch: 'archer',  desc: 'Тысяча лет в одной роще. Мудрость старше любого королевства',           bonuses: { def: 0.35, hp: 0.40, xpMult: 0.25, atk: 0.10 } },
+
+  // Укротитель Зверей
+  { id: 'beast_god',              name: 'Зверобог',               parent: 'beast_tamer',       branch: 'archer',  desc: 'Перестал быть укротителем. Стал зверем',                                 bonuses: { atk: 0.40, spd: 0.25, crit: 0.20, lifesteal: 0.08 } },
+  { id: 'nature_lord',            name: 'Повелитель Природы',     parent: 'beast_tamer',       branch: 'archer',  desc: 'Одним жестом поднимает стаи и прячет солнце',                            bonuses: { xpMult: 0.50, atk: 0.35, hp: 0.15, pierce: 0.05 } },
+
+  // Лесной Дух
+  { id: 'forest_will',            name: 'Воля Леса',              parent: 'forest_spirit',     branch: 'archer',  desc: 'Лес захотел победить. Он — способ',                                      bonuses: { spd: 0.45, xpMult: 0.40, atk: 0.15, pierce: 0.05 } },
+  { id: 'forest_phantom',         name: 'Лесной Призрак',         parent: 'forest_spirit',     branch: 'archer',  desc: 'Следит за добычей неделями. Та никогда не замечает',                     bonuses: { spd: 0.40, dodge: 0.18, pierce: 0.20, atk: 0.20 } },
+
+  // Охотник на Монстров
+  { id: 'colossus_slayer',        name: 'Истребитель Колоссов',   parent: 'monster_hunter',    branch: 'archer',  desc: 'Чем крупнее цель — тем интереснее охота. Боссы — любимая дичь',         bonuses: { deathblow: 0.10, pierce: 0.30, atk: 0.30, crit: 0.15 } },
+  { id: 'fortune_hunter',         name: 'Охотник за Удачей',      parent: 'monster_hunter',    branch: 'archer',  desc: 'Ищет не монстров, а их сокровища. Монстры — просто препятствие',         bonuses: { crit: 0.30, critDmg: 0.50, goldMult: 0.30, atk: 0.20 } },
+
+  // Меткий Стрелок
+  { id: 'god_slayer',             name: 'Убийца Богов',           parent: 'marksman',          branch: 'archer',  desc: 'Они думали, что недосягаемы. Думали',                                    bonuses: { crit: 0.40, critDmg: 0.65, deathblow: 0.10, atk: 0.15 } },
+  { id: 'inevitability',          name: 'Неотвратимость',         parent: 'marksman',          branch: 'archer',  desc: 'Выстрел уже произошёл. Стрела просто ещё не долетела',                   bonuses: { pierce: 0.30, deathblow: 0.08, crit: 0.30, atk: 0.20 } },
+
+  // Арбалетчик
+  { id: 'steel_hunter',           name: 'Стальной Охотник',       parent: 'crossbowman',       branch: 'archer',  desc: 'Броня не защищает. Никакая броня',                                       bonuses: { atk: 0.55, pierce: 0.35, crit: 0.10, def: 0.10 } },
+  { id: 'bastion_guard',          name: 'Страж Бастиона',         parent: 'crossbowman',       branch: 'archer',  desc: 'Стреляет с высоты. Снизу его не достать',                               bonuses: { def: 0.30, atk: 0.40, pierce: 0.25, hp: 0.20 } },
+
+  // Отравленная Стрела
+  { id: 'fate_poison',            name: 'Яд Судьбы',              parent: 'poison_arrow',      branch: 'archer',  desc: 'Враг уже мёртв. Просто ещё не знает об этом',                           bonuses: { poison: 0.18, deathblow: 0.08, atk: 0.25, crit: 0.20, pierce: 0.10 } },
+  { id: 'archenemy',              name: 'Архивраг',               parent: 'poison_arrow',      branch: 'archer',  desc: 'Не борется с конкретными существами. Борется с существованием',          bonuses: { poison: 0.15, crit: 0.30, critDmg: 0.45, atk: 0.25 } },
+
+  // Теневой Лучник
+  { id: 'night_spawn',            name: 'Порождение Ночи',        parent: 'shadow_archer',     branch: 'archer',  desc: 'Удар достигает цели раньше, чем цель успела испугаться',                  bonuses: { spd: 0.35, crit: 0.30, deathblow: 0.07, atk: 0.25, pierce: 0.10 } },
+  { id: 'darkness_weaver',        name: 'Ткач Тьмы',             parent: 'shadow_archer',     branch: 'archer',  desc: 'Тьма — его материал. Из неё он строит смерть',                           bonuses: { spd: 0.35, dodge: 0.18, pierce: 0.25, atk: 0.20, crit: 0.10 } },
+
+  // 🔮 MAGE
+
+  // Хранитель Природы
+  { id: 'world_root',             name: 'Корень Мира',            parent: 'nature_warden',     branch: 'mage',    desc: 'Существовал до первого дерева. Переживёт последнее',                      bonuses: { hp: 0.55, xpMult: 0.55, atk: 0.05, magicShield: 0.10 } },
+  { id: 'primordial',             name: 'Первозданный',           parent: 'nature_warden',     branch: 'mage',    desc: 'Природа в её изначальной форме — до того как стала доброй',              bonuses: { hp: 0.45, xpMult: 0.45, magicShield: 0.20, atk: 0.10 } },
+
+  // Голос Природы
+  { id: 'earth_prophet',          name: 'Пророк Земли',           parent: 'voice_of_nature',   branch: 'mage',    desc: 'Земля рассказала ему всё что будет. Он просто ждёт',                     bonuses: { xpMult: 0.55, goldMult: 0.40, atk: 0.10, hp: 0.10 } },
+  { id: 'nature_storm',           name: 'Буря Природы',           parent: 'voice_of_nature',   branch: 'mage',    desc: 'Природа не только растит. Иногда она уничтожает',                        bonuses: { atk: 0.40, xpMult: 0.35, crit: 0.20, hp: 0.15 } },
+
+  // Духовидец
+  { id: 'veil_guardian',          name: 'Страж Завесы',           parent: 'spirit_seer',       branch: 'mage',    desc: 'Стоит между миром живых и мёртвых. Не пропускает никого',                bonuses: { xpMult: 0.45, dodge: 0.20, atk: 0.20, hp: 0.15 } },
+  { id: 'oracle',                 name: 'Оракул',                 parent: 'spirit_seer',       branch: 'mage',    desc: 'Знает исход каждого боя до его начала. Воюет для вида',                  bonuses: { xpMult: 0.50, atk: 0.40, spd: 0.10, hp: 0.10 } },
+
+  // Повелитель Духов
+  { id: 'spirit_archon',          name: 'Архонт Духов',           parent: 'spirit_lord',       branch: 'mage',    desc: 'Командует легионами невидимых солдат',                                   bonuses: { atk: 0.45, xpMult: 0.35, magicShield: 0.18, hp: 0.15 } },
+  { id: 'soul_devourer',          name: 'Пожиратель Душ',         parent: 'spirit_lord',       branch: 'mage',    desc: 'Убитые враги не умирают. Они становятся его силой',                      bonuses: { atk: 0.45, lifesteal: 0.15, xpMult: 0.30, hp: 0.10 } },
+
+  // Мастер Зелий
+  { id: 'potion_lord',            name: 'Повелитель Зелий',       parent: 'brew_master',       branch: 'mage',    desc: 'Его зелья совершенны. Цена соответствующая',                             bonuses: { goldMult: 0.55, hp: 0.45, atk: 0.10 } },
+  { id: 'chaos_alchemist',        name: 'Алхимик Хаоса',          parent: 'brew_master',       branch: 'mage',    desc: 'Алхимия предсказуема? Не в его руках',                                   bonuses: { atk: 0.45, crit: 0.20, goldMult: 0.35, hp: 0.10 } },
+
+  // Аптекарь
+  { id: 'dark_healer',            name: 'Лекарь Тьмы',            parent: 'apothecary',        branch: 'mage',    desc: 'Лечит союзников. Отравляет врагов. Разницы не замечает',                 bonuses: { hp: 0.50, poison: 0.18, atk: 0.15, goldMult: 0.15 } },
+  { id: 'death_merchant',         name: 'Торговец Смертью',       parent: 'apothecary',        branch: 'mage',    desc: 'Смерть в красивых флаконах. По умеренной цене',                          bonuses: { goldMult: 0.40, poison: 0.15, atk: 0.30, hp: 0.15 } },
+
+  // Пиротехник
+  { id: 'flame_demon',            name: 'Демон Пламени',          parent: 'pyromaniac',        branch: 'mage',    desc: 'Огонь не его оружие. Огонь — это он',                                    bonuses: { atk: 0.60, crit: 0.30, goldMult: 0.10 } },
+  { id: 'mad_arsonist',           name: 'Безумный Поджигатель',   parent: 'pyromaniac',        branch: 'mage',    desc: 'Считает пожары красивыми. Устраивает их везде',                          bonuses: { atk: 0.45, goldMult: 0.30, spd: 0.20, crit: 0.10 } },
+
+  // Взрывотехник
+  { id: 'army_destroyer',         name: 'Разрушитель Армий',      parent: 'explosive_expert',  branch: 'mage',    desc: 'Не интересуется отдельными солдатами. Только армиями целиком',           bonuses: { atk: 0.55, crit: 0.35, goldMult: 0.10 } },
+  { id: 'catastrophe_architect',  name: 'Архитектор Катастроф',   parent: 'explosive_expert',  branch: 'mage',    desc: 'Каждый взрыв — заранее спланированное произведение искусства',           bonuses: { crit: 0.30, goldMult: 0.35, atk: 0.40, spd: 0.10 } },
+
+  // Мастер Ядов
+  { id: 'supreme_poisoner',       name: 'Верховный Ядовар',       parent: 'poison_master',     branch: 'mage',    desc: 'Знает яды, которых не существует. Изобрёл их сам',                       bonuses: { poison: 0.25, crit: 0.30, atk: 0.20, goldMult: 0.10 } },
+  { id: 'silent_killer',          name: 'Тихий Убийца',           parent: 'poison_master',     branch: 'mage',    desc: 'Никогда не торопится. Яд сделает всё сам',                               bonuses: { poison: 0.20, deathblow: 0.06, spd: 0.25, atk: 0.20 } },
+
+  // Чумной Доктор
+  { id: 'plague_bearer',          name: 'Несущий Чуму',           parent: 'plague_doctor',     branch: 'mage',    desc: 'Там где он прошёл — трава не растёт три года',                           bonuses: { poison: 0.25, hp: 0.45, atk: 0.10, goldMult: 0.15 } },
+  { id: 'doomsday_doctor',        name: 'Доктор Конца Света',     parent: 'plague_doctor',     branch: 'mage',    desc: 'Лечит всех. От жизни',                                                   bonuses: { hp: 0.35, goldMult: 0.40, poison: 0.18, atk: 0.10 } },
 ];
 
 // ── ГЕНЕРАЦИЯ БОНУСОВ ДЛЯ ГЛУБИН 5–10 ───────────────────────────────────────
@@ -208,8 +353,18 @@ for (const c of manualWithDepths) c.depth = computeDepth(c.id, tempMap);
 // Классы depth=4 для старта генерации
 const depth4Classes = manualWithDepths.filter(c => c.depth === 4);
 
-// Генерируем классы depth 5–10
-const generatedClasses = generateDeepClasses(depth4Classes, 5);
+// Ручные depth-5: их depth-4 родители пропускаются при авто-генерации depth-5,
+// но сами становятся сидами для авто-генерации depth 6–10.
+const manualDepth5 = manualWithDepths.filter(c => c.depth === 5);
+const manualDepth5ParentIds = new Set(manualDepth5.map(c => c.parent));
+const depth4WithoutManualD5 = depth4Classes.filter(c => !manualDepth5ParentIds.has(c.id));
+
+// Генерируем классы depth 5–10 (только для depth-4 без ручных детей)
+// + depth 6–10 для ручных depth-5 классов
+const generatedClasses = [
+  ...generateDeepClasses(depth4WithoutManualD5, 5),
+  ...generateDeepClasses(manualDepth5, 6),
+];
 
 // Устанавливаем depth для генерируемых
 function setGeneratedDepths(classes, parentMap) {

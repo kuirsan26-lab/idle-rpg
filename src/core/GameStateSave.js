@@ -3,6 +3,8 @@
  * Устанавливается на GameState.prototype
  */
 
+import { CLASS_MAP } from '../data/classes.js';
+
 export function installSave(proto) {
   proto.save = function() {
     const data = {
@@ -49,7 +51,20 @@ export function installSave(proto) {
       this.prestigePoints = data.prestigePoints ?? 0;
       this.prestigeShop   = data.prestigeShop ?? {};
       this.currentClass   = data.currentClass ?? 'novice';
+      // Миграция: авто-генерируемые depth-5 (devastator_0 и т.п.) заменены ручными —
+      // откатываемся по суффиксу _0/_1 до ближайшего существующего предка.
+      let _cls = this.currentClass;
+      while (_cls && !CLASS_MAP.has(_cls)) {
+        const _parent = _cls.replace(/_[01]$/, '');
+        if (_parent === _cls) { _cls = 'novice'; break; }
+        _cls = _parent;
+      }
+      this.currentClass = _cls;
+
       this.unlockedClasses = new Set(data.unlockedClasses ?? ['novice']);
+      // Фильтруем удалённые авто-генерируемые ID из разблокированных
+      this.unlockedClasses = new Set([...this.unlockedClasses].filter(id => CLASS_MAP.has(id)));
+      if (!this.unlockedClasses.has('novice')) this.unlockedClasses.add('novice');
       this.upgrades = { atk: 0, def: 0, hp: 0, spd: 0, crit: 0, critDmg: 0, ...data.upgrades };
       this.currentWave    = data.currentWave ?? 1;
       this.maxWaveReached = data.maxWaveReached ?? (data.currentWave ?? 0);
