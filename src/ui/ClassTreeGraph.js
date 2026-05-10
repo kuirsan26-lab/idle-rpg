@@ -226,7 +226,7 @@ export class ClassTreeGraph {
       crit:'🎯 Крит шанс', critDmg:'💥 Крит урон', xpMult:'📚 Опыт',
       goldMult:'💰 Золото', dodge:'🌀 Уворот', lifesteal:'🩸 Вампиризм',
       thorns:'🌵 Шипы', magicShield:'🔮 Маг. щит',
-      pierce:'🏹 Пробитие', deathblow:'💀 Смерт. удар',
+      pierce:'🏹 Пробитие', deathblow:'💀 Смерт. удар', poison:'☠️ Яд',
     };
 
     let bonusHtml = '';
@@ -294,8 +294,18 @@ export class ClassTreeGraph {
 
     for (const [id, line] of this._edgeMap) {
       const onPath = id === cur || anc.has(id);
-      line.setAttribute('stroke', onPath ? '#2a3050' : '#16161f');
-      line.setAttribute('stroke-width', onPath ? '2.5' : '1.5');
+      const disc   = this.state.discoveredClasses.has(id);
+      const ecol   = BRANCH_COLORS[CLASS_MAP.get(id)?.branch] ?? '#888';
+      if (onPath) {
+        line.setAttribute('stroke', '#2a3050');
+        line.setAttribute('stroke-width', '2.5');
+      } else if (disc) {
+        line.setAttribute('stroke', ecol + '44');
+        line.setAttribute('stroke-width', '1.5');
+      } else {
+        line.setAttribute('stroke', '#14141e');
+        line.setAttribute('stroke-width', '1');
+      }
     }
   }
 
@@ -327,10 +337,10 @@ export class ClassTreeGraph {
       s.color      = '#bbb';
       div.textContent = '✓';
     } else if (isDisc) {
-      s.background = '#0b0b16';
-      s.border     = `1px solid ${color}44`;
-      s.boxShadow  = '';
-      s.color      = color + '77';
+      s.background = color + '22';
+      s.border     = `1.5px solid ${color}bb`;
+      s.boxShadow  = `0 0 6px ${color}55`;
+      s.color      = color + 'dd';
       div.textContent = '';
     } else if (isAvail) {
       s.background = '#080812';

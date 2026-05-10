@@ -253,7 +253,7 @@ export class ClassTreePanel {
       xpMult: '📚 Опыт',     goldMult: '💰 Золото',
       dodge: '🌀 Уворот',    lifesteal: '🩸 Вампиризм',
       thorns: '🌵 Шипы',     magicShield: '🔮 Маг. щит',
-      pierce: '🏹 Пробитие', deathblow: '💀 Смерт. удар',
+      pierce: '🏹 Пробитие', deathblow: '💀 Смерт. удар', poison: '☠️ Яд',
     };
     let statsHtml;
     if (isDiscovered) {

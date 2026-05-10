@@ -3,10 +3,18 @@
  * При каждом релизе: обновить GAME_VERSION и добавить запись в CHANGELOG.
  */
 
-export const GAME_VERSION = '1.11.0';
+export const GAME_VERSION = '1.11.1';
 
 // type: 'new' | 'changed' | 'fixed' | 'balance'
 export const CHANGELOG = [
+  {
+    version: '1.11.1',
+    date: '2026-05-10',
+    entries: [
+      { type: 'fixed',   text: '🔧 Открытые классы в радиальном графе теперь подсвечиваются цветом своей ветки — сразу видно, сколько классов открыто в каждой ветке.' },
+      { type: 'fixed',   text: '🔧 Стат «☠️ Яд» теперь отображается по-русски в панели классов и в радиальном графе.' },
+    ],
+  },
   {
     version: '1.11.0',
     date: '2026-05-10',
