@@ -115,7 +115,7 @@ main.js
 ### Sprites & backgrounds (GameScene.js)
 
 **Все 34 ассета готовы** в `public/`:
-- `sprites/`: goblin, slime, skeleton, orc, troll, dragonling, demon, lich, dragon, archdemon (10 мобов) + 10 боссов (boss_slime_king → boss_chaos_lord) + 5 героев (hero_novice/warrior/rogue/archer/mage) — 128×128 RGBA PNG
+- `sprites/`: goblin, slime, skeleton, orc, troll, dragonling, demon, lich, dragon, archdemon (10 мобов) + 10 боссов (boss_slime_king → boss_chaos_lord) — **128×128 RGBA PNG**; 5 героев (hero_novice/warrior/rogue/archer/mage) — **256×256 RGBA PNG**. Все упакованы в `atlas.png`/`atlas.json` через `scripts/build_atlas.py` (поддерживает разные размеры фреймов).
 - `backgrounds/`: bg_01_10 → bg_91_100 (10 фонов) — 620×480 JPG
 
 **Глубины (depth) в Phaser scene:**
@@ -136,7 +136,12 @@ _MOB_SPRITES = { goblin: 'mob_goblin', ... };
 // _createMobBody() — автоматически подхватит через textures.exists(key)
 ```
 
-**Генерация новых спрайтов:** `python -X utf8 scripts/generate_sprites.py` (YandexART 2.0, credentials в `memory/reference_yandexart.md`).
+**Генерация спрайтов:**
+- Мобы/боссы: `python -X utf8 scripts/generate_sprites.py`
+- Герои (256×256, flood-fill bg removal): `python -X utf8 scripts/generate_heroes.py`
+- После любой генерации — пересобрать атлас: `python -X utf8 scripts/build_atlas.py`
+
+Credentials YandexART 2.0 — в `memory/reference_yandexart.md`.
 
 ### BattleStrip (ui/BattleStrip.js)
 

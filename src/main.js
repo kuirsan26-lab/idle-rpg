@@ -40,12 +40,14 @@ const phaserGame = new Phaser.Game({
   height:          SCENE_H,
   parent:          'game-container',
   backgroundColor: '#080810',
-  scene:           [],          // ← пусто, добавим вручную
+  antialias:       false,
+  roundPixels:     true,
+  resolution:      window.devicePixelRatio || 1,
+  scene:           [],      // ← пусто, добавим вручную
   scale: {
     mode:       Phaser.Scale.NONE,
     autoCenter: Phaser.Scale.NO_CENTER,
   },
-  // Отключаем дефолтный banner чтобы не засорять консоль
   banner: false,
 });
 

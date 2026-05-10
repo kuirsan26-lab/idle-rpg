@@ -3,10 +3,17 @@
  * При каждом релизе: обновить GAME_VERSION и добавить запись в CHANGELOG.
  */
 
-export const GAME_VERSION = '1.11.1';
+export const GAME_VERSION = '1.11.2';
 
 // type: 'new' | 'changed' | 'fixed' | 'balance'
 export const CHANGELOG = [
+  {
+    version: '1.11.2',
+    date: '2026-05-10',
+    entries: [
+      { type: 'fixed', text: '🔧 Спрайты героев теперь чёткие: новые 256×256 иллюстрации + отключена билинейная фильтрация WebGL.' },
+    ],
+  },
   {
     version: '1.11.1',
     date: '2026-05-10',

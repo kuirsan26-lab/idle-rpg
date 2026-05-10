@@ -1,7 +1,7 @@
 # Idle RPG — Living Architecture
 
 > Живой документ. Обновлять при каждом значимом изменении структуры или планов.
-> Последнее обновление: 2026-05-10 (v1.11.1: подсветка открытых классов в графе + ☠️ Яд)
+> Последнее обновление: 2026-05-10 (v1.11.2: чёткие спрайты героев 256×256 + Phaser antialias:false)
 
 ---
 
@@ -35,7 +35,7 @@
 | UI-панели | Vanilla HTML/CSS/JS |
 | Сборка | Vite |
 | Хранилище | localStorage (ключ `idle_rpg_save`, формат v2) |
-| Спрайты | YandexART 2.0, 128×128 RGBA PNG |
+| Спрайты | YandexART 2.0, мобы/боссы 128×128 · герои 256×256 RGBA PNG |
 | Фоны | YandexART 2.0, 620×480 JPG |
 
 ---
@@ -44,7 +44,7 @@
 
 ```
 src/
-  main.js              (116 строки)  — точка входа, монтирование Phaser + UI + MainMenu + ClassTreeGraph
+  main.js              (119 строки)  — точка входа, монтирование Phaser + UI + MainMenu + ClassTreeGraph
   i18n/
     index.js            (16)  — getLang(), setLang(), t(key); язык в localStorage
     ru.js                (12)  — русские строки (сейчас только главное меню)
@@ -76,8 +76,14 @@ src/
     InventoryPanel.js  (185)  — инвентарь: 3 слота, список предметов, продажа
     MainMenu.js         (75)  — главное меню: Продолжить/Начать заново, changelog, RU/EN
 
+scripts/
+  build_atlas.py       — сборка atlas.png/json; разные размеры фреймов (мобы 128, герои 256)
+  generate_heroes.py   — генерация 5 hero-спрайтов (256×256) через YandexART 2.0; flood-fill bg removal
+  generate_sprites.py  — генерация мобов/боссов (128×128)
+  generate_grounds.py  — генерация ground-текстур
+
 public/
-  sprites/             — 25 PNG: 10 мобов + 10 боссов + 5 героев
+  sprites/             — 25 PNG: 10 мобов + 10 боссов (128×128) · 5 героев (256×256) + atlas.png/json
   backgrounds/         — 10 JPG (bg_01_10 … bg_91_100) + 10 PNG (ground_*)
 ```
 
