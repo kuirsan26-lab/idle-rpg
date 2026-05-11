@@ -3,7 +3,7 @@
  */
 import {
   CLASS_MAP, CHILDREN_MAP, BRANCH_COLORS,
-  DEPTH_LEVEL_REQ, DEPTH_GOLD_COST, getAncestors,
+  DEPTH_LEVEL_REQ, DEPTH_GOLD_COST, getAncestors, getCumulativeBonuses,
 } from '../data/classes.js';
 
 // ── Layout constants ──────────────────────────────────────────────────────────
@@ -237,13 +237,19 @@ export class ClassTreeGraph {
     const cls    = CLASS_MAP.get(id);
     if (!cls) return;
     const isCur   = id === this.state.currentClass;
-    const anc     = new Set(getAncestors(this.state.currentClass));
-    const isDisc  = this.state.discoveredClasses.has(id) || isCur || anc.has(id);
+    const cur     = this.state.currentClass;
+    const anc     = new Set(getAncestors(cur));
     const color   = BRANCH_COLORS[cls.branch] ?? '#888';
     const cost    = DEPTH_GOLD_COST[cls.depth] ?? 0;
     const lvl     = DEPTH_LEVEL_REQ[cls.depth] ?? 0;
-    const reqsMet = !cls.requires?.length || cls.requires.every(rid => this.state.discoveredClasses.has(rid));
-    const isAvail = cls.parent === this.state.currentClass
+    const isPrestigeFromCur = !!(cls.prestige && cls.requires?.includes(cur) && cls.parent !== cur);
+    const allReqsMet = !!(cls.prestige && cls.requires?.length &&
+      cls.requires.every(rid => this.state.discoveredClasses.has(rid) || rid === cur || anc.has(rid)));
+    const isDisc  = this.state.discoveredClasses.has(id) || isCur || anc.has(id) || allReqsMet;
+    const reqsMet = !cls.requires?.length || (isPrestigeFromCur
+      ? cls.requires.filter(rid => rid !== cur).every(rid => this.state.discoveredClasses.has(rid))
+      : cls.requires.every(rid => this.state.discoveredClasses.has(rid)));
+    const isAvail = (cls.parent === cur || isPrestigeFromCur)
       && !this.state.unlockedClasses.has(id)
       && this.state.level >= lvl
       && this.state.gold >= cost
@@ -258,14 +264,34 @@ export class ClassTreeGraph {
       pierce:'🏹 Пробитие', deathblow:'💀 Смерт. удар', poison:'☠️ Яд', burn:'🔥 Горение',
     };
 
+    const depthMult = Math.pow(1.30, cls.depth);
+    const multLabel = depthMult.toFixed(2);
+
     let bonusHtml = '';
     if (isDisc) {
       bonusHtml = Object.entries(cls.bonuses || {})
         .filter(([, v]) => v > 0)
         .map(([k, v]) => `<div style="display:flex;justify-content:space-between;margin:2px 0">
-          <span style="color:#666">${BNAMES[k] ?? k}</span>
+          <span style="color:#555">${BNAMES[k] ?? k}</span>
           <span style="color:#88cc66">+${Math.round(v * 100)}%</span></div>`)
         .join('');
+    }
+
+    let cumulHtml = '';
+    if (isDisc && cls.depth > 0) {
+      const cb = getCumulativeBonuses(id);
+      const rows = Object.entries(cb)
+        .filter(([, v]) => v > 0)
+        .map(([k, v]) => `<div style="display:flex;justify-content:space-between;margin:2px 0">
+          <span style="color:#666">${BNAMES[k] ?? k}</span>
+          <span style="color:#ffcc44">+${Math.round(v * depthMult * 100)}%</span></div>`)
+        .join('');
+      if (rows) {
+        cumulHtml = `<div style="border-top:1px solid #1a1a28;padding-top:6px;margin-top:4px">
+          <div style="color:#666;font-size:10px;margin-bottom:3px">Итого с цепочкой <span style="color:#ffd700;font-weight:bold">×${multLabel}</span></div>
+          ${rows}
+        </div>`;
+      }
     }
 
     let footer = '';
@@ -298,8 +324,12 @@ export class ClassTreeGraph {
 
     this._infoPanel.innerHTML = `
       <div style="font-weight:bold;color:${nameColor};font-size:13px;margin-bottom:4px">${isDisc ? `${prestigeLabel}${cls.name}` : '???'}</div>
-      <div style="color:#444;font-size:10px;margin-bottom:${bonusHtml ? 8 : 0}px;line-height:1.4">${isDisc ? cls.desc : 'Откройте, чтобы узнать'}</div>
-      ${bonusHtml ? `<div style="border-top:1px solid #1a1a28;padding-top:6px">${bonusHtml}</div>` : ''}
+      <div style="color:#444;font-size:10px;margin-bottom:${bonusHtml ? 6 : 0}px;line-height:1.4">${isDisc ? cls.desc : 'Откройте, чтобы узнать'}</div>
+      ${bonusHtml ? `<div style="border-top:1px solid #1a1a28;padding-top:6px">
+        <div style="color:#444;font-size:10px;margin-bottom:3px">Бонусы класса:</div>
+        ${bonusHtml}
+      </div>` : ''}
+      ${cumulHtml}
       ${requiresHtml}
       ${footer}
     `;
@@ -337,6 +367,17 @@ export class ClassTreeGraph {
       if (cls.requires?.length && !cls.requires.every(rid => this.state.discoveredClasses.has(rid))) continue;
       return true;
     }
+    // Check prestige classes reachable via requires[] from current class
+    for (const [id, cls] of CLASS_MAP) {
+      if (!cls.prestige || !cls.requires?.includes(cur)) continue;
+      if (this.state.unlockedClasses.has(id)) continue;
+      const cost = DEPTH_GOLD_COST[cls.depth] ?? Infinity;
+      const lvl  = DEPTH_LEVEL_REQ[cls.depth] ?? 999;
+      if (this.state.level < lvl || this.state.gold < cost) continue;
+      const otherReqs = cls.requires.filter(rid => rid !== cur);
+      if (!otherReqs.every(rid => this.state.discoveredClasses.has(rid))) continue;
+      return true;
+    }
     return false;
   }
 
@@ -363,11 +404,15 @@ export class ClassTreeGraph {
       const ecls    = CLASS_MAP.get(id);
       const ecol    = BRANCH_COLORS[ecls?.branch] ?? '#888';
       const edepth  = ecls?.depth ?? 99;
-      const eavail  = ecls && ecls.parent === cur
+      const ePrestigeFromCur = !!(ecls?.prestige && ecls.requires?.includes(cur) && ecls.parent !== cur);
+      const eOtherReqs = ecls?.requires?.filter(r => r !== cur) ?? [];
+      const eavail  = ecls && (ecls.parent === cur || ePrestigeFromCur)
         && !this.state.unlockedClasses.has(id)
         && this.state.level  >= (DEPTH_LEVEL_REQ[edepth]  ?? 999)
         && this.state.gold   >= (DEPTH_GOLD_COST[edepth]  ?? Infinity)
-        && (!ecls.requires?.length || ecls.requires.every(r => this.state.discoveredClasses.has(r)));
+        && (ePrestigeFromCur
+          ? eOtherReqs.every(r => this.state.discoveredClasses.has(r))
+          : (!ecls.requires?.length || ecls.requires.every(r => this.state.discoveredClasses.has(r))));
       if (onPath) {
         line.setAttribute('stroke', '#2a3050');
         line.setAttribute('stroke-width', '2.5');
@@ -385,14 +430,20 @@ export class ClassTreeGraph {
 
     // Prestige requires edges — show only when class is known/available
     for (const [id, lines] of this._reqEdgeMap) {
-      const cls   = CLASS_MAP.get(id);
-      const disc  = this.state.discoveredClasses.has(id) || id === cur || anc.has(id);
+      const cls    = CLASS_MAP.get(id);
       const edepth = cls?.depth ?? 99;
-      const avail = cls && cls.parent === cur
+      const allReqsMet = !!(cls?.prestige && cls.requires?.length &&
+        cls.requires.every(rid => this.state.discoveredClasses.has(rid) || rid === cur || anc.has(rid)));
+      const disc   = this.state.discoveredClasses.has(id) || id === cur || anc.has(id) || allReqsMet;
+      const isPrestigeFromCur = !!(cls?.prestige && cls.requires?.includes(cur) && cls.parent !== cur);
+      const otherReqs = cls?.requires?.filter(rid => rid !== cur) ?? [];
+      const avail  = cls && (cls.parent === cur || isPrestigeFromCur)
         && !this.state.unlockedClasses.has(id)
         && this.state.level  >= (DEPTH_LEVEL_REQ[edepth]  ?? 999)
         && this.state.gold   >= (DEPTH_GOLD_COST[edepth]  ?? Infinity)
-        && (!cls.requires?.length || cls.requires.every(r => this.state.discoveredClasses.has(r)));
+        && (isPrestigeFromCur
+          ? otherReqs.every(r => this.state.discoveredClasses.has(r))
+          : (!cls.requires?.length || cls.requires.every(r => this.state.discoveredClasses.has(r))));
       const isCurNode = id === cur;
       const show = disc || avail;
       for (const line of lines) {
@@ -410,11 +461,18 @@ export class ClassTreeGraph {
   _styleNode(div, id, cls, cur, anc) {
     const isCur   = id === cur;
     const isAnc   = anc.has(id) && !isCur;
-    const isDisc  = this.state.discoveredClasses.has(id) || isCur || isAnc;
     const cost    = DEPTH_GOLD_COST[cls.depth] ?? Infinity;
     const lvl     = DEPTH_LEVEL_REQ[cls.depth] ?? 999;
-    const reqsMet = !cls.requires?.length || cls.requires.every(rid => this.state.discoveredClasses.has(rid));
-    const isAvail = cls.parent === cur
+    // Prestige accessible from current class via requires[] (not as direct parent)
+    const isPrestigeFromCur = !!(cls.prestige && cls.requires?.includes(cur) && cls.parent !== cur);
+    // All prestige requirements discovered (auto-reveal node info)
+    const allReqsMet = !!(cls.prestige && cls.requires?.length &&
+      cls.requires.every(rid => this.state.discoveredClasses.has(rid) || rid === cur || anc.has(rid)));
+    const isDisc  = this.state.discoveredClasses.has(id) || isCur || isAnc || allReqsMet;
+    const reqsMet = !cls.requires?.length || (isPrestigeFromCur
+      ? cls.requires.filter(rid => rid !== cur).every(rid => this.state.discoveredClasses.has(rid))
+      : cls.requires.every(rid => this.state.discoveredClasses.has(rid)));
+    const isAvail = (cls.parent === cur || isPrestigeFromCur)
       && !this.state.unlockedClasses.has(id)
       && this.state.level >= lvl
       && this.state.gold >= cost
@@ -425,7 +483,10 @@ export class ClassTreeGraph {
     const requiresHint = isDisc && cls.requires?.length
       ? '\nТребует: ' + cls.requires.map(rid => CLASS_MAP.get(rid)?.name ?? rid).join(' + ')
       : '';
-    div.title = isDisc ? `${cls.name}\n${cls.desc}${requiresHint}` : `???\nОткройте, чтобы узнать`;
+    const multHint = isDisc && cls.depth > 0
+      ? `\nМножитель глубины ×${Math.pow(1.30, cls.depth).toFixed(2)}`
+      : '';
+    div.title = isDisc ? `${cls.name}\n${cls.desc}${requiresHint}${multHint}` : `???\nОткройте, чтобы узнать`;
 
     div.classList.remove('node-avail-pulse');
 

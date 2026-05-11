@@ -145,6 +145,10 @@ export class GameState extends EventBus {
     const cb  = this.classBonuses;
     const upg = this.upgrades;
 
+    // Усилитель бонусов класса по глубине: 1.30^depth (depth 0→×1.0, depth 5→×3.71)
+    const depth     = CLASS_MAP.get(this.currentClass)?.depth ?? 0;
+    const depthMult = Math.pow(1.30, depth);
+
     // Постоянные бонусы из магазина престижа (множители к базовым значениям)
     const pHp   = 1 + this.getPrestigeRank('baseHp')  * 0.15;
     const pAtk  = 1 + this.getPrestigeRank('baseAtk') * 0.15;
@@ -170,28 +174,29 @@ export class GameState extends EventBus {
 
     const eq = this.equipBonuses;
 
-    const hpMult   = 1 + (cb.hp   || 0) + (upgBonuses.hp  || 0) + (eq.hp  || 0);
-    const atkMult  = 1 + (cb.atk  || 0) + (upgBonuses.atk || 0) + (eq.atk || 0);
-    const defMult  = 1 + (cb.def  || 0) + (upgBonuses.def || 0) + (eq.def || 0);
-    const spdMult  = 1 + (cb.spd  || 0) + (upgBonuses.spd || 0) + (eq.spd || 0);
+    // depthMult усиливает только классовые бонусы; апгрейды и снаряжение — без изменений
+    const hpMult  = 1 + (cb.hp  || 0) * depthMult + (upgBonuses.hp  || 0) + (eq.hp  || 0);
+    const atkMult = 1 + (cb.atk || 0) * depthMult + (upgBonuses.atk || 0) + (eq.atk || 0);
+    const defMult = 1 + (cb.def || 0) * depthMult + (upgBonuses.def || 0) + (eq.def || 0);
+    const spdMult = 1 + (cb.spd || 0) * depthMult + (upgBonuses.spd || 0) + (eq.spd || 0);
 
     return {
       maxHp:    Math.round(rawHp * hpMult),
       atk:      Math.max(1, Math.round(rawAtk * atkMult)),
       def:      Math.max(0, Math.round(rawDef * defMult)),
       spd:      parseFloat((rawSpd * spdMult).toFixed(2)),
-      crit:     Math.min(95, 5  + (cb.crit    || 0) * 100 + (upgBonuses.crit    || 0) * 100 + (eq.crit    || 0) * 100),
-      critDmg:  150 + (cb.critDmg || 0) * 100 + (upgBonuses.critDmg || 0) * 100 + (eq.critDmg || 0) * 100,
-      xpMult:   parseFloat(((1 + (cb.xpMult   || 0) + (eq.xpMult   || 0)) * pXp).toFixed(3)),
-      goldMult: parseFloat(((1 + (cb.goldMult  || 0) + (eq.goldMult || 0)) * pGold).toFixed(3)),
-      dodge:       Math.min(75, (cb.dodge       || 0) * 100 + (eq.dodge       || 0) * 100),
-      lifesteal:   (cb.lifesteal   || 0) * 100 + (eq.lifesteal   || 0) * 100,
-      thorns:      (cb.thorns      || 0) * 100 + (eq.thorns      || 0) * 100,
-      magicShield: Math.min(75, (cb.magicShield || 0) * 100 + (eq.magicShield || 0) * 100),
-      pierce:      Math.min(75, (cb.pierce      || 0) * 100),
-      deathblow:   Math.min(20, (cb.deathblow   || 0) * 100),
-      poison:      Math.min(60, (cb.poison      || 0) * 100),
-      burn:        Math.min(50, (cb.burn        || 0) * 100),
+      crit:     Math.min(95, 5  + (cb.crit    || 0) * 100 * depthMult + (upgBonuses.crit    || 0) * 100 + (eq.crit    || 0) * 100),
+      critDmg:  150 + (cb.critDmg || 0) * 100 * depthMult + (upgBonuses.critDmg || 0) * 100 + (eq.critDmg || 0) * 100,
+      xpMult:   parseFloat(((1 + (cb.xpMult  || 0) * depthMult + (eq.xpMult  || 0)) * pXp).toFixed(3)),
+      goldMult: parseFloat(((1 + (cb.goldMult || 0) * depthMult + (eq.goldMult || 0)) * pGold).toFixed(3)),
+      dodge:       Math.min(75, (cb.dodge       || 0) * 100 * depthMult + (eq.dodge       || 0) * 100),
+      lifesteal:   (cb.lifesteal   || 0) * 100 * depthMult + (eq.lifesteal   || 0) * 100,
+      thorns:      (cb.thorns      || 0) * 100 * depthMult + (eq.thorns      || 0) * 100,
+      magicShield: Math.min(75, (cb.magicShield || 0) * 100 * depthMult + (eq.magicShield || 0) * 100),
+      pierce:      Math.min(75, (cb.pierce      || 0) * 100 * depthMult),
+      deathblow:   Math.min(20, (cb.deathblow   || 0) * 100 * depthMult),
+      poison:      Math.min(60, (cb.poison      || 0) * 100 * depthMult),
+      burn:        Math.min(50, (cb.burn        || 0) * 100 * depthMult),
       hpMult, atkMult, defMult, spdMult,
     };
   }
@@ -248,17 +253,30 @@ export class GameState extends EventBus {
     const cls = CLASS_MAP.get(classId);
     if (!cls) return false;
     if (this.unlockedClasses.has(classId)) return false;
-    if (cls.parent !== this.currentClass) return false;
-    if (cls.requires?.length && !cls.requires.every(id => this.discoveredClasses.has(id))) return false;
+    // Prestige class: accessible if currentClass is in requires[] and all other reqs discovered
+    if (cls.prestige && cls.requires?.length) {
+      if (!cls.requires.includes(this.currentClass)) return false;
+      const otherReqs = cls.requires.filter(rid => rid !== this.currentClass);
+      if (!otherReqs.every(rid => this.discoveredClasses.has(rid))) return false;
+    } else {
+      if (cls.parent !== this.currentClass) return false;
+      if (cls.requires?.length && !cls.requires.every(id => this.discoveredClasses.has(id))) return false;
+    }
     const cost  = DEPTH_GOLD_COST[cls.depth] ?? Infinity;
     const lvReq = DEPTH_LEVEL_REQ[cls.depth] ?? 999;
     return this.level >= lvReq && this.gold >= cost;
   }
 
-  /** Доступные для разблокировки классы (дети текущего) */
+  /** Доступные для разблокировки классы (дети текущего + престиж через requires) */
   getAvailableClasses() {
     const children = CHILDREN_MAP.get(this.currentClass) || [];
-    return children.filter(id => this.canUnlockClass(id));
+    const result = children.filter(id => this.canUnlockClass(id));
+    // Also check prestige classes reachable via requires[] from current class
+    for (const [id, cls] of CLASS_MAP) {
+      if (!cls.prestige || !cls.requires?.includes(this.currentClass)) continue;
+      if (!result.includes(id) && this.canUnlockClass(id)) result.push(id);
+    }
+    return result;
   }
 
   /** Сменить класс (с оплатой) */
@@ -267,8 +285,15 @@ export class GameState extends EventBus {
     if (!cls) return false;
     const cost = DEPTH_GOLD_COST[cls.depth] ?? Infinity;
     if (this.gold < cost) return false;
-    if (cls.parent !== this.currentClass) return false;
-    if (cls.requires?.length && !cls.requires.every(id => this.discoveredClasses.has(id))) return false;
+    // Prestige class: allow entry from any requires[] class
+    if (cls.prestige && cls.requires?.length) {
+      if (!cls.requires.includes(this.currentClass)) return false;
+      const otherReqs = cls.requires.filter(rid => rid !== this.currentClass);
+      if (!otherReqs.every(rid => this.discoveredClasses.has(rid))) return false;
+    } else {
+      if (cls.parent !== this.currentClass) return false;
+      if (cls.requires?.length && !cls.requires.every(id => this.discoveredClasses.has(id))) return false;
+    }
 
     this.gold -= cost;
     this.currentClass = classId;
