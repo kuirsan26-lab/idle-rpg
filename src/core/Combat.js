@@ -3,6 +3,7 @@
  * Отвечает за: тики атаки, очередь мобов, волны, респолн
  */
 import { createMobData, getMobCount } from '../data/mobs.js';
+import { CLASS_MAP } from '../data/classes.js';
 
 const TICK_MS            = 200;   // базовый тик логики
 const RESPAWN_MS         = 3000;  // время до воскрешения
@@ -86,7 +87,7 @@ export class CombatSystem {
         mob.poisonTicks--;
         mob.hp -= mob.poisonDmg;
         this._emit('onMobDot', { mob, damage: mob.poisonDmg, type: 'poison' });
-        if (mob.hp <= 0) { this._killMob(mob); continue; }
+        if (mob.hp <= 0) { this.state.poisonKillCount++; this._killMob(mob); continue; }
       }
       if (mob.burnTicks > 0) {
         mob.burnTicks--;
@@ -167,7 +168,11 @@ export class CombatSystem {
           bonusGold = this.state.addGold(clearedWave * 50);
         }
         this.state.emit('combat:milestone', { wave: clearedWave, isNewRecord, bonusGold });
+      } else if (clearedWave > this.state.maxWaveReached) {
+        this.state.maxWaveReached = clearedWave;
       }
+
+      this.state.checkAchievements();
       return;
     }
 
@@ -300,10 +305,12 @@ export class CombatSystem {
   // ── Активные скилы ──────────────────────────────────────────────────────────
   _applySkill(skill) {
     const stats = this.state.getStats();
+    const depth = CLASS_MAP.get(this.state.currentClass)?.depth ?? 0;
+    const pm    = 1 + 0.12 * Math.max(0, depth - 1); // depth1→×1.0, depth5→×1.48
 
     switch (skill.id) {
       case 'focus': {
-        const healAmt = Math.round(stats.maxHp * 0.25);
+        const healAmt = Math.round(stats.maxHp * 0.25 * pm);
         this.state.currentHp = Math.min(stats.maxHp, this.state.currentHp + healAmt);
         this.state.emit('player:hpChanged', { hp: this.state.currentHp });
         this._emit('onSkillUsed', { skill, healAmt });
@@ -312,18 +319,18 @@ export class CombatSystem {
       case 'shield_bash': {
         const target = this.mobs[0];
         if (target) {
-          target.stunTicks = 5; // 5 тиков × 200ms = 1 сек
+          target.stunTicks = Math.round(5 * pm); // depth5 → ~7 тиков (1.4с)
           this._emit('onSkillUsed', { skill, target });
         }
         break;
       }
       case 'poison_stab': {
-        this._pendingPoison = { dmg: Math.round(stats.atk * 0.15), ticks: 3 };
+        this._pendingPoison = { dmg: Math.round(stats.atk * 0.15 * pm), ticks: 3 };
         this._emit('onSkillUsed', { skill });
         break;
       }
       case 'volley': {
-        const dmg = Math.max(1, Math.round(stats.atk * 0.5));
+        const dmg = Math.max(1, Math.round(stats.atk * 0.5 * pm));
         for (const mob of [...this.mobs]) {
           mob.hp -= dmg;
           this._emit('onPlayerAttack', { mob, damage: dmg, isCrit: false });
@@ -332,8 +339,8 @@ export class CombatSystem {
         break;
       }
       case 'fireball': {
-        const fbDmg   = Math.max(1, Math.round(stats.atk * 0.8));
-        const burnDmg = Math.max(1, Math.round(stats.atk * 0.1));
+        const fbDmg   = Math.max(1, Math.round(stats.atk * 0.8 * pm));
+        const burnDmg = Math.max(1, Math.round(stats.atk * 0.1 * pm));
         for (const mob of [...this.mobs]) {
           mob.hp -= fbDmg;
           mob.burnTicks = (mob.burnTicks ?? 0) + 3;
@@ -351,6 +358,8 @@ export class CombatSystem {
     const xpGained   = this.state.addXp(mob.data.xp);
     const goldGained = this.state.addGold(mob.data.gold);
     this.state.totalKills++;
+    if (mob.data.isBoss) this.state.bossKillCount++;
+    this.state.checkAchievements();
 
     const itemDrop = this.state.rollItemDrop(this.state.currentWave, mob.data.isBoss, mob.data.isElite ?? false);
 

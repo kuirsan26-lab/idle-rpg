@@ -288,6 +288,37 @@ const MANUAL_CLASSES = [
   // Чумной Доктор
   { id: 'plague_bearer',          name: 'Несущий Чуму',           parent: 'plague_doctor',     branch: 'mage',    desc: 'Там где он прошёл — трава не растёт три года',                           bonuses: { poison: 0.25, hp: 0.45, atk: 0.10, goldMult: 0.15 } },
   { id: 'doomsday_doctor',        name: 'Доктор Конца Света',     parent: 'plague_doctor',     branch: 'mage',    desc: 'Лечит всех. От жизни',                                                   bonuses: { hp: 0.35, goldMult: 0.40, poison: 0.18, atk: 0.10 } },
+
+  // ── ⭐ ПРЕСТИЖ depth 4 (require два depth-3) ─────────────────────────────────
+  { id: 'toxic_archer',   name: 'Ядовитый Стрелок', parent: 'toxicologist', branch: 'mage',    prestige: 1, requires: ['toxicologist', 'dark_shot'],  desc: 'Смешал яды алхимика с мастерством стрелка. Каждая стрела несёт медленную смерть',    bonuses: { atk: 0.30, poison: 0.08, pierce: 0.10, crit: 0.10 } },
+  { id: 'battle_phantom', name: 'Боевой Призрак',   parent: 'ninja',        branch: 'rogue',   prestige: 1, requires: ['ninja', 'crusader'],          desc: 'Неуловимый как тень, стойкий как крепость. Чужие удары возвращаются к владельцу',   bonuses: { dodge: 0.10, thorns: 0.08, atk: 0.20, spd: 0.15 } },
+  { id: 'war_chaos',      name: 'Воин Хаоса',       parent: 'destroyer',    branch: 'warrior', prestige: 1, requires: ['destroyer', 'bombardier'],    desc: 'Ярость берсерка сплавлена с магией взрывчатки. Никто не понимает как он это делает', bonuses: { atk: 0.35, crit: 0.15, spd: 0.10, magicShield: 0.05 } },
+  { id: 'blood_hunter',   name: 'Кровавый Охотник', parent: 'bloodthirst',  branch: 'warrior', prestige: 1, requires: ['bloodthirst', 'tracker'],     desc: 'Преследует добычу неотступно, восстанавливая силы с каждым пробитием',               bonuses: { lifesteal: 0.10, pierce: 0.08, atk: 0.25, spd: 0.12 } },
+  { id: 'iron_mage',      name: 'Железный Маг',     parent: 'crusader',     branch: 'warrior', prestige: 1, requires: ['crusader', 'shaman'],         desc: 'Броня паладина сплавлена с магическим щитом шамана. Абсолютная непробиваемость',     bonuses: { def: 0.20, magicShield: 0.12, hp: 0.20, thorns: 0.08 } },
+
+  // ── Дети ⭐ depth-4 престижа (depth 5) ────────────────────────────────────────
+  // Ядовитый Стрелок
+  { id: 'venom_lord',       name: 'Владыка Яда',         parent: 'toxic_archer',   branch: 'mage',    desc: 'Яд стал его сутью. Враги растворяются в нём ещё до смерти',                bonuses: { poison: 0.22, pierce: 0.18, crit: 0.20, atk: 0.15 } },
+  { id: 'plague_archer',    name: 'Чумной Лучник',        parent: 'toxic_archer',   branch: 'mage',    desc: 'Одна стрела заражает. Следующая убивает. Иногда достаточно одной',         bonuses: { poison: 0.18, deathblow: 0.08, pierce: 0.15, atk: 0.25 } },
+  // Боевой Призрак
+  { id: 'ethereal_blade',   name: 'Эфирный Клинок',       parent: 'battle_phantom', branch: 'rogue',   desc: 'Его клинок из чистой воли. Броня, шипы, плоть — всё лишь препятствие',  bonuses: { dodge: 0.25, thorns: 0.20, atk: 0.30, spd: 0.15 } },
+  { id: 'phantom_guardian', name: 'Призрачный Страж',     parent: 'battle_phantom', branch: 'rogue',   desc: 'Щит для союзников, кошмар для врагов. Каждый удар по нему возвращается', bonuses: { dodge: 0.20, thorns: 0.25, def: 0.30, hp: 0.20 } },
+  // Воин Хаоса
+  { id: 'arcane_destroyer', name: 'Тайный Разрушитель',   parent: 'war_chaos',      branch: 'warrior', desc: 'Магия и сталь: взрыв в ближнем бою. Враги не успевают понять откуда',    bonuses: { atk: 0.50, crit: 0.20, magicShield: 0.15, spd: 0.10 } },
+  { id: 'void_knight',      name: 'Рыцарь Пустоты',       parent: 'war_chaos',      branch: 'warrior', desc: 'Черпает силу из разрыва между магией и сталью. Пустота его союзник',     bonuses: { atk: 0.40, def: 0.25, magicShield: 0.20, crit: 0.15 } },
+  // Кровавый Охотник
+  { id: 'eternal_predator', name: 'Вечный Хищник',        parent: 'blood_hunter',   branch: 'warrior', desc: 'Охота никогда не заканчивается. Он стал самой охотой',                   bonuses: { lifesteal: 0.22, pierce: 0.20, atk: 0.30, spd: 0.15 } },
+  { id: 'blood_tracker',    name: 'Кровавый Следопыт',    parent: 'blood_hunter',   branch: 'warrior', desc: 'Чует добычу за тысячи миль. Пронзает её ещё до встречи',                bonuses: { lifesteal: 0.18, pierce: 0.15, atk: 0.35, crit: 0.12 } },
+  // Железный Маг
+  { id: 'fortress_mage',    name: 'Маг-Крепость',         parent: 'iron_mage',      branch: 'warrior', desc: 'Неприступная магическая цитадель. Атаки разбиваются о него как о скалу', bonuses: { def: 0.40, magicShield: 0.25, thorns: 0.20, hp: 0.25 } },
+  { id: 'spirit_armor',     name: 'Духовной Доспех',       parent: 'iron_mage',      branch: 'warrior', desc: 'Дух предков стал его бронёй. Каждый удар по нему — удар по легиону',    bonuses: { magicShield: 0.30, thorns: 0.25, def: 0.35, atk: 0.10 } },
+
+  // ── ⭐⭐ ПРЕСТИЖ depth 5 (require два depth-4) ────────────────────────────────
+  { id: 'shadow_marksman',   name: 'Теневой Стрелок',  parent: 'ghost',        branch: 'rogue',   prestige: 2, requires: ['ghost', 'marksman'],              desc: 'Стреляет из ниоткуда. Уворачивается от ответа. Убивает наверняка',                bonuses: { dodge: 0.15, deathblow: 0.10, pierce: 0.08, atk: 0.30, crit: 0.20 } },
+  { id: 'paladin_magister',  name: 'Паладин-Магистр',  parent: 'faith_guard',  branch: 'warrior', prestige: 2, requires: ['faith_guard', 'spirit_lord'],      desc: 'Непоколебимый рыцарь духа. Магия и сталь защищают его с двух сторон',           bonuses: { thorns: 0.20, magicShield: 0.18, def: 0.30, hp: 0.25 } },
+  { id: 'arch_toxicologist', name: 'Архитоксиколог',   parent: 'poison_master',branch: 'mage',    prestige: 2, requires: ['poison_master', 'toxic_archer'],   desc: 'Наука ядов слилась с искусством отравленной стрелы. Непревзойдённый мастер',   bonuses: { poison: 0.28, pierce: 0.12, crit: 0.20, atk: 0.25 } },
+  { id: 'chaos_incarnate',   name: 'Воплощение Хаоса', parent: 'war_chaos',    branch: 'warrior', prestige: 2, requires: ['war_chaos', 'battle_phantom'],     desc: 'Два хаоса объединились. Взрыв и тень. Магия и уворот. Он неостановим',        bonuses: { atk: 0.45, crit: 0.25, magicShield: 0.15, dodge: 0.12, spd: 0.10 } },
+  { id: 'eternal_guardian',  name: 'Вечный Страж',     parent: 'iron_mage',    branch: 'warrior', prestige: 2, requires: ['iron_mage', 'faith_guard'],        desc: 'Живая крепость, наполненная духами предков. Абсолютная защита на все времена', bonuses: { magicShield: 0.22, thorns: 0.22, def: 0.40, hp: 0.30 } },
 ];
 
 // ── ГЕНЕРАЦИЯ БОНУСОВ ДЛЯ ГЛУБИН 5–10 ───────────────────────────────────────

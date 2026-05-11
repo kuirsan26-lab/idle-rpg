@@ -26,6 +26,9 @@ export function installSave(proto) {
       maxWaveReached: this.maxWaveReached,
       inventory:      this.inventory,
       equipment:      this.equipment,
+      completedAchievements: [...this.completedAchievements],
+      bossKillCount:   this.bossKillCount,
+      poisonKillCount: this.poisonKillCount,
       timestamp:      Date.now(),
     };
     try {
@@ -76,6 +79,9 @@ export function installSave(proto) {
       this.maxWaveReached = data.maxWaveReached ?? (data.currentWave ?? 0);
       this.inventory      = data.inventory ?? [];
       this.equipment      = { weapon: null, armor: null, accessory: null, ...(data.equipment ?? {}) };
+      this.completedAchievements = new Set(data.completedAchievements ?? []);
+      this.bossKillCount   = data.bossKillCount ?? 0;
+      this.poisonKillCount = data.poisonKillCount ?? 0;
 
       // Офлайн-прогресс (до 8 часов)
       const elapsed = Math.min((Date.now() - (data.timestamp ?? Date.now())) / 1000, 8 * 3600);

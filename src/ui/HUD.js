@@ -28,11 +28,12 @@ export class HUD {
       state.on('player:death',    () => { this._log('💀 Вы погибли! Возрождение...', 'player:death'); this._updateGold(); }),
       state.on('player:respawn',  () => this._log('✨ Возрождение!', 'wave')),
       state.on('player:prestige', (d) => {
-        this._log(`⭐ ПЕРЕРОЖДЕНИЕ #${d.count}! Получено ${d.pp} ПО (всего: ${d.totalPp} ПО)`, 'player:prestige');
+        this._log(`⭐ ПЕРЕРОЖДЕНИЕ #${d.count}!`, 'player:prestige');
         this._update();
         this._updateInvCount();
         this._updateSkillBtn();
       }),
+      state.on('player:ppChanged', () => this._updatePrestigeBtn()),
       state.on('combat:milestone', (d) => {
         this._showMilestone(d);
         if (d.isNewRecord) {
@@ -46,8 +47,7 @@ export class HUD {
         this._log(`⚡ Скилл: ${skill.icon} ${skill.name}!`, 'wave');
       }),
       state.on('player:classDiscovered', ({ totalDiscovered }) => {
-        this._log(`🔍 Новый класс открыт! +1 ПО (открыто: ${totalDiscovered})`, 'level');
-        this._updatePrestigeBtn();
+        this._log(`🔍 Новый класс открыт! (открыто: ${totalDiscovered})`, 'level');
       }),
     ];
 
@@ -120,8 +120,6 @@ export class HUD {
   }
 
   showPrestigeModal() {
-    const pp       = this.state.calcPrestigePoints();
-    const totalPp  = this.state.prestigePoints + pp;
     const hasKeep  = this.state.getPrestigeRank('keepUpgrades') > 0;
     const hasWave  = this.state.getPrestigeRank('startWave') > 0;
     const startGold = (this.state.getPrestigeRank('startGold1') ? 1000 : 0)
@@ -129,7 +127,7 @@ export class HUD {
                     + (this.state.getPrestigeRank('startGold3') ? 25000 : 0);
 
     document.getElementById('prestige-bonus-text').textContent =
-      `+${pp} ПО (всего будет ${totalPp} ПО)`;
+      `Сброс прогресса, бонусы из магазина сохраняются`;
 
     const keepRow  = document.getElementById('prestige-keep-upgrades-row');
     const goldRow  = document.getElementById('prestige-start-gold-row');
@@ -194,15 +192,12 @@ export class HUD {
   }
 
   _updatePrestigeBtn() {
-    const pp      = this.state.calcPrestigePoints();
-    const canDo   = this.state.canPrestige();
-    const btn     = document.getElementById('prestige-btn');
-    const preview = document.getElementById('prestige-pp-preview');
-    const hudPp   = document.getElementById('hud-pp');
+    const canDo = this.state.canPrestige();
+    const btn   = document.getElementById('prestige-btn');
+    const hudPp = document.getElementById('hud-pp');
 
-    if (btn)     btn.disabled         = !canDo;
-    if (preview) preview.textContent  = pp;
-    if (hudPp)   hudPp.textContent    = this.state.prestigePoints;
+    if (btn)   btn.disabled      = !canDo;
+    if (hudPp) hudPp.textContent = this.state.prestigePoints;
   }
 
   // ── Milestone overlay ─────────────────────────────────────────────────────────

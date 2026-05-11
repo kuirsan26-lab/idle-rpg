@@ -1,4 +1,4 @@
-/**
+﻿/**
  * HTML-панель дерева классов
  * Показывает: путь до текущего класса, доступные следующие, верхние ветки
  */
@@ -179,12 +179,16 @@ export class ClassTreePanel {
       const costStr = isAvailable
         ? `<span style="color:#ffd700">${this._formatNum(cost)}g</span>`
         : depth > 0 ? `<span style="color:#333">${this._formatNum(cost)}g</span>` : '';
+      const prestigePrefix = cls.prestige === 2 ? '⭐⭐ ' : cls.prestige === 1 ? '⭐ ' : '';
+      const requiresHint = cls.requires?.length
+        ? '\nТребует: ' + cls.requires.map(id => CLASS_MAP.get(id)?.name ?? '???').join(' + ')
+        : '';
       return `
         <div class="${nodeClass}" data-id="${cls.id}" title="Неизвестный класс\nОткройте, чтобы узнать\nНужен уровень: ${lvl}">
           <div class="node-row">
             <span class="node-indent" style="width:${indent}px"></span>
-            <span class="node-specialty-dot" style="background:#222;border:1px solid #444"></span>
-            <span class="node-name" style="color:#444">⊡ ???</span>
+            <span class="node-specialty-dot" style="background:#222;border:1px solid ${cls.prestige ? '#6a5000' : '#444'}"></span>
+            <span class="node-name" style="color:${cls.prestige ? '#6a5000' : '#444'}">${prestigePrefix}⊡ ???</span>
             <span class="node-depth" style="color:#333">${depth > 0 ? 'Ур.' + depth : ''}</span>
             <span style="margin-left:auto;font-size:10px">${costStr}</span>
           </div>
@@ -207,13 +211,18 @@ export class ClassTreePanel {
         : '';
 
     const icon = isCurrent ? '▶ ' : isAncestor ? '✓ ' : isAvailable ? '✦ ' : '⊡ ';
+    const prestigePrefix = cls.prestige === 2 ? '⭐⭐ ' : cls.prestige === 1 ? '⭐ ' : '';
+    const requiresHint = cls.requires?.length
+      ? '\nТребует: ' + cls.requires.map(id => CLASS_MAP.get(id)?.name ?? id).join(' + ')
+      : '';
+    const dotColor = cls.prestige ? (isCurrent || isAncestor ? '#ffd700' : '#6a5000') : color;
 
     return `
       <div class="${nodeClass}" data-id="${cls.id}" title="${cls.desc}\nНужен уровень: ${lvl}">
         <div class="node-row">
           <span class="node-indent" style="width:${indent}px"></span>
-          <span class="node-specialty-dot" style="background:${color}"></span>
-          <span class="node-name">${icon}${cls.name}</span>
+          <span class="node-specialty-dot" style="background:${dotColor}"></span>
+          <span class="node-name" style="${cls.prestige && (isCurrent || isAncestor) ? 'color:#ffd700' : ''}">${icon}${prestigePrefix}${cls.name}</span>
           <span class="node-depth" style="color:#444">${depth > 0 ? 'Ур.' + depth : ''}</span>
           <span style="margin-left:auto;font-size:10px">${costStr}</span>
         </div>
@@ -222,9 +231,9 @@ export class ClassTreePanel {
 
   _isAvailable(cls) {
     if (!cls || cls.id === 'novice') return false;
-    const parentIsCurrentClass = cls.parent === this.state.currentClass;
-    if (!parentIsCurrentClass) return false;
+    if (cls.parent !== this.state.currentClass) return false;
     if (this.state.unlockedClasses.has(cls.id)) return false;
+    if (cls.requires?.length && !cls.requires.every(id => this.state.discoveredClasses.has(id))) return false;
     const cost = DEPTH_GOLD_COST[cls.depth] ?? Infinity;
     const lvl  = DEPTH_LEVEL_REQ[cls.depth] ?? 999;
     return this.state.level >= lvl && this.state.gold >= cost;
@@ -241,8 +250,9 @@ export class ClassTreePanel {
     const isDiscovered = this.state.discoveredClasses.has(classId);
     const color       = isDiscovered ? (BRANCH_COLORS[cls.branch] ?? '#aaa') : '#444';
 
-    document.getElementById('modal-class-name').textContent = isDiscovered ? cls.name : '??? Неизвестный класс';
-    document.getElementById('modal-class-name').style.color = color;
+    const prestigeLabel = cls.prestige === 2 ? '⭐⭐ ' : cls.prestige === 1 ? '⭐ ' : '';
+    document.getElementById('modal-class-name').textContent = isDiscovered ? `${prestigeLabel}${cls.name}` : '??? Неизвестный класс';
+    document.getElementById('modal-class-name').style.color = cls.prestige ? '#ffd700' : color;
     document.getElementById('modal-class-desc').textContent = isDiscovered ? cls.desc : 'Откройте этот класс, чтобы узнать его секреты. Каждый новый класс приносит +1 ПО.';
     document.getElementById('modal-class-cost').textContent = this._formatNum(cost);
 
@@ -271,6 +281,26 @@ export class ClassTreePanel {
     }
 
     document.getElementById('modal-class-stats').innerHTML = statsHtml;
+
+    // Престиж: секция требований
+    let requiresHtml = '';
+    if (cls.requires?.length) {
+      const reqItems = cls.requires.map(id => {
+        const rc  = CLASS_MAP.get(id);
+        const met = this.state.discoveredClasses.has(id);
+        return `<span style="color:${met ? '#ffd700' : '#555'}">${met && rc ? rc.name : '???'} ${met ? '✓' : '✗'}</span>`;
+      }).join(' <span style="color:#444">+</span> ');
+      requiresHtml = `<div style="margin-top:10px;padding-top:8px;border-top:1px solid #1a1a28;font-size:11px;color:#888">⭐ Требует открытых классов:<br><div style="margin-top:4px">${reqItems}</div></div>`;
+    }
+    const existingStats = document.getElementById('modal-class-stats');
+    const reqEl = document.getElementById('modal-class-requires');
+    if (reqEl) reqEl.remove();
+    if (requiresHtml) {
+      const div = document.createElement('div');
+      div.id = 'modal-class-requires';
+      div.innerHTML = requiresHtml;
+      existingStats.after(div);
+    }
 
     document.getElementById('class-modal-overlay').classList.add('visible');
   }
