@@ -239,6 +239,12 @@ export class CombatSystem {
         target.poisonDmg   = Math.round(stats.atk * 0.15);
       }
 
+      // Burn stat: шанс наложить горение (игнорирует броню); не стакается, освежает таймер
+      if (stats.burn > 0 && Math.random() * 100 < stats.burn) {
+        target.burnTicks = 4;
+        target.burnDmg   = Math.round(stats.atk * 0.12);
+      }
+
       if (target.hp <= 0) {
         this._killMob(target);
       }

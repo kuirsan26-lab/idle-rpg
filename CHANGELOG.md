@@ -5,6 +5,17 @@
 
 ---
 
+## [1.13.0] — 2026-05-11
+
+### Добавлено
+- **Стат `burn` (Горение)** — DoT, игнорирует броню (DEF). 4 тика × 12% ATK. Шансовое наложение с каждого удара (cap 50%). Виден в StatsPanel как `🔥 Горение`, скрыт при 0. Реализован в `Combat.js` по паттерну `poison`. В `ClassTreeGraph.js` — русская метка в BNAMES.
+- **20+ новых огненных классов** (depth 3–5): `flame_warrior`, `fire_arrow` (depth 3); `fire_berserker`, `hell_guard`, `arsonist`, `fire_sniper`, `phoenix_arrow`, `phoenix` (depth 4, prestige); 12 depth-5 детей. Ретрофит 6 существующих mage-классов (pyromaniac, explosive_expert и др.) — добавлен `burn` в bonuses.
+- **8 новых ⭐/⭐⭐ престиж-классов**: лучник — `elusive_sniper` (eagle_eye+ninja), `storm_tracker` (tracker+berserker), `apex_predator` ⭐⭐; маг — `arcane_ranger` (archdruid+ranger), `explosive_assassin` (bombardier+assassin), `arcane_overlord` ⭐⭐; плут — `shadow_witch` (ninja+shaman), `plague_rogue` (bandit+toxicologist), `nightmare_agent` ⭐⭐. Плюс 16 depth-5 детей этих классов.
+
+### Изменено
+- **Граф классов — видимость нод**: неизвестные ноды отрисовываются фоном `color + '18'` и пунктирной обводкой `color + '38'` — больше не сливаются с тёмным фоном оверлея.
+- **Граф классов — prestige-рёбра**: линии cross-branch requires скрыты (`stroke: none`) до открытия класса; появляются при обнаружении/доступности с градацией яркости.
+
 ## [1.12.0] — 2026-05-11
 
 ### Добавлено

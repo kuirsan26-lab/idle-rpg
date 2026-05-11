@@ -95,6 +95,11 @@
       animation: pulse-available 1.4s ease-in-out infinite;
       color: #7dda7d;
     }
+    @keyframes node-avail-pulse {
+      0%,100% { box-shadow: 0 0 5px var(--pulse-col); opacity: 0.75; }
+      50%      { box-shadow: 0 0 18px var(--pulse-col); opacity: 1; }
+    }
+    .node-avail-pulse { animation: node-avail-pulse 1.4s ease-in-out infinite; }
 
     /* ═══════════════════════════ SKILL ZONE ═══════════════════════════ */
     #skill-zone {
@@ -1025,6 +1030,7 @@
           <div class="stat-row" id="stat-row-pierce"      style="display:none"><span class="sname">🏹 Пробитие</span><span><span class="sval" id="stat-pierce">0</span><span class="smult">%</span></span></div>
           <div class="stat-row" id="stat-row-deathblow"   style="display:none"><span class="sname">💀 Смерт. удар</span><span><span class="sval" id="stat-deathblow">0</span><span class="smult">%</span></span></div>
           <div class="stat-row" id="stat-row-poison"      style="display:none"><span class="sname">☠️ Яд</span><span><span class="sval" id="stat-poison">0</span><span class="smult">%</span></span></div>
+          <div class="stat-row" id="stat-row-burn"        style="display:none"><span class="sname">🔥 Горение</span><span><span class="sval" id="stat-burn">0</span><span class="smult">%</span></span></div>
         </div>
         <div class="panel-section">
           <div class="panel-section-title">🔧 Прокачка</div>

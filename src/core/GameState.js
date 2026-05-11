@@ -191,6 +191,7 @@ export class GameState extends EventBus {
       pierce:      Math.min(75, (cb.pierce      || 0) * 100),
       deathblow:   Math.min(20, (cb.deathblow   || 0) * 100),
       poison:      Math.min(60, (cb.poison      || 0) * 100),
+      burn:        Math.min(50, (cb.burn        || 0) * 100),
       hpMult, atkMult, defMult, spdMult,
     };
   }

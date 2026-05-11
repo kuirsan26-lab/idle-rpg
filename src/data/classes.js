@@ -68,7 +68,8 @@ const MANUAL_CLASSES = [
   // ── DEPTH 3 ──────────────────────────────────────────────────────
   // Берсерк
   { id: 'destroyer',   name: 'Разрушитель', parent: 'berserker', branch: 'warrior', desc: 'Непреодолимая сила разрушения', bonuses: { atk: 0.35, hp: 0.15, spd: 0.10 } },
-  { id: 'bloodthirst', name: 'Кровожад',    parent: 'berserker', branch: 'warrior', desc: 'Восстанавливает жизнь с каждым убийством', bonuses: { atk: 0.30, hp: 0.20, crit: 0.10, lifesteal: 0.08 } },
+  { id: 'bloodthirst',   name: 'Кровожад',    parent: 'berserker', branch: 'warrior', desc: 'Восстанавливает жизнь с каждым убийством', bonuses: { atk: 0.30, hp: 0.20, crit: 0.10, lifesteal: 0.08 } },
+  { id: 'flame_warrior', name: 'Воин Пламени', parent: 'berserker', branch: 'warrior', desc: 'Ярость настолько горячая, что буквально поджигает врагов', bonuses: { atk: 0.25, spd: 0.12, burn: 0.06, hp: 0.08 } },
   // Паладин
   { id: 'crusader',    name: 'Крестоносец', parent: 'paladin',   branch: 'warrior', desc: 'Непоколебимый воин святого дела', bonuses: { def: 0.30, hp: 0.25, atk: 0.15, thorns: 0.10 } },
   { id: 'inquisitor',  name: 'Инквизитор',  parent: 'paladin',   branch: 'warrior', desc: 'Неумолимый охотник на нечисть. Святая воля защищает от проклятий', bonuses: { atk: 0.30, crit: 0.10, def: 0.20, magicShield: 0.05 } },
@@ -84,6 +85,7 @@ const MANUAL_CLASSES = [
   // Снайпер
   { id: 'eagle_eye',   name: 'Орлиный Глаз',    parent: 'sniper',    branch: 'archer', desc: 'Никогда не промахивается. Каждый выстрел может стать смертельным', bonuses: { crit: 0.20, critDmg: 0.40, atk: 0.15, pierce: 0.10, deathblow: 0.03 } },
   { id: 'dark_shot',   name: 'Тёмный Стрелок',  parent: 'sniper',    branch: 'archer', desc: 'Отравляет врагов своими стрелами', bonuses: { atk: 0.25, crit: 0.15, critDmg: 0.25, pierce: 0.08, deathblow: 0.02, poison: 0.04 } },
+  { id: 'fire_arrow',  name: 'Огненная Стрела', parent: 'sniper',    branch: 'archer', desc: 'Наконечник в огне. Броня плавится, воля — тоже', bonuses: { burn: 0.06, atk: 0.20, pierce: 0.06, crit: 0.10 } },
   // Друид
   { id: 'archdruid',   name: 'Архидруид',        parent: 'druid',     branch: 'mage',   desc: 'Высший адепт природной магии', bonuses: { xpMult: 0.35, hp: 0.25, atk: 0.15, magicShield: 0.10 } },
   { id: 'shaman',      name: 'Шаман',             parent: 'druid',     branch: 'mage',   desc: 'Призывает силы духов предков. Духи-хранители уводят удары', bonuses: { xpMult: 0.25, atk: 0.25, spd: 0.15, magicShield: 0.08, dodge: 0.04 } },
@@ -96,6 +98,9 @@ const MANUAL_CLASSES = [
   // Разрушитель
   { id: 'devastator',  name: 'Опустошитель',  parent: 'destroyer',   branch: 'warrior', desc: 'Оставляет за собой только руины', bonuses: { atk: 0.40, hp: 0.15, spd: 0.10 } },
   { id: 'thunderer',   name: 'Громовержец',   parent: 'destroyer',   branch: 'warrior', desc: 'Удары звучат как раскаты грома', bonuses: { atk: 0.35, crit: 0.10, spd: 0.15 } },
+  // Воин Пламени
+  { id: 'fire_berserker', name: 'Огненный Берсерк', parent: 'flame_warrior', branch: 'warrior', desc: 'Живой факел. Каждый удар оставляет след из огня', bonuses: { burn: 0.10, atk: 0.40, spd: 0.15 } },
+  { id: 'hell_guard',     name: 'Адский Страж',     parent: 'flame_warrior', branch: 'warrior', desc: 'Горит снаружи, но не изнутри. Враги разбиваются о пылающую броню', bonuses: { burn: 0.12, hp: 0.25, def: 0.15, atk: 0.15 } },
   // Кровожад
   { id: 'vampire',     name: 'Вампир',        parent: 'bloodthirst', branch: 'warrior', desc: 'Пьёт жизненную силу врагов', bonuses: { atk: 0.25, hp: 0.30, crit: 0.15, lifesteal: 0.12 } },
   { id: 'bloodlord',   name: 'Лорд Крови',    parent: 'bloodthirst', branch: 'warrior', desc: 'Повелитель кровопролития', bonuses: { atk: 0.35, hp: 0.20, crit: 0.10, lifesteal: 0.10 } },
@@ -115,8 +120,9 @@ const MANUAL_CLASSES = [
   { id: 'swindler',    name: 'Мошенник',    parent: 'pickpocket', branch: 'rogue', desc: 'Обманывает всех на пути', bonuses: { goldMult: 0.45, spd: 0.20, crit: 0.10 } },
   { id: 'adventurer',  name: 'Авантюрист',  parent: 'pickpocket', branch: 'rogue', desc: 'Всегда в поисках приключений', bonuses: { xpMult: 0.20, goldMult: 0.25, atk: 0.15, spd: 0.15 } },
   // Разбойник
-  { id: 'outlaw',  name: 'Изгой', parent: 'bandit', branch: 'rogue', desc: 'Вне закона и вне пощады', bonuses: { atk: 0.35, spd: 0.20, crit: 0.10 } },
-  { id: 'pirate',  name: 'Пират', parent: 'bandit', branch: 'rogue', desc: 'Грабитель морей и суши. Кровожадный — восстанавливает силы в бою', bonuses: { atk: 0.25, goldMult: 0.25, spd: 0.15, hp: 0.10, lifesteal: 0.04 } },
+  { id: 'outlaw',   name: 'Изгой',       parent: 'bandit', branch: 'rogue', desc: 'Вне закона и вне пощады', bonuses: { atk: 0.35, spd: 0.20, crit: 0.10 } },
+  { id: 'pirate',   name: 'Пират',       parent: 'bandit', branch: 'rogue', desc: 'Грабитель морей и суши. Кровожадный — восстанавливает силы в бою', bonuses: { atk: 0.25, goldMult: 0.25, spd: 0.15, hp: 0.10, lifesteal: 0.04 } },
+  { id: 'arsonist', name: 'Поджигатель', parent: 'bandit', branch: 'rogue', desc: 'Пока все смотрят на пламя — он уже с добычей', bonuses: { burn: 0.05, spd: 0.20, goldMult: 0.20, atk: 0.15 } },
   // Страж Леса
   { id: 'green_guardian', name: 'Зелёный Страж',    parent: 'forest_guard', branch: 'archer', desc: 'Защита леса — его призвание', bonuses: { hp: 0.30, def: 0.25, atk: 0.15, pierce: 0.05 } },
   { id: 'beast_tamer',    name: 'Укротитель Зверей', parent: 'forest_guard', branch: 'archer', desc: 'Повелевает дикими зверями', bonuses: { atk: 0.25, hp: 0.20, xpMult: 0.20, pierce: 0.05 } },
@@ -127,8 +133,11 @@ const MANUAL_CLASSES = [
   { id: 'marksman',    name: 'Меткий Стрелок', parent: 'eagle_eye', branch: 'archer', desc: 'Попадает с любого расстояния. Смерть от одного выстрела — не редкость', bonuses: { crit: 0.25, critDmg: 0.45, atk: 0.10, pierce: 0.12, deathblow: 0.04 } },
   { id: 'crossbowman', name: 'Арбалетчик',     parent: 'eagle_eye', branch: 'archer', desc: 'Мощные болты пробивают любую броню', bonuses: { atk: 0.35, crit: 0.15, def: 0.10, pierce: 0.12, deathblow: 0.03 } },
   // Тёмный Стрелок
-  { id: 'poison_arrow',  name: 'Отравленная Стрела', parent: 'dark_shot', branch: 'archer', desc: 'Яд медленно съедает врага', bonuses: { atk: 0.30, crit: 0.20, critDmg: 0.20, pierce: 0.10, deathblow: 0.03, poison: 0.07 } },
-  { id: 'shadow_archer', name: 'Теневой Лучник',     parent: 'dark_shot', branch: 'archer', desc: 'Стреляет из кромешной тьмы', bonuses: { atk: 0.25, spd: 0.20, crit: 0.15, critDmg: 0.20, pierce: 0.10, deathblow: 0.02 } },
+  { id: 'poison_arrow',  name: 'Отравленная Стрела', parent: 'dark_shot',  branch: 'archer', desc: 'Яд медленно съедает врага', bonuses: { atk: 0.30, crit: 0.20, critDmg: 0.20, pierce: 0.10, deathblow: 0.03, poison: 0.07 } },
+  { id: 'shadow_archer', name: 'Теневой Лучник',     parent: 'dark_shot',  branch: 'archer', desc: 'Стреляет из кромешной тьмы', bonuses: { atk: 0.25, spd: 0.20, crit: 0.15, critDmg: 0.20, pierce: 0.10, deathblow: 0.02 } },
+  // Огненная Стрела
+  { id: 'fire_sniper',    name: 'Огненный Снайпер', parent: 'fire_arrow', branch: 'archer', desc: 'Стрела летит через броню и поджигает кости', bonuses: { burn: 0.10, pierce: 0.15, crit: 0.15, atk: 0.20 } },
+  { id: 'phoenix_arrow',  name: 'Стрела Феникса',   parent: 'fire_arrow', branch: 'archer', desc: 'Один выстрел — и враг догорает сам. Стрела живёт дольше лука', bonuses: { burn: 0.08, crit: 0.20, critDmg: 0.35, atk: 0.25 } },
   // Архидруид
   { id: 'nature_warden',  name: 'Хранитель Природы', parent: 'archdruid', branch: 'mage', desc: 'Природа подчиняется его слову', bonuses: { xpMult: 0.40, hp: 0.30, atk: 0.10 } },
   { id: 'voice_of_nature', name: 'Голос Природы',    parent: 'archdruid', branch: 'mage', desc: 'Говорит от имени всего живого', bonuses: { xpMult: 0.35, atk: 0.20, hp: 0.20 } },
@@ -139,8 +148,8 @@ const MANUAL_CLASSES = [
   { id: 'brew_master', name: 'Мастер Зелий', parent: 'potion_master', branch: 'mage', desc: 'Зелья чудовищной силы', bonuses: { atk: 0.30, goldMult: 0.25, hp: 0.20 } },
   { id: 'apothecary',  name: 'Аптекарь',    parent: 'potion_master', branch: 'mage', desc: 'Лечит и отравляет с равным мастерством', bonuses: { hp: 0.30, atk: 0.25, goldMult: 0.20, poison: 0.05 } },
   // Бомбардир
-  { id: 'pyromaniac',      name: 'Пиротехник',    parent: 'bombardier',   branch: 'mage', desc: 'Обожает взрывы и огонь', bonuses: { atk: 0.40, crit: 0.15, goldMult: 0.10 } },
-  { id: 'explosive_expert', name: 'Взрывотехник', parent: 'bombardier',   branch: 'mage', desc: 'Мастер разрушительных веществ', bonuses: { atk: 0.35, crit: 0.20, goldMult: 0.15 } },
+  { id: 'pyromaniac',      name: 'Пиротехник',    parent: 'bombardier',   branch: 'mage', desc: 'Обожает взрывы и огонь. Каждый удар может поджечь врага', bonuses: { atk: 0.35, crit: 0.15, goldMult: 0.10, burn: 0.05 } },
+  { id: 'explosive_expert', name: 'Взрывотехник', parent: 'bombardier',   branch: 'mage', desc: 'Взрывы с горящим следом. Броня не защищает от жара', bonuses: { atk: 0.30, crit: 0.20, goldMult: 0.15, burn: 0.04 } },
   { id: 'poison_master',   name: 'Мастер Ядов',  parent: 'toxicologist', branch: 'mage', desc: 'Знает тысячу ядов. Ни один враг не уходит без отравы в крови', bonuses: { atk: 0.25, goldMult: 0.15, crit: 0.10, poison: 0.08 } },
   { id: 'plague_doctor',   name: 'Чумной Доктор', parent: 'toxicologist', branch: 'mage', desc: 'Несёт болезнь и смерть под маской целителя', bonuses: { hp: 0.20, goldMult: 0.25, atk: 0.15, poison: 0.08 } },
 
@@ -179,6 +188,14 @@ const MANUAL_CLASSES = [
   { id: 'wizard_slayer',          name: 'Истребитель Колдунов',   parent: 'witch_hunter',      branch: 'warrior', desc: 'Каждое отражённое заклинание — урок. Он учился тысячи лет',               bonuses: { magicShield: 0.35, xpMult: 0.40, atk: 0.20, crit: 0.10 } },
   { id: 'word_burner',            name: 'Сжигатель Слов',         parent: 'witch_hunter',      branch: 'warrior', desc: 'Магия существует, потому что её называют по имени. Он забирает имена',  bonuses: { crit: 0.30, magicShield: 0.20, atk: 0.35, xpMult: 0.10 } },
 
+  // Огненный Берсерк
+  { id: 'inferno_berserker',      name: 'Берсерк Инферно',        parent: 'fire_berserker',    branch: 'warrior', desc: 'Не замечает боли. Боль — это просто ещё один повод гореть ярче',         bonuses: { burn: 0.18, atk: 0.50, spd: 0.20 } },
+  { id: 'flame_incarnation',      name: 'Воплощение Пламени',     parent: 'fire_berserker',    branch: 'warrior', desc: 'В какой-то момент перестал быть воином и стал огнём',                     bonuses: { burn: 0.15, atk: 0.60, crit: 0.20 } },
+
+  // Адский Страж
+  { id: 'abyssal_sentinel',       name: 'Страж Бездны',           parent: 'hell_guard',        branch: 'warrior', desc: 'Стоит у ворот преисподней и не пропускает никого назад',                  bonuses: { burn: 0.15, hp: 0.50, def: 0.30, thorns: 0.10 } },
+  { id: 'obsidian_rampart',       name: 'Обсидиановый Рубеж',     parent: 'hell_guard',        branch: 'warrior', desc: 'Вулкан принял форму человека и решил, что ему нравится сражаться',        bonuses: { burn: 0.12, def: 0.45, hp: 0.40, lifesteal: 0.08 } },
+
   // 🗡️ ROGUE
 
   // Тень
@@ -212,6 +229,10 @@ const MANUAL_CLASSES = [
   // Пират
   { id: 'cursed_admiral',         name: 'Адмирал Проклятых',      parent: 'pirate',            branch: 'rogue',   desc: 'Командует флотом мертвецов. Сам давно должен был умереть',                bonuses: { goldMult: 0.40, lifesteal: 0.15, hp: 0.30, atk: 0.15 } },
   { id: 'sea_devil',              name: 'Морской Дьявол',         parent: 'pirate',            branch: 'rogue',   desc: 'Море сделало его чем-то большим, чем человек. И меньшим',                bonuses: { atk: 0.35, lifesteal: 0.15, spd: 0.25, poison: 0.08, goldMult: 0.10 } },
+
+  // Поджигатель
+  { id: 'smoke_thief',            name: 'Дымовой Вор',            parent: 'arsonist',          branch: 'rogue',   desc: 'Поджигает всё вокруг, потом тихо обчищает карманы под шум пожара',       bonuses: { burn: 0.12, dodge: 0.20, goldMult: 0.40, atk: 0.20 } },
+  { id: 'hell_arsonist',          name: 'Адский Поджигатель',     parent: 'arsonist',          branch: 'rogue',   desc: 'Поджигает не дома — он поджигает самих врагов. Изнутри',                  bonuses: { burn: 0.16, crit: 0.30, atk: 0.45, spd: 0.15 } },
 
   // 🏹 ARCHER
 
@@ -247,6 +268,22 @@ const MANUAL_CLASSES = [
   { id: 'night_spawn',            name: 'Порождение Ночи',        parent: 'shadow_archer',     branch: 'archer',  desc: 'Удар достигает цели раньше, чем цель успела испугаться',                  bonuses: { spd: 0.35, crit: 0.30, deathblow: 0.07, atk: 0.25, pierce: 0.10 } },
   { id: 'darkness_weaver',        name: 'Ткач Тьмы',             parent: 'shadow_archer',     branch: 'archer',  desc: 'Тьма — его материал. Из неё он строит смерть',                           bonuses: { spd: 0.35, dodge: 0.18, pierce: 0.25, atk: 0.20, crit: 0.10 } },
 
+  // Огненный Снайпер
+  { id: 'scorched_earth',         name: 'Выжженная Земля',        parent: 'fire_sniper',       branch: 'archer',  desc: 'После него не остаётся ни травы, ни живых. Только пепел',                 bonuses: { burn: 0.18, pierce: 0.30, atk: 0.30, crit: 0.10 } },
+  { id: 'wrath_of_apollyon',      name: 'Гнев Аполлиона',         parent: 'fire_sniper',       branch: 'archer',  desc: 'Выстрел, от которого нет защиты. Ни брони, ни воли',                     bonuses: { burn: 0.15, deathblow: 0.08, pierce: 0.25, atk: 0.35 } },
+
+  // Стрела Феникса
+  { id: 'blazing_storm',          name: 'Огненный Шторм',         parent: 'phoenix_arrow',     branch: 'archer',  desc: 'Пускает стрелы так быстро, что в воздухе не остаётся холодного места',   bonuses: { burn: 0.16, crit: 0.35, critDmg: 0.50, atk: 0.20 } },
+  { id: 'solar_marksman',         name: 'Солнечный Стрелок',      parent: 'phoenix_arrow',     branch: 'archer',  desc: 'Целится в солнце, попадает во врага. Разница несущественна',               bonuses: { burn: 0.14, pierce: 0.20, crit: 0.25, goldMult: 0.30 } },
+
+  // Неуловимый Снайпер
+  { id: 'phantom_shot',           name: 'Призрачный Выстрел',     parent: 'elusive_sniper',    branch: 'archer',  desc: 'Стрела появляется раньше, чем враг замечает стрелка',                     bonuses: { dodge: 0.22, deathblow: 0.09, pierce: 0.25, atk: 0.20, crit: 0.15 } },
+  { id: 'shadow_predator',        name: 'Теневой Хищник',         parent: 'elusive_sniper',    branch: 'archer',  desc: 'Охотится в темноте. Жертва видит только вспышку, предшествующую смерти',  bonuses: { dodge: 0.25, crit: 0.30, critDmg: 0.45, atk: 0.20, spd: 0.10 } },
+
+  // Следопыт Бури
+  { id: 'wind_incarnate',         name: 'Воплощение Ветра',       parent: 'storm_tracker',     branch: 'archer',  desc: 'Двигается быстрее стрелы. Его уже нет там, куда направлен ответный удар', bonuses: { spd: 0.45, crit: 0.20, atk: 0.30, pierce: 0.10 } },
+  { id: 'tempest_hunter',         name: 'Охотник Шторма',         parent: 'storm_tracker',     branch: 'archer',  desc: 'Буря ускоряет его, но не мешает прицелу. Атака из шторма — смертельна',    bonuses: { spd: 0.30, atk: 0.40, hp: 0.20, pierce: 0.12 } },
+
   // 🔮 MAGE
 
   // Хранитель Природы
@@ -274,12 +311,12 @@ const MANUAL_CLASSES = [
   { id: 'death_merchant',         name: 'Торговец Смертью',       parent: 'apothecary',        branch: 'mage',    desc: 'Смерть в красивых флаконах. По умеренной цене',                          bonuses: { goldMult: 0.40, poison: 0.15, atk: 0.30, hp: 0.15 } },
 
   // Пиротехник
-  { id: 'flame_demon',            name: 'Демон Пламени',          parent: 'pyromaniac',        branch: 'mage',    desc: 'Огонь не его оружие. Огонь — это он',                                    bonuses: { atk: 0.60, crit: 0.30, goldMult: 0.10 } },
-  { id: 'mad_arsonist',           name: 'Безумный Поджигатель',   parent: 'pyromaniac',        branch: 'mage',    desc: 'Считает пожары красивыми. Устраивает их везде',                          bonuses: { atk: 0.45, goldMult: 0.30, spd: 0.20, crit: 0.10 } },
+  { id: 'flame_demon',            name: 'Демон Пламени',          parent: 'pyromaniac',        branch: 'mage',    desc: 'Огонь не его оружие. Огонь — это он',                                    bonuses: { atk: 0.52, crit: 0.30, goldMult: 0.10, burn: 0.08 } },
+  { id: 'mad_arsonist',           name: 'Безумный Поджигатель',   parent: 'pyromaniac',        branch: 'mage',    desc: 'Считает пожары красивыми. Устраивает их везде',                          bonuses: { atk: 0.40, goldMult: 0.30, spd: 0.20, crit: 0.10, burn: 0.06 } },
 
   // Взрывотехник
-  { id: 'army_destroyer',         name: 'Разрушитель Армий',      parent: 'explosive_expert',  branch: 'mage',    desc: 'Не интересуется отдельными солдатами. Только армиями целиком',           bonuses: { atk: 0.55, crit: 0.35, goldMult: 0.10 } },
-  { id: 'catastrophe_architect',  name: 'Архитектор Катастроф',   parent: 'explosive_expert',  branch: 'mage',    desc: 'Каждый взрыв — заранее спланированное произведение искусства',           bonuses: { crit: 0.30, goldMult: 0.35, atk: 0.40, spd: 0.10 } },
+  { id: 'army_destroyer',         name: 'Разрушитель Армий',      parent: 'explosive_expert',  branch: 'mage',    desc: 'Не интересуется отдельными солдатами. Только армиями целиком',           bonuses: { atk: 0.48, crit: 0.35, goldMult: 0.10, burn: 0.07 } },
+  { id: 'catastrophe_architect',  name: 'Архитектор Катастроф',   parent: 'explosive_expert',  branch: 'mage',    desc: 'Каждый взрыв — заранее спланированное произведение искусства',           bonuses: { crit: 0.25, goldMult: 0.35, atk: 0.40, spd: 0.10, burn: 0.05 } },
 
   // Мастер Ядов
   { id: 'supreme_poisoner',       name: 'Верховный Ядовар',       parent: 'poison_master',     branch: 'mage',    desc: 'Знает яды, которых не существует. Изобрёл их сам',                       bonuses: { poison: 0.25, crit: 0.30, atk: 0.20, goldMult: 0.10 } },
@@ -292,9 +329,16 @@ const MANUAL_CLASSES = [
   // ── ⭐ ПРЕСТИЖ depth 4 (require два depth-3) ─────────────────────────────────
   { id: 'toxic_archer',   name: 'Ядовитый Стрелок', parent: 'toxicologist', branch: 'mage',    prestige: 1, requires: ['toxicologist', 'dark_shot'],  desc: 'Смешал яды алхимика с мастерством стрелка. Каждая стрела несёт медленную смерть',    bonuses: { atk: 0.30, poison: 0.08, pierce: 0.10, crit: 0.10 } },
   { id: 'battle_phantom', name: 'Боевой Призрак',   parent: 'ninja',        branch: 'rogue',   prestige: 1, requires: ['ninja', 'crusader'],          desc: 'Неуловимый как тень, стойкий как крепость. Чужие удары возвращаются к владельцу',   bonuses: { dodge: 0.10, thorns: 0.08, atk: 0.20, spd: 0.15 } },
-  { id: 'war_chaos',      name: 'Воин Хаоса',       parent: 'destroyer',    branch: 'warrior', prestige: 1, requires: ['destroyer', 'bombardier'],    desc: 'Ярость берсерка сплавлена с магией взрывчатки. Никто не понимает как он это делает', bonuses: { atk: 0.35, crit: 0.15, spd: 0.10, magicShield: 0.05 } },
+  { id: 'war_chaos',      name: 'Воин Хаоса',       parent: 'destroyer',    branch: 'warrior', prestige: 1, requires: ['destroyer', 'bombardier'],    desc: 'Ярость берсерка сплавлена с магией взрывчатки. Удары горят, броня плавится', bonuses: { atk: 0.30, crit: 0.15, spd: 0.10, magicShield: 0.05, burn: 0.06 } },
+  { id: 'phoenix',        name: 'Феникс',            parent: 'flame_warrior', branch: 'warrior', prestige: 1, requires: ['flame_warrior', 'fire_arrow'],    desc: 'Рождён из двух огней — ярости воина и точности лучника. Горит, но не умирает', bonuses: { burn: 0.12, lifesteal: 0.10, atk: 0.25, spd: 0.15 } },
   { id: 'blood_hunter',   name: 'Кровавый Охотник', parent: 'bloodthirst',  branch: 'warrior', prestige: 1, requires: ['bloodthirst', 'tracker'],     desc: 'Преследует добычу неотступно, восстанавливая силы с каждым пробитием',               bonuses: { lifesteal: 0.10, pierce: 0.08, atk: 0.25, spd: 0.12 } },
   { id: 'iron_mage',      name: 'Железный Маг',     parent: 'crusader',     branch: 'warrior', prestige: 1, requires: ['crusader', 'shaman'],         desc: 'Броня паладина сплавлена с магическим щитом шамана. Абсолютная непробиваемость',     bonuses: { def: 0.20, magicShield: 0.12, hp: 0.20, thorns: 0.08 } },
+  { id: 'elusive_sniper',    name: 'Неуловимый Снайпер', parent: 'eagle_eye',   branch: 'archer', prestige: 1, requires: ['eagle_eye', 'ninja'],        desc: 'Слился с тенью, не теряя прицела. Удар из ниоткуда — и никаких следов',               bonuses: { dodge: 0.10, crit: 0.15, critDmg: 0.25, pierce: 0.08, atk: 0.15 } },
+  { id: 'storm_tracker',    name: 'Следопыт Бури',      parent: 'tracker',    branch: 'archer', prestige: 1, requires: ['tracker', 'berserker'],      desc: 'Ярость берсерка встретила инстинкт охотника. Налетает ураганом — уйти невозможно',    bonuses: { spd: 0.15, atk: 0.25, crit: 0.12, hp: 0.10, pierce: 0.08 } },
+  { id: 'arcane_ranger',    name: 'Маг-Охотник',        parent: 'archdruid',  branch: 'mage',   prestige: 1, requires: ['archdruid', 'ranger'],       desc: 'Природная магия слилась с мастерством рейнджера. Знает лес изнутри — и разит из него', bonuses: { xpMult: 0.20, pierce: 0.10, hp: 0.12, atk: 0.18, spd: 0.08 } },
+  { id: 'explosive_assassin',name: 'Взрывной Убийца',   parent: 'bombardier', branch: 'mage',   prestige: 1, requires: ['bombardier', 'assassin'],    desc: 'Точность убийцы плюс взрывная алхимия. Противник не успевает понять, что убит',       bonuses: { crit: 0.15, atk: 0.22, deathblow: 0.03, goldMult: 0.10, burn: 0.05 } },
+  { id: 'shadow_witch',     name: 'Теневая Ведьма',     parent: 'ninja',      branch: 'rogue',  prestige: 1, requires: ['ninja', 'shaman'],           desc: 'Освоила духовную магию шамана, не потеряв ни тени. Удары отклоняются волей духов',    bonuses: { dodge: 0.10, magicShield: 0.10, spd: 0.15, crit: 0.15, atk: 0.15 } },
+  { id: 'plague_rogue',     name: 'Чумной Плут',        parent: 'bandit',     branch: 'rogue',  prestige: 1, requires: ['bandit', 'toxicologist'],    desc: 'Смешал бандитскую дерзость с ядами токсиколога. Карманы полны золота и флаконов',     bonuses: { poison: 0.08, goldMult: 0.20, spd: 0.12, atk: 0.18, crit: 0.08 } },
 
   // ── Дети ⭐ depth-4 престижа (depth 5) ────────────────────────────────────────
   // Ядовитый Стрелок
@@ -313,12 +357,31 @@ const MANUAL_CLASSES = [
   { id: 'fortress_mage',    name: 'Маг-Крепость',         parent: 'iron_mage',      branch: 'warrior', desc: 'Неприступная магическая цитадель. Атаки разбиваются о него как о скалу', bonuses: { def: 0.40, magicShield: 0.25, thorns: 0.20, hp: 0.25 } },
   { id: 'spirit_armor',     name: 'Духовной Доспех',       parent: 'iron_mage',      branch: 'warrior', desc: 'Дух предков стал его бронёй. Каждый удар по нему — удар по легиону',    bonuses: { magicShield: 0.30, thorns: 0.25, def: 0.35, atk: 0.10 } },
 
+  // Феникс
+  { id: 'eternal_flame',          name: 'Вечное Пламя',           parent: 'phoenix',           branch: 'warrior', desc: 'Его нельзя потушить. Его нельзя убить. Он просто горит вечно',           bonuses: { burn: 0.20, lifesteal: 0.20, atk: 0.35, spd: 0.20 } },
+  { id: 'reborn_phoenix',         name: 'Феникс Возрождённый',    parent: 'phoenix',           branch: 'warrior', desc: 'Умирал трижды. Каждый раз возвращался сильнее. Четвёртый — уже скука',   bonuses: { burn: 0.16, hp: 0.45, lifesteal: 0.15, atk: 0.20 } },
+  // Маг-Охотник
+  { id: 'forest_archmage',        name: 'Маг Дремучего Леса',     parent: 'arcane_ranger',     branch: 'mage',    desc: 'Лес стал его оружием. Магия природы проникает сквозь любую броню',        bonuses: { xpMult: 0.35, pierce: 0.20, atk: 0.20, hp: 0.15, magicShield: 0.08 } },
+  { id: 'nature_warlord',         name: 'Властелин Природы',      parent: 'arcane_ranger',     branch: 'mage',    desc: 'Природа не защищает — она нападает по его приказу',                      bonuses: { xpMult: 0.30, atk: 0.35, spd: 0.20, pierce: 0.12 } },
+  // Взрывной Убийца
+  { id: 'death_bomber',           name: 'Бомбардировщик Смерти',  parent: 'explosive_assassin', branch: 'mage',   desc: 'Один взрыв — один труп. Красиво и эффективно',                           bonuses: { crit: 0.30, deathblow: 0.08, atk: 0.40, burn: 0.08 } },
+  { id: 'alchemical_killer',      name: 'Алхимический Убийца',    parent: 'explosive_assassin', branch: 'mage',   desc: 'Зелья ускорения, зелья яда, зелья огня. Смерть по рецепту',              bonuses: { crit: 0.20, atk: 0.35, goldMult: 0.20, spd: 0.15, burn: 0.06 } },
+  // Теневая Ведьма
+  { id: 'spirit_assassin',        name: 'Убийца Духов',           parent: 'shadow_witch',      branch: 'rogue',   desc: 'Духи ведут его к цели. Никакая магия не почует удара раньше него',        bonuses: { dodge: 0.25, magicShield: 0.20, atk: 0.30, crit: 0.20 } },
+  { id: 'ethereal_shadow',        name: 'Эфирная Тень',           parent: 'shadow_witch',      branch: 'rogue',   desc: 'Полупрозрачный. Движется между мирами. Удары проходят сквозь броню',      bonuses: { dodge: 0.28, spd: 0.30, magicShield: 0.15, pierce: 0.15 } },
+  // Чумной Плут
+  { id: 'toxic_bandit',           name: 'Ядовитый Бандит',        parent: 'plague_rogue',      branch: 'rogue',   desc: 'Грабит. Отравляет. Исчезает. В такой последовательности',                 bonuses: { poison: 0.20, goldMult: 0.35, atk: 0.25, spd: 0.15 } },
+  { id: 'virulent_rogue',         name: 'Зловонный Плут',         parent: 'plague_rogue',      branch: 'rogue',   desc: 'Яд стал его второй кожей. Враги умирают от одного прикосновения',        bonuses: { poison: 0.22, crit: 0.25, atk: 0.30, spd: 0.12 } },
+
   // ── ⭐⭐ ПРЕСТИЖ depth 5 (require два depth-4) ────────────────────────────────
   { id: 'shadow_marksman',   name: 'Теневой Стрелок',  parent: 'ghost',        branch: 'rogue',   prestige: 2, requires: ['ghost', 'marksman'],              desc: 'Стреляет из ниоткуда. Уворачивается от ответа. Убивает наверняка',                bonuses: { dodge: 0.15, deathblow: 0.10, pierce: 0.08, atk: 0.30, crit: 0.20 } },
   { id: 'paladin_magister',  name: 'Паладин-Магистр',  parent: 'faith_guard',  branch: 'warrior', prestige: 2, requires: ['faith_guard', 'spirit_lord'],      desc: 'Непоколебимый рыцарь духа. Магия и сталь защищают его с двух сторон',           bonuses: { thorns: 0.20, magicShield: 0.18, def: 0.30, hp: 0.25 } },
   { id: 'arch_toxicologist', name: 'Архитоксиколог',   parent: 'poison_master',branch: 'mage',    prestige: 2, requires: ['poison_master', 'toxic_archer'],   desc: 'Наука ядов слилась с искусством отравленной стрелы. Непревзойдённый мастер',   bonuses: { poison: 0.28, pierce: 0.12, crit: 0.20, atk: 0.25 } },
   { id: 'chaos_incarnate',   name: 'Воплощение Хаоса', parent: 'war_chaos',    branch: 'warrior', prestige: 2, requires: ['war_chaos', 'battle_phantom'],     desc: 'Два хаоса объединились. Взрыв и тень. Магия и уворот. Он неостановим',        bonuses: { atk: 0.45, crit: 0.25, magicShield: 0.15, dodge: 0.12, spd: 0.10 } },
   { id: 'eternal_guardian',  name: 'Вечный Страж',     parent: 'iron_mage',    branch: 'warrior', prestige: 2, requires: ['iron_mage', 'faith_guard'],        desc: 'Живая крепость, наполненная духами предков. Абсолютная защита на все времена', bonuses: { magicShield: 0.22, thorns: 0.22, def: 0.40, hp: 0.30 } },
+  { id: 'apex_predator',     name: 'Верховный Хищник', parent: 'marksman',     branch: 'archer',  prestige: 2, requires: ['marksman', 'elusive_sniper'],                 desc: 'Точность бога и скорость призрака. Всё живое — его добыча. Промаха не бывает',           bonuses: { crit: 0.25, critDmg: 0.40, dodge: 0.12, deathblow: 0.08, atk: 0.15 } },
+  { id: 'arcane_overlord',   name: 'Тайный Владыка',   parent: 'poison_master', branch: 'mage',   prestige: 2, requires: ['poison_master', 'arcane_ranger'],               desc: 'Природные яды усилены магией охотника. Каждый удар — отравленная стрела из леса',         bonuses: { xpMult: 0.28, poison: 0.22, pierce: 0.15, atk: 0.20, crit: 0.12 } },
+  { id: 'nightmare_agent',   name: 'Агент Кошмара',    parent: 'ghost',        branch: 'rogue',   prestige: 2, requires: ['ghost', 'shadow_witch'],                       desc: 'Призрак, обученный ведьмой теней. Обходит магию. Убивает прежде, чем заклятья сработают', bonuses: { dodge: 0.22, magicShield: 0.18, spd: 0.25, crit: 0.18, deathblow: 0.05 } },
 ];
 
 // ── ГЕНЕРАЦИЯ БОНУСОВ ДЛЯ ГЛУБИН 5–10 ───────────────────────────────────────

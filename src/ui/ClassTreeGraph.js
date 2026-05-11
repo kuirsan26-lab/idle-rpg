@@ -54,8 +54,9 @@ place('novice', -Math.PI / 2, Math.PI * 1.5); // top, clockwise
 export class ClassTreeGraph {
   constructor(state) {
     this.state    = state;
-    this._nodeEls = new Map();
-    this._edgeMap = new Map();
+    this._nodeEls  = new Map();
+    this._edgeMap  = new Map();
+    this._reqEdgeMap = new Map(); // id → [line, ...] for requires edges
     this._tx = 0; this._ty = 0; this._scale = 1;
     this._dragging = false;
     this._drag0    = { x: 0, y: 0, tx: 0, ty: 0 };
@@ -110,7 +111,7 @@ export class ClassTreeGraph {
       <span style="color:#55cc66">● Лучник</span>
       <span style="color:#5588ee">● Маг</span>
       <span style="color:#fff">◎ Текущий</span>
-      <span style="color:#555;border:1px dashed #555;padding:0 4px">? Доступный</span>
+      <span style="color:#7dcc7d;border:1px solid #7dcc7d88;padding:0 4px">? Доступный</span>
       <span style="color:#2a2a3a">· Неизвестный</span>
       <span style="color:#ffd700;border:1px solid #ffd70066;padding:0 4px">⭐ Престиж</span>
     `;
@@ -185,11 +186,13 @@ export class ClassTreeGraph {
         line.setAttribute('y1', r.y.toFixed(1));
         line.setAttribute('x2', c.x.toFixed(1));
         line.setAttribute('y2', c.y.toFixed(1));
-        line.setAttribute('stroke', '#3a2800');
-        line.setAttribute('stroke-width', '1.2');
-        line.setAttribute('stroke-dasharray', '4,3');
+        line.setAttribute('stroke', 'none');
+        line.setAttribute('stroke-width', '1');
+        line.setAttribute('stroke-dasharray', '3,7');
         line.dataset.prestigeReq = '1';
         this._svg.appendChild(line);
+        if (!this._reqEdgeMap.has(id)) this._reqEdgeMap.set(id, []);
+        this._reqEdgeMap.get(id).push(line);
       }
     }
   }
@@ -252,7 +255,7 @@ export class ClassTreeGraph {
       crit:'🎯 Крит шанс', critDmg:'💥 Крит урон', xpMult:'📚 Опыт',
       goldMult:'💰 Золото', dodge:'🌀 Уворот', lifesteal:'🩸 Вампиризм',
       thorns:'🌵 Шипы', magicShield:'🔮 Маг. щит',
-      pierce:'🏹 Пробитие', deathblow:'💀 Смерт. удар', poison:'☠️ Яд',
+      pierce:'🏹 Пробитие', deathblow:'💀 Смерт. удар', poison:'☠️ Яд', burn:'🔥 Горение',
     };
 
     let bonusHtml = '';
@@ -355,18 +358,51 @@ export class ClassTreeGraph {
     }
 
     for (const [id, line] of this._edgeMap) {
-      const onPath = id === cur || anc.has(id);
-      const disc   = this.state.discoveredClasses.has(id);
-      const ecol   = BRANCH_COLORS[CLASS_MAP.get(id)?.branch] ?? '#888';
+      const onPath  = id === cur || anc.has(id);
+      const disc    = this.state.discoveredClasses.has(id);
+      const ecls    = CLASS_MAP.get(id);
+      const ecol    = BRANCH_COLORS[ecls?.branch] ?? '#888';
+      const edepth  = ecls?.depth ?? 99;
+      const eavail  = ecls && ecls.parent === cur
+        && !this.state.unlockedClasses.has(id)
+        && this.state.level  >= (DEPTH_LEVEL_REQ[edepth]  ?? 999)
+        && this.state.gold   >= (DEPTH_GOLD_COST[edepth]  ?? Infinity)
+        && (!ecls.requires?.length || ecls.requires.every(r => this.state.discoveredClasses.has(r)));
       if (onPath) {
         line.setAttribute('stroke', '#2a3050');
         line.setAttribute('stroke-width', '2.5');
+      } else if (eavail) {
+        line.setAttribute('stroke', ecol + 'cc');
+        line.setAttribute('stroke-width', '2');
       } else if (disc) {
         line.setAttribute('stroke', ecol + '44');
         line.setAttribute('stroke-width', '1.5');
       } else {
         line.setAttribute('stroke', '#14141e');
         line.setAttribute('stroke-width', '1');
+      }
+    }
+
+    // Prestige requires edges — show only when class is known/available
+    for (const [id, lines] of this._reqEdgeMap) {
+      const cls   = CLASS_MAP.get(id);
+      const disc  = this.state.discoveredClasses.has(id) || id === cur || anc.has(id);
+      const edepth = cls?.depth ?? 99;
+      const avail = cls && cls.parent === cur
+        && !this.state.unlockedClasses.has(id)
+        && this.state.level  >= (DEPTH_LEVEL_REQ[edepth]  ?? 999)
+        && this.state.gold   >= (DEPTH_GOLD_COST[edepth]  ?? Infinity)
+        && (!cls.requires?.length || cls.requires.every(r => this.state.discoveredClasses.has(r)));
+      const isCurNode = id === cur;
+      const show = disc || avail;
+      for (const line of lines) {
+        if (show) {
+          const bright = isCurNode || anc.has(id);
+          line.setAttribute('stroke', bright ? '#ffd70099' : avail ? '#ffd70077' : '#ffd70033');
+          line.setAttribute('stroke-width', bright ? '1.5' : avail ? '1.2' : '0.8');
+        } else {
+          line.setAttribute('stroke', 'none');
+        }
       }
     }
   }
@@ -391,6 +427,8 @@ export class ClassTreeGraph {
       : '';
     div.title = isDisc ? `${cls.name}\n${cls.desc}${requiresHint}` : `???\nОткройте, чтобы узнать`;
 
+    div.classList.remove('node-avail-pulse');
+
     if (isCur) {
       s.background = cls.prestige ? '#3a2a00' : color;
       s.border     = cls.prestige ? '3px solid #ffd700' : '3px solid #fff';
@@ -410,16 +448,19 @@ export class ClassTreeGraph {
       s.color      = cls.prestige ? '#ffd70088' : color + 'dd';
       div.textContent = cls.prestige ? (cls.prestige === 2 ? '✦' : '⭐') : '';
     } else if (isAvail) {
+      const pc = cls.prestige ? '#ffd700' : color;
       s.background = cls.prestige ? '#1e1400' : '#080812';
-      s.border     = cls.prestige ? `1.5px dashed #ffd70099` : `1.5px dashed ${color}66`;
+      s.border     = cls.prestige ? `2px solid #ffd700bb` : `2px solid ${color}bb`;
       s.boxShadow  = '';
-      s.color      = cls.prestige ? '#ffd700' : '#555';
+      s.color      = cls.prestige ? '#ffd700' : color + 'cc';
       div.textContent = cls.prestige ? '⭐' : '?';
+      div.style.setProperty('--pulse-col', pc);
+      div.classList.add('node-avail-pulse');
     } else {
-      s.background = '#050510';
-      s.border     = cls.prestige ? '1px solid #3a2800' : '1px solid #181826';
+      s.background = cls.prestige ? '#1a100088' : color + '18';
+      s.border     = cls.prestige ? '1px dashed #6a450044' : `1px dashed ${color}38`;
       s.boxShadow  = '';
-      s.color      = cls.prestige ? '#3a2800' : '#1e1e30';
+      s.color      = cls.prestige ? '#6a450055' : color + '40';
       div.textContent = '';
     }
   }
