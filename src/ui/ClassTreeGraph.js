@@ -277,18 +277,26 @@ export class ClassTreeGraph {
         .join('');
     }
 
+    // Только эти четыре стата усиливаются depthMult
+    const DEPTH_SCALED = new Set(['hp', 'atk', 'def', 'spd']);
+
     let cumulHtml = '';
     if (isDisc && cls.depth > 0) {
       const cb = getCumulativeBonuses(id);
       const rows = Object.entries(cb)
         .filter(([, v]) => v > 0)
-        .map(([k, v]) => `<div style="display:flex;justify-content:space-between;margin:2px 0">
-          <span style="color:#666">${BNAMES[k] ?? k}</span>
-          <span style="color:#ffcc44">+${Math.round(v * depthMult * 100)}%</span></div>`)
+        .map(([k, v]) => {
+          const m = DEPTH_SCALED.has(k) ? depthMult : 1;
+          const scaled = Math.round(v * m * 100);
+          const col = DEPTH_SCALED.has(k) ? '#ffcc44' : '#aaaaaa';
+          return `<div style="display:flex;justify-content:space-between;margin:2px 0">
+            <span style="color:#666">${BNAMES[k] ?? k}</span>
+            <span style="color:${col}">+${scaled}%</span></div>`;
+        })
         .join('');
       if (rows) {
         cumulHtml = `<div style="border-top:1px solid #1a1a28;padding-top:6px;margin-top:4px">
-          <div style="color:#666;font-size:10px;margin-bottom:3px">Итого с цепочкой <span style="color:#ffd700;font-weight:bold">×${multLabel}</span></div>
+          <div style="color:#666;font-size:10px;margin-bottom:3px">Итого с цепочкой <span style="color:#ffd700;font-weight:bold">×${multLabel}</span> <span style="color:#444">(HP/ATK/DEF/SPD)</span></div>
           ${rows}
         </div>`;
       }

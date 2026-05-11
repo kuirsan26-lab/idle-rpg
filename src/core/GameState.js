@@ -174,7 +174,7 @@ export class GameState extends EventBus {
 
     const eq = this.equipBonuses;
 
-    // depthMult усиливает только классовые бонусы; апгрейды и снаряжение — без изменений
+    // depthMult усиливает только HP/ATK/DEF/SPD; все остальные статы — без множителя
     const hpMult  = 1 + (cb.hp  || 0) * depthMult + (upgBonuses.hp  || 0) + (eq.hp  || 0);
     const atkMult = 1 + (cb.atk || 0) * depthMult + (upgBonuses.atk || 0) + (eq.atk || 0);
     const defMult = 1 + (cb.def || 0) * depthMult + (upgBonuses.def || 0) + (eq.def || 0);
@@ -185,18 +185,18 @@ export class GameState extends EventBus {
       atk:      Math.max(1, Math.round(rawAtk * atkMult)),
       def:      Math.max(0, Math.round(rawDef * defMult)),
       spd:      parseFloat((rawSpd * spdMult).toFixed(2)),
-      crit:     Math.min(95, 5  + (cb.crit    || 0) * 100 * depthMult + (upgBonuses.crit    || 0) * 100 + (eq.crit    || 0) * 100),
-      critDmg:  150 + (cb.critDmg || 0) * 100 * depthMult + (upgBonuses.critDmg || 0) * 100 + (eq.critDmg || 0) * 100,
-      xpMult:   parseFloat(((1 + (cb.xpMult  || 0) * depthMult + (eq.xpMult  || 0)) * pXp).toFixed(3)),
-      goldMult: parseFloat(((1 + (cb.goldMult || 0) * depthMult + (eq.goldMult || 0)) * pGold).toFixed(3)),
-      dodge:       Math.min(75, (cb.dodge       || 0) * 100 * depthMult + (eq.dodge       || 0) * 100),
-      lifesteal:   (cb.lifesteal   || 0) * 100 * depthMult + (eq.lifesteal   || 0) * 100,
-      thorns:      (cb.thorns      || 0) * 100 * depthMult + (eq.thorns      || 0) * 100,
-      magicShield: Math.min(75, (cb.magicShield || 0) * 100 * depthMult + (eq.magicShield || 0) * 100),
-      pierce:      Math.min(75, (cb.pierce      || 0) * 100 * depthMult),
-      deathblow:   Math.min(20, (cb.deathblow   || 0) * 100 * depthMult),
-      poison:      Math.min(60, (cb.poison      || 0) * 100 * depthMult),
-      burn:        Math.min(50, (cb.burn        || 0) * 100 * depthMult),
+      crit:     Math.min(95, 5  + (cb.crit    || 0) * 100 + (upgBonuses.crit    || 0) * 100 + (eq.crit    || 0) * 100),
+      critDmg:  150 + (cb.critDmg || 0) * 100 + (upgBonuses.critDmg || 0) * 100 + (eq.critDmg || 0) * 100,
+      xpMult:   parseFloat(((1 + (cb.xpMult  || 0) + (eq.xpMult  || 0)) * pXp).toFixed(3)),
+      goldMult: parseFloat(((1 + (cb.goldMult || 0) + (eq.goldMult || 0)) * pGold).toFixed(3)),
+      dodge:       Math.min(75, (cb.dodge       || 0) * 100 + (eq.dodge       || 0) * 100),
+      lifesteal:   (cb.lifesteal   || 0) * 100 + (eq.lifesteal   || 0) * 100,
+      thorns:      (cb.thorns      || 0) * 100 + (eq.thorns      || 0) * 100,
+      magicShield: Math.min(75, (cb.magicShield || 0) * 100 + (eq.magicShield || 0) * 100),
+      pierce:      Math.min(75, (cb.pierce      || 0) * 100),
+      deathblow:   Math.min(20, (cb.deathblow   || 0) * 100),
+      poison:      Math.min(60, (cb.poison      || 0) * 100),
+      burn:        Math.min(50, (cb.burn        || 0) * 100),
       hpMult, atkMult, defMult, spdMult,
     };
   }
