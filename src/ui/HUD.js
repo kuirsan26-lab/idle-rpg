@@ -15,8 +15,9 @@ export class HUD {
     this._unsubs = [
       state.on('player:inventoryChanged', () => this._updateInvCount()),
       state.on('player:statsChanged',     () => this._update()),
-      state.on('player:goldChanged',      () => this._updateGold()),
+      state.on('player:goldChanged',      () => { this._updateGold(); this._updateSkillUpgrade(); }),
       state.on('player:xpChanged',        () => this._updateXp()),
+      state.on('player:skillLevelChanged', () => { this._updateSkillBtn(); }),
       state.on('player:levelUp',          (d) => { this._update(); this._updatePrestigeBtn(); this._log(`🎉 Уровень ${d.level}!`, 'level'); }),
       state.on('player:classChanged',     () => { this._update(); this._updateSkillBtn(); }),
       state.on('combat:killCountChanged', () => this._updateKills()),
@@ -33,7 +34,7 @@ export class HUD {
         this._updateInvCount();
         this._updateSkillBtn();
       }),
-      state.on('player:ppChanged', () => this._updatePrestigeBtn()),
+      state.on('player:ppChanged', () => { this._updatePrestigeBtn(); this._updateSkillUpgrade(); }),
       state.on('combat:milestone', (d) => {
         this._showMilestone(d);
         if (d.isNewRecord) {
@@ -88,7 +89,50 @@ export class HUD {
       btn.dataset.bound = '1';
       btn.addEventListener('click', () => this.state.triggerSkill());
     }
+
+    // Кнопка усиления скилла
+    const upBtn = document.getElementById('skill-upgrade-btn');
+    if (upBtn && !upBtn.dataset.bound) {
+      upBtn.dataset.bound = '1';
+      upBtn.addEventListener('click', () => {
+        if (this.state.buySkillUpgrade()) this._updateSkillUpgrade();
+      });
+    }
+    // Чекбокс авто-каста
+    const autoCb = document.getElementById('skill-autocast');
+    if (autoCb && !autoCb.dataset.bound) {
+      autoCb.dataset.bound = '1';
+      autoCb.addEventListener('change', () => { this.state.automation.autoCast = autoCb.checked; });
+    }
+    if (autoCb) autoCb.checked = this.state.automation.autoCast;
+
+    this._updateSkillUpgrade();
     this._updateSkillCd();
+  }
+
+  _updateSkillUpgrade() {
+    const lvlEl  = document.getElementById('skill-level');
+    const costEl = document.getElementById('skill-upgrade-cost');
+    const btn    = document.getElementById('skill-upgrade-btn');
+    if (!btn) return;
+
+    const level = this.state.getSkillLevel();
+    if (lvlEl) lvlEl.textContent = level;
+
+    const next = this.state.getNextSkillUpgrade();
+    if (!next) {
+      btn.classList.add('maxed');
+      btn.disabled = true;
+      if (costEl) costEl.textContent = 'МАКС';
+      return;
+    }
+    btn.classList.remove('maxed');
+    const affordable = next.type === 'gold'
+      ? this.state.gold >= next.cost
+      : this.state.prestigePoints >= next.cost;
+    btn.disabled = !affordable;
+    if (costEl) costEl.textContent = next.type === 'gold' ? `${this._fmt(next.cost)}🪙` : `${next.cost}ПО`;
+    btn.title = `Ур.${level + 1}: ${next.label}`;
   }
 
   _updateSkillCd() {
@@ -97,18 +141,21 @@ export class HUD {
     const cd   = document.getElementById('skill-btn-cd');
     if (!btn) return;
 
-    const pct   = this.state.getSkillCooldownPct();
-    const ready = pct >= 1;
+    const pct     = this.state.getSkillCooldownPct();
+    const ready    = pct >= 1;
+    const charges  = this.state.getSkillCharges();
+    const maxCharges = this.state.getSkillMaxCharges();
 
     btn.disabled = !ready || !this.state.isAlive;
     if (fill) fill.style.width = (pct * 100) + '%';
     if (cd) {
+      const chargeTag = maxCharges > 1 ? ` ×${charges}` : '';
       if (ready) {
-        cd.textContent = 'ГОТОВО';
+        cd.textContent = `ГОТОВО${chargeTag}`;
         cd.style.color = '#88ff88';
       } else {
         const sec = ((this.state._skillCdEnd - performance.now()) / 1000).toFixed(1);
-        cd.textContent = `${sec}с`;
+        cd.textContent = `${sec}с${chargeTag}`;
         cd.style.color = '#888';
       }
     }

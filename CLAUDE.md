@@ -106,8 +106,18 @@ main.js
 | archer  | Залп           | 50% ATK по всем врагам                | 12 s  |
 | mage    | Огненный шар   | 80% ATK по всем + горение 3 тика      | 15 s  |
 
-`state.triggerSkill()` — активировать. `state.isSkillReady()` / `state.getSkillCooldownPct()` — состояние. Эффекты масштабируются множителем глубины `pm = 1 + 0.12*(depth-1)` (depth5 → ×1.48) в `Combat._applySkill`.
+`state.triggerSkill()` — активировать. `state.isSkillReady()` / `state.getSkillCooldownPct()` / `state.getSkillCharges()` — состояние. Эффекты масштабируются множителем глубины `pm = 1 + 0.12*(depth-1)` (depth5 → ×1.48) в `Combat._applySkill`.
 Скилл-эффекты в Combat: `_pendingPoison`, `mob.stunTicks`, `mob.poisonTicks/poisonDmg`, `mob.burnTicks/burnDmg`.
+
+**Прокачка скиллов (v1.15.0):** `state.skillLevels` (по ветке, не сбрасывается при престиже). 5 уровней: 1-3 за золото, 4-5 за ПО (`SKILL_UPGRADES` в `data/skills.js`). `getSkillParams(branch, level)` резолвит эффективные параметры (heal%, cd, урон, тики, стан, цели, заряды), которые читает `Combat._applySkill`. Заряды (warrior/archer L5: +1 заряд) — `_skillCharges` + ленивая дозарядка `_syncSkillCharges()`. Спец-эффекты: баф ATK +20% (`_atkBuffEnd`, focus L4), щит возрождения (`_respawnShield`, focus L5, поглощается в `takeDamage`), стак яда (rogue L5), крит/DoT на залп (archer L2/L3), взрыв при смерти `_explode()` (mage L5). `state.buySkillUpgrade()` / `getNextSkillUpgrade()`. UI: `#skill-upgrade-btn` в `#skill-zone`.
+
+### Automation (v1.15.0)
+
+`state.automation = { autoCast, autoBuy, autoSell }` — не сбрасывается при престиже, сохраняется.
+- **autoCast** (bool): `Combat._tick()` авто-кастит скилл по готовности при наличии врагов. Чекбокс в `#skill-zone`.
+- **buy-max / ×10**: `state.buyUpgradeBulk(id, count|'max')`. Режим `#upg-buymode` в StatsPanel (×1/×10/МАКС).
+- **autoBuy** (bool): `Combat._tick()` → `state.autoBuyStep()` покупает самый дешёвый доступный апгрейд. Чекбокс `#upg-autobuy`.
+- **autoSell** (`'off'|'common'|'rare'`): `rollItemDrop()` → `shouldAutoSell()` продаёт дроп минуя инвентарь. `#inv-autosell` в инвентаре.
 
 Мобы в `combat.mobs[]` — чистые данные. Их визуальные аналоги живут в `GameScene.mobVisuals` (Map<mobId, visual>).
 

@@ -37,6 +37,17 @@ export class InventoryPanel {
   _bindEvents() {
     document.getElementById('inv-close-btn').addEventListener('click', () => this.close());
 
+    // Авто-продажа по редкости
+    const asWrap = document.getElementById('inv-autosell');
+    if (asWrap) {
+      asWrap.addEventListener('click', e => {
+        const btn = e.target.closest('.inv-as-btn');
+        if (!btn) return;
+        this.state.automation.autoSell = btn.dataset.as;
+        this._syncAutoSell();
+      });
+    }
+
     // Клик по слоту куклы — снять предмет
     document.getElementById('inv-doll').addEventListener('click', e => {
       const slot = e.target.closest('[data-slot]')?.dataset.slot;
@@ -60,6 +71,13 @@ export class InventoryPanel {
   _refresh() {
     this._renderDoll();
     this._renderInventory();
+    this._syncAutoSell();
+  }
+
+  _syncAutoSell() {
+    const mode = this.state.automation.autoSell;
+    document.querySelectorAll('.inv-as-btn').forEach(b =>
+      b.classList.toggle('active', b.dataset.as === mode));
   }
 
   // ── Кукла персонажа ──────────────────────────────────────────────────────────

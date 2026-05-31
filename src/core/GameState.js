@@ -5,7 +5,7 @@
  */
 import { getCumulativeBonuses, CLASS_MAP, CHILDREN_MAP, DEPTH_LEVEL_REQ, DEPTH_GOLD_COST } from '../data/classes.js';
 import { generateItem, SELL_VALUE } from '../data/items.js';
-import { SKILLS_BY_BRANCH } from '../data/skills.js';
+import { SKILLS_BY_BRANCH, SKILL_UPGRADES, SKILL_MAX_LEVEL, getSkillParams } from '../data/skills.js';
 import { installSave } from './GameStateSave.js';
 import { ACHIEVEMENTS } from '../data/achievements.js';
 
@@ -119,7 +119,18 @@ export class GameState extends EventBus {
     this._lastSave = Date.now();
 
     // ── Скилы ────────────────────────────────────────────────────────
-    this._skillCdEnd = 0; // performance.now() когда скилл будет готов
+    this._skillCdEnd  = 0; // performance.now() когда перезарядится следующий заряд
+    this._skillCharges = 1; // доступные заряды (max задаётся прокачкой)
+    this.skillLevels  = { novice: 0, warrior: 0, rogue: 0, archer: 0, mage: 0 }; // не сбрасывается при престиже
+    this._atkBuffEnd  = 0;  // performance.now() конца бафа +20% урона (focus L4)
+    this._respawnShield = 0;// поглощение урона после возрождения (focus L5)
+
+    // ── Автоматизация (не сбрасывается при престиже) ──────────────────
+    this.automation = {
+      autoCast: false,           // авто-каст скилла по готовности
+      autoBuy:  false,           // авто-покупка самого дешёвого апгрейда
+      autoSell: 'off',           // 'off' | 'common' | 'rare' — авто-продажа дропа
+    };
   }
 
   /** Все суммарные бонусы от класса */
@@ -180,9 +191,12 @@ export class GameState extends EventBus {
     const defMult = 1 + (cb.def || 0) * depthMult + (upgBonuses.def || 0) + (eq.def || 0);
     const spdMult = 1 + (cb.spd || 0) * depthMult + (upgBonuses.spd || 0) + (eq.spd || 0);
 
+    // Временный баф урона от скилла focus L4 (+20% на 10с)
+    const atkBuff = performance.now() < this._atkBuffEnd ? 1.2 : 1;
+
     return {
       maxHp:    Math.round(rawHp * hpMult),
-      atk:      Math.max(1, Math.round(rawAtk * atkMult)),
+      atk:      Math.max(1, Math.round(rawAtk * atkMult * atkBuff)),
       def:      Math.max(0, Math.round(rawDef * defMult)),
       spd:      parseFloat((rawSpd * spdMult).toFixed(2)),
       crit:     Math.min(95, 5  + (cb.crit    || 0) * 100 + (upgBonuses.crit    || 0) * 100 + (eq.crit    || 0) * 100),
@@ -248,6 +262,25 @@ export class GameState extends EventBus {
     return true;
   }
 
+  /** Купить N уровней апгрейда (count: число или 'max'). Возвращает кол-во купленных. */
+  buyUpgradeBulk(id, count = 1) {
+    const limit = count === 'max' ? Infinity : count;
+    let bought = 0;
+    while (bought < limit) {
+      const level = this.upgrades[id] ?? 0;
+      const cost  = upgradeCost(id, level);
+      if (this.gold < cost) break;
+      this.gold -= cost;
+      this.upgrades[id] = level + 1;
+      bought++;
+    }
+    if (bought > 0) {
+      this.emit('player:statsChanged');
+      this.emit('player:goldChanged', { gold: this.gold });
+    }
+    return bought;
+  }
+
   /** Проверить, может ли игрок взять класс */
   canUnlockClass(classId) {
     const cls = CLASS_MAP.get(classId);
@@ -298,6 +331,10 @@ export class GameState extends EventBus {
     this.gold -= cost;
     this.currentClass = classId;
     this.unlockedClasses.add(classId);
+
+    // Новая ветка → свежий скилл: полные заряды
+    this._skillCharges = this.getSkillMaxCharges();
+    this._skillCdEnd   = 0;
 
     if (!this.discoveredClasses.has(classId)) {
       this.discoveredClasses.add(classId);
@@ -380,6 +417,16 @@ export class GameState extends EventBus {
 
   /** Получить урон (возвращает true если смерть) */
   takeDamage(amount) {
+    // Щит возрождения (focus L5) поглощает урон первым
+    if (this._respawnShield > 0) {
+      const absorbed = Math.min(this._respawnShield, amount);
+      this._respawnShield -= absorbed;
+      amount -= absorbed;
+      if (amount <= 0) {
+        this.emit('player:hpChanged', { hp: this.currentHp });
+        return false;
+      }
+    }
     this.currentHp = Math.max(0, this.currentHp - amount);
     this.emit('player:hpChanged', { hp: this.currentHp });
     if (this.currentHp <= 0) {
@@ -394,6 +441,10 @@ export class GameState extends EventBus {
   respawn() {
     this.isAlive   = true;
     this.currentHp = this.getStats().maxHp;
+    // Щит возрождения (focus L5): поглощает 30% макс. HP до первого пробоя
+    this._respawnShield = this.getSkillParams().respawnShield
+      ? Math.round(this.currentHp * 0.30)
+      : 0;
     this.emit('player:respawn');
     this.emit('player:hpChanged', { hp: this.currentHp });
   }
@@ -404,12 +455,21 @@ export class GameState extends EventBus {
   rollItemDrop(wave, isBoss = false, isElite = false) {
     const chance = isBoss ? 0.50 : isElite ? 1.0 : 0.12;
     if (Math.random() > chance) return null;
-    if (this.inventory.length >= 20) return null; // инвентарь полон
 
     let forcedRarity = null;
     if (isBoss  && Math.random() < 0.7) forcedRarity = 'rare';
     else if (isElite) forcedRarity = 'rare';
     const item = generateItem(wave, forcedRarity);
+
+    // Авто-продажа: продаём сразу, минуя инвентарь (работает и при полном инвентаре)
+    if (this.shouldAutoSell(item.rarity)) {
+      const gold = Math.round(SELL_VALUE[item.rarity] * (1 + wave * 0.05));
+      this.addGold(gold);
+      this.emit('player:inventoryChanged', { autoSold: item, gold });
+      return null;
+    }
+
+    if (this.inventory.length >= 20) return null; // инвентарь полон
     this.inventory.push(item);
     this.emit('player:inventoryChanged', { item });
     return item;
@@ -472,26 +532,112 @@ export class GameState extends EventBus {
     return SKILLS_BY_BRANCH[this.getBranch()] ?? SKILLS_BY_BRANCH.novice;
   }
 
-  /** Скилл готов к использованию */
-  isSkillReady() {
-    return performance.now() >= this._skillCdEnd;
+  /** Уровень прокачки скилла ветки */
+  getSkillLevel(branch = this.getBranch()) {
+    return this.skillLevels[branch] ?? 0;
   }
 
-  /** Доля прогресса кулдауна [0..1], где 1 = готово */
+  /** Параметры скилла с учётом прокачки */
+  getSkillParams() {
+    return getSkillParams(this.getBranch(), this.getSkillLevel());
+  }
+
+  getSkillMaxCharges() { return this.getSkillParams().charges ?? 1; }
+  getSkillCdMs()       { return this.getSkillParams().cdMs; }
+
+  /** Ленивая дозарядка зарядов скилла */
+  _syncSkillCharges() {
+    const max = this.getSkillMaxCharges();
+    if (this._skillCharges >= max) { this._skillCharges = max; return; }
+    const now = performance.now();
+    const cd  = this.getSkillCdMs();
+    while (this._skillCharges < max && now >= this._skillCdEnd) {
+      this._skillCharges++;
+      if (this._skillCharges < max) this._skillCdEnd += cd;
+    }
+  }
+
+  /** Доступные заряды скилла */
+  getSkillCharges() { this._syncSkillCharges(); return this._skillCharges; }
+
+  /** Скилл готов к использованию */
+  isSkillReady() {
+    this._syncSkillCharges();
+    return this._skillCharges > 0 && this.isAlive;
+  }
+
+  /** Доля прогресса кулдауна перезаряжающегося заряда [0..1], где 1 = готово */
   getSkillCooldownPct() {
-    if (this.isSkillReady()) return 1;
-    const skill   = this.getActiveSkill();
-    const elapsed = skill.cdMs - (this._skillCdEnd - performance.now());
-    return Math.max(0, elapsed / skill.cdMs);
+    this._syncSkillCharges();
+    if (this._skillCharges > 0) return 1;
+    const cd = this.getSkillCdMs();
+    const remaining = this._skillCdEnd - performance.now();
+    return Math.max(0, Math.min(1, (cd - remaining) / cd));
   }
 
   /** Активировать скилл. Возвращает объект скилла или null если не готов */
   triggerSkill() {
-    if (!this.isSkillReady() || !this.isAlive) return null;
-    const skill      = this.getActiveSkill();
-    this._skillCdEnd = performance.now() + skill.cdMs;
+    this._syncSkillCharges();
+    if (this._skillCharges <= 0 || !this.isAlive) return null;
+    const max = this.getSkillMaxCharges();
+    const wasFull = this._skillCharges >= max;
+    this._skillCharges--;
+    if (wasFull) this._skillCdEnd = performance.now() + this.getSkillCdMs();
+    const skill = this.getActiveSkill();
     this.emit('player:skillTriggered', { skill });
+    this.emit('player:skillChargesChanged');
     return skill;
+  }
+
+  /** Купить следующий уровень скилла текущей ветки (1–3 золото, 4–5 ПО) */
+  buySkillUpgrade() {
+    const branch = this.getBranch();
+    const lvl    = this.getSkillLevel(branch);
+    if (lvl >= SKILL_MAX_LEVEL) return false;
+    const next = SKILL_UPGRADES[branch]?.[lvl];
+    if (!next) return false;
+
+    if (next.type === 'gold') {
+      if (this.gold < next.cost) return false;
+      this.gold -= next.cost;
+      this.emit('player:goldChanged', { gold: this.gold });
+    } else {
+      if (this.prestigePoints < next.cost) return false;
+      this.prestigePoints -= next.cost;
+      this.emit('player:ppChanged', { pp: this.prestigePoints });
+    }
+
+    this.skillLevels[branch] = lvl + 1;
+    this._skillCharges = this.getSkillMaxCharges(); // обновить, если вырос максимум зарядов
+    this.emit('player:skillLevelChanged', { branch, level: lvl + 1 });
+    this.emit('player:statsChanged');
+    return true;
+  }
+
+  /** Стоимость и тип следующего уровня скилла (или null если максимум) */
+  getNextSkillUpgrade(branch = this.getBranch()) {
+    const lvl = this.getSkillLevel(branch);
+    if (lvl >= SKILL_MAX_LEVEL) return null;
+    return SKILL_UPGRADES[branch]?.[lvl] ?? null;
+  }
+
+  /** Авто-покупка: купить самый дешёвый доступный апгрейд (1 за вызов) */
+  autoBuyStep() {
+    let bestId = null, bestCost = Infinity;
+    for (const upg of UPGRADES_LIST) {
+      const cost = upgradeCost(upg.id, this.upgrades[upg.id] ?? 0);
+      if (cost <= this.gold && cost < bestCost) { bestCost = cost; bestId = upg.id; }
+    }
+    if (bestId) return this.buyUpgrade(bestId);
+    return false;
+  }
+
+  /** Нужно ли авто-продать предмет данной редкости */
+  shouldAutoSell(rarity) {
+    const m = this.automation.autoSell;
+    if (m === 'common') return rarity === 'common';
+    if (m === 'rare')   return rarity === 'common' || rarity === 'rare';
+    return false;
   }
 
   /** Начальная инициализация / загрузка */

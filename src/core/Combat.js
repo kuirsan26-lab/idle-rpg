@@ -176,6 +176,14 @@ export class CombatSystem {
       return;
     }
 
+    // Автоматизация: авто-каст скилла и авто-покупка апгрейдов
+    if (this.state.automation.autoCast && this.mobs.length > 0 && this.state.isSkillReady()) {
+      this.state.triggerSkill();
+    }
+    if (this.state.automation.autoBuy) {
+      this.state.autoBuyStep();
+    }
+
     // Атака игрока
     if (this.attackCooldown <= 0 && this.mobs.length > 0) {
       const attackInterval = Math.round(1000 / Math.max(0.1, stats.spd));
@@ -203,13 +211,18 @@ export class CombatSystem {
       let dmg = Math.max(1, stats.atk - Math.round(effectiveDef * 0.5));
       if (isCrit) dmg = Math.round(dmg * (stats.critDmg / 100));
 
-      // Яд от скилла rogue: бонус +80% к текущей атаке + вешаем яд на цель
+      // Яд от скилла rogue: бонусный множитель к атаке + вешаем яд на цель
       if (this._pendingPoison) {
         const p = this._pendingPoison;
         this._pendingPoison = null;
-        dmg = Math.round(dmg * 1.8);
-        target.poisonTicks = p.ticks;
-        target.poisonDmg   = p.dmg;
+        dmg = Math.round(dmg * (p.mult ?? 1.8));
+        if (p.stacks && target.poisonTicks > 0) {
+          target.poisonTicks += p.ticks;
+          target.poisonDmg   += p.dmg;
+        } else {
+          target.poisonTicks = p.ticks;
+          target.poisonDmg   = p.dmg;
+        }
       }
 
       // Shield: поглощает урон до HP
@@ -313,49 +326,78 @@ export class CombatSystem {
     const stats = this.state.getStats();
     const depth = CLASS_MAP.get(this.state.currentClass)?.depth ?? 0;
     const pm    = 1 + 0.12 * Math.max(0, depth - 1); // depth1→×1.0, depth5→×1.48
+    const p     = this.state.getSkillParams();
 
     switch (skill.id) {
       case 'focus': {
-        const healAmt = Math.round(stats.maxHp * 0.25 * pm);
+        const healAmt = Math.round(stats.maxHp * p.healPct * pm);
         this.state.currentHp = Math.min(stats.maxHp, this.state.currentHp + healAmt);
         this.state.emit('player:hpChanged', { hp: this.state.currentHp });
+        if (p.atkBuff) {
+          this.state._atkBuffEnd = performance.now() + 10000; // +20% урона на 10с
+          this.state.emit('player:statsChanged');
+        }
         this._emit('onSkillUsed', { skill, healAmt });
         break;
       }
       case 'shield_bash': {
-        const target = this.mobs[0];
-        if (target) {
-          target.stunTicks = Math.round(5 * pm); // depth5 → ~7 тиков (1.4с)
-          this._emit('onSkillUsed', { skill, target });
-        }
+        const ticks   = Math.round(p.stunTicks * pm);
+        const targets = p.targets === 'all' ? [...this.mobs] : this.mobs.slice(0, p.targets);
+        for (const t of targets) t.stunTicks = ticks;
+        if (targets[0]) this._emit('onSkillUsed', { skill, target: targets[0] });
         break;
       }
       case 'poison_stab': {
-        this._pendingPoison = { dmg: Math.round(stats.atk * 0.15 * pm), ticks: 3 };
+        this._pendingPoison = {
+          dmg:    Math.round(stats.atk * p.poisonPct * pm),
+          ticks:  p.poisonTicks,
+          mult:   p.dmgMult,
+          stacks: p.poisonStacks,
+        };
         this._emit('onSkillUsed', { skill });
         break;
       }
       case 'volley': {
-        const dmg = Math.max(1, Math.round(stats.atk * 0.5 * pm));
+        const dmg = Math.max(1, Math.round(stats.atk * p.dmgPct * pm));
         for (const mob of [...this.mobs]) {
-          mob.hp -= dmg;
-          this._emit('onPlayerAttack', { mob, damage: dmg, isCrit: false });
+          let d = dmg;
+          const isCrit = p.volleyCrit && Math.random() * 100 < stats.crit;
+          if (isCrit) d = Math.round(d * (stats.critDmg / 100));
+          mob.hp -= d;
+          if (p.volleyDot) {
+            mob.poisonTicks = Math.max(mob.poisonTicks ?? 0, 6);
+            mob.poisonDmg   = Math.round(stats.atk * 0.10);
+          }
+          this._emit('onPlayerAttack', { mob, damage: d, isCrit });
           if (mob.hp <= 0) this._killMob(mob);
         }
         break;
       }
       case 'fireball': {
-        const fbDmg   = Math.max(1, Math.round(stats.atk * 0.8 * pm));
+        const fbDmg   = Math.max(1, Math.round(stats.atk * p.dmgPct * pm));
         const burnDmg = Math.max(1, Math.round(stats.atk * 0.1 * pm));
         for (const mob of [...this.mobs]) {
           mob.hp -= fbDmg;
-          mob.burnTicks = (mob.burnTicks ?? 0) + 3;
+          mob.burnTicks = (mob.burnTicks ?? 0) + p.burnTicks;
           mob.burnDmg   = burnDmg;
           this._emit('onPlayerAttack', { mob, damage: fbDmg, isCrit: false });
-          if (mob.hp <= 0) this._killMob(mob);
+          if (mob.hp <= 0) {
+            if (p.explodeOnDeath) this._explode(mob, Math.round(fbDmg * 0.5));
+            this._killMob(mob);
+          }
         }
         break;
       }
+    }
+  }
+
+  /** Взрыв при смерти (fireball L5): урон всем прочим мобам */
+  _explode(source, dmg) {
+    for (const mob of [...this.mobs]) {
+      if (mob === source || mob.hp <= 0) continue;
+      mob.hp -= dmg;
+      this._emit('onPlayerAttack', { mob, damage: dmg, isCrit: false });
+      if (mob.hp <= 0) this._killMob(mob);
     }
   }
 

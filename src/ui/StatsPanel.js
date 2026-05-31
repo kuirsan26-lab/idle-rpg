@@ -7,15 +7,36 @@ export class StatsPanel {
   /** @param {import('../core/GameState.js').GameState} state */
   constructor(state) {
     this.state = state;
+    this._buyMode = 1; // 1 | 10 | 'max'
 
     this._renderUpgrades();
+    this._bindControls();
     this._updateStats();
 
     this._unsubs = [
-      state.on('player:statsChanged', () => this._updateStats()),
+      state.on('player:statsChanged', () => { this._updateStats(); this._refreshAllUpgrades(); }),
       state.on('player:goldChanged',  () => { this._updateStats(); this._updateButtonStates(); }),
-      state.on('player:prestige',     () => { this._updateStats(); for (const upg of UPGRADES_LIST) this._updateUpgradeItem(upg.id); }),
+      state.on('player:prestige',     () => { this._updateStats(); this._refreshAllUpgrades(); }),
     ];
+  }
+
+  _bindControls() {
+    document.querySelectorAll('.upg-mode-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const m = btn.dataset.mode;
+        this._buyMode = m === 'max' ? 'max' : parseInt(m, 10);
+        document.querySelectorAll('.upg-mode-btn').forEach(b => b.classList.toggle('active', b === btn));
+      });
+    });
+    const autoCb = document.getElementById('upg-autobuy');
+    if (autoCb) {
+      autoCb.checked = this.state.automation.autoBuy;
+      autoCb.addEventListener('change', () => { this.state.automation.autoBuy = autoCb.checked; });
+    }
+  }
+
+  _refreshAllUpgrades() {
+    for (const upg of UPGRADES_LIST) this._updateUpgradeItem(upg.id);
   }
 
   destroy() {
@@ -79,7 +100,7 @@ export class StatsPanel {
     container.querySelectorAll('.upg-buy-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const id = btn.dataset.id;
-        this.state.buyUpgrade(id);
+        this.state.buyUpgradeBulk(id, this._buyMode);
         this._updateUpgradeItem(id);
       });
     });

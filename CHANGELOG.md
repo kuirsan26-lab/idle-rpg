@@ -5,6 +5,20 @@
 
 ---
 
+## [1.15.0] — 2026-05-31
+
+### Добавлено
+- **Усиление скиллов** — `state.skillLevels` (по ветке, не сбрасывается при престиже). 5 уровней: 1-3 за золото, 4-5 за ПО. `SKILL_UPGRADES` + `getSkillParams(branch, level)` в `data/skills.js`; `Combat._applySkill` читает резолвнутые параметры. UI: `#skill-upgrade-btn` в `#skill-zone`.
+- **Спец-эффекты прокачки**: система зарядов скилла (`_skillCharges` + `_syncSkillCharges`, warrior/archer L5), баф ATK +20% на 10с (`_atkBuffEnd`, focus L4), щит возрождения 30% HP (`_respawnShield`, focus L5), стак яда (rogue L5), крит/DoT на залп (archer L2/L3), взрыв при смерти `_explode()` (mage L5), стан всех врагов (warrior L3).
+- **Автоматизация** (`state.automation`, не сбрасывается при престиже):
+  - Авто-каст скилла — `Combat._tick()` при `autoCast`; чекбокс в `#skill-zone`.
+  - Buy-max / ×10 — `buyUpgradeBulk(id, count|'max')`; режим `#upg-buymode` в StatsPanel.
+  - Авто-покупка апгрейдов — `autoBuyStep()` (самый дешёвый доступный); чекбокс `#upg-autobuy`.
+  - Авто-продажа лута по редкости — `rollItemDrop` → `shouldAutoSell()`; `#inv-autosell` в инвентаре.
+
+### Сохранение
+- В сейв добавлены `skillLevels` и `automation` (миграция со значениями по умолчанию для старых сейвов).
+
 ## [1.14.0] — 2026-05-31
 
 ### Добавлено

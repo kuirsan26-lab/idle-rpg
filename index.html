@@ -149,6 +149,21 @@
       font-size: 10px; color: #555; flex: 1; overflow: hidden;
       text-overflow: ellipsis; white-space: nowrap;
     }
+    /* Усиление скилла + авто-каст */
+    #skill-upgrade-btn {
+      padding: 4px 9px; border-radius: 6px; cursor: pointer; white-space: nowrap;
+      background: rgba(184,134,11,0.14); border: 1px solid rgba(184,134,11,0.35);
+      color: #e8c060; font-size: 10px; font-weight: 700; font-family: 'Segoe UI', sans-serif;
+      transition: background 0.15s;
+    }
+    #skill-upgrade-btn:not(:disabled):hover { background: rgba(184,134,11,0.28); }
+    #skill-upgrade-btn:disabled { opacity: 0.5; cursor: default; }
+    #skill-upgrade-btn.maxed { color: #7dda7d; border-color: rgba(125,218,125,0.4); background: rgba(40,120,40,0.14); }
+    #skill-autocast-wrap {
+      display: flex; align-items: center; gap: 4px; cursor: pointer;
+      font-size: 10px; color: #888; white-space: nowrap; user-select: none;
+    }
+    #skill-autocast-wrap input { cursor: pointer; accent-color: #7755ff; }
 
     /* ═══════════════════════════ BATTLE STRIP ═══════════════════════════ */
     #battle-strip {
@@ -287,6 +302,21 @@
     }
     .upg-buy-btn:hover { filter: brightness(1.12); }
     .upg-buy-btn:disabled { background: #1a1a2a; color: #444; cursor: not-allowed; border-color: transparent; }
+    /* Контролы прокачки: режим покупки + авто-покупка */
+    #upg-controls { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
+    #upg-buymode { display: flex; gap: 3px; }
+    .upg-mode-btn {
+      padding: 3px 8px; border-radius: 4px; cursor: pointer;
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      color: #888; font-size: 10px; font-weight: 700; font-family: 'Segoe UI', sans-serif;
+    }
+    .upg-mode-btn:hover { background: rgba(255,255,255,0.1); color: #ccc; }
+    .upg-mode-btn.active { background: rgba(100,80,200,0.25); border-color: rgba(120,100,220,0.5); color: #c8b0ff; }
+    #upg-autobuy-wrap {
+      display: flex; align-items: center; gap: 4px; cursor: pointer;
+      font-size: 10px; color: #888; user-select: none;
+    }
+    #upg-autobuy-wrap input { cursor: pointer; accent-color: #7dda7d; }
 
     /* ═══════════════════════════ COMBAT LOG ═══════════════════════════ */
     #combat-log {
@@ -540,6 +570,16 @@
       background: none; border: none; color: #666; font-size: 16px; cursor: pointer; padding: 2px 6px;
     }
     #inv-close-btn:hover { color: #aaa; }
+    /* Авто-продажа */
+    #inv-autosell { display: flex; align-items: center; gap: 4px; }
+    .inv-as-label { font-size: 10px; color: #666; font-weight: 400; }
+    .inv-as-btn {
+      padding: 3px 7px; border-radius: 4px; cursor: pointer;
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      color: #888; font-size: 10px; font-weight: 600; font-family: 'Segoe UI', sans-serif;
+    }
+    .inv-as-btn:hover { background: rgba(255,255,255,0.1); color: #ccc; }
+    .inv-as-btn.active { background: rgba(180,120,0,0.25); border-color: rgba(200,150,0,0.5); color: #e8c060; }
     .inv-body { display: flex; gap: 12px; padding: 12px; overflow: hidden; min-height: 0; }
     /* Слоты снаряжения */
     .inv-slots-col { width: 180px; flex-shrink: 0; display: flex; flex-direction: column; gap: 8px; }
@@ -992,7 +1032,7 @@
       #prestige-pp-badge { font-size: 12px; padding: 7px 10px; }
 
       /* ── Skill zone: на всю ширину, крупная кнопка ── */
-      #skill-zone { height: auto; padding: 7px 10px; gap: 8px; }
+      #skill-zone { height: auto; padding: 7px 10px; gap: 8px; flex-wrap: wrap; }
       #skill-zone-label { display: none; }
       #skill-btn { min-width: 0; flex: 1; padding: 9px 12px; }
       #skill-btn-name { font-size: 13px; }
@@ -1156,6 +1196,8 @@
         </span>
         <div id="skill-cd-bar"><div id="skill-cd-fill" style="width:100%"></div></div>
       </button>
+      <button id="skill-upgrade-btn" title="Усилить скилл">▲ Ур.<span id="skill-level">0</span> · <span id="skill-upgrade-cost">—</span></button>
+      <label id="skill-autocast-wrap" title="Авто-каст по готовности"><input type="checkbox" id="skill-autocast"> Авто</label>
       <span id="skill-zone-desc"></span>
     </div>
 
@@ -1195,6 +1237,16 @@
         </div>
         <div class="panel-section">
           <div class="panel-section-title">🔧 Прокачка</div>
+          <div id="upg-controls">
+            <div id="upg-buymode">
+              <button class="upg-mode-btn active" data-mode="1">×1</button>
+              <button class="upg-mode-btn" data-mode="10">×10</button>
+              <button class="upg-mode-btn" data-mode="max">МАКС</button>
+            </div>
+            <label id="upg-autobuy-wrap" title="Авто-покупка самого дешёвого апгрейда">
+              <input type="checkbox" id="upg-autobuy"> Авто
+            </label>
+          </div>
         </div>
         <div id="upgrades-scroll"></div>
       </div>
@@ -1334,6 +1386,12 @@
       <div class="inv-header">
         <span>🎒 Инвентарь и снаряжение</span>
         <div style="display:flex;align-items:center;gap:10px;">
+          <div id="inv-autosell" title="Авто-продажа дропа по редкости">
+            <span class="inv-as-label">Авто-продажа:</span>
+            <button class="inv-as-btn" data-as="off">Выкл</button>
+            <button class="inv-as-btn" data-as="common">⚪ Обычн.</button>
+            <button class="inv-as-btn" data-as="rare">🔵 +Редк.</button>
+          </div>
           <span id="inv-notif"></span>
           <button id="inv-close-btn">✕</button>
         </div>
