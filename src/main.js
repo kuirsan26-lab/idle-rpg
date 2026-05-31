@@ -17,6 +17,7 @@ import { InventoryPanel }  from './ui/InventoryPanel.js';
 import { MainMenu }        from './ui/MainMenu.js';
 import { ClassTreeGraph }     from './ui/ClassTreeGraph.js';
 import { AchievementsPanel }  from './ui/AchievementsPanel.js';
+import { MobileNav }          from './ui/MobileNav.js';
 import { CLASS_MAP }     from './data/classes.js';
 
 window._classMap = CLASS_MAP;
@@ -65,6 +66,7 @@ const prestigeShop   = new PrestigeShop(state);
 const inventoryPanel  = new InventoryPanel(state);
 const classTreeGraph   = new ClassTreeGraph(state);
 const achievementsPanel = new AchievementsPanel(state);
+const mobileNav         = new MobileNav();
 
 // Логирование боевых событий
 combat.register({
@@ -105,13 +107,21 @@ const menu = new MainMenu({
 menu.show();
 
 // ── 6. Resize ─────────────────────────────────────────────────────────────────
+// На мобилке (≤820px) макет резиновый — CSS @media управляет вёрсткой,
+// а scale() надо снять, иначе фиксированный слой 1280×720 «съёжится».
+const mqMobile = window.matchMedia('(max-width: 820px)');
 function handleResize() {
   const app = document.getElementById('app');
   if (!app) return;
+  if (mqMobile.matches) {
+    app.style.transform = 'none';
+    return;
+  }
   const scale = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
   const x = (window.innerWidth  - 1280 * scale) / 2;
   const y = (window.innerHeight - 720  * scale) / 2;
   app.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
 }
 window.addEventListener('resize', handleResize);
+mqMobile.addEventListener('change', handleResize);
 handleResize();
