@@ -317,12 +317,15 @@ onPlayerAttack: burn → if rand < burn% → mob.burnTicks=4, mob.burnDmg=atk*0.
 | Скорость ветерана ×3 (по +2%) | 7 ПО |
 | Сохранить улучшения | 30 ПО |
 | Стартовая волна | 15 ПО |
+| 🤖 Авто-продажа (group `auto`) | 5 ПО |
+| 🤖 Авто-покупка | 15 ПО |
+| 🤖 Авто-каст | 20 ПО |
 
-Итого максимум 92 ПО из достижений, суммарная стоимость всего магазина ~87 ПО — задуман как чуть недостижимый, требует выбора приоритетов.
+**Инвариант:** Σ(ачивки) = 127 ПО == Σ(магазин по разу) = 127 ПО. Полный выкуп всех рангов = 205 ПО.
 
 ### Достижения
 
-20 достижений в `src/data/achievements.js`, итого 92 ПО. Хранятся в `state.completedAchievements: Set<id>`.
+22 достижения в `src/data/achievements.js`, итого 127 ПО (== стоимость магазина по разу). Хранятся в `state.completedAchievements: Set<id>`.
 
 **Логика проверки:** `state.checkAchievements()` вызывается после каждого убийства, смерти, смены класса, экипировки предмета, очистки волны, загрузки сейва. Ачивка засчитывается один раз — при следующем успешном `ach.check(state)`.
 
@@ -368,14 +371,16 @@ onPlayerAttack: burn → if rand < burn% → mob.burnTicks=4, mob.burnDmg=atk*0.
 
 ### Автоматизация (v1.15.0)
 
-`state.automation = { autoCast, autoBuy, autoSell }` — не сбрасывается при престиже, сохраняется.
+`state.automation = { autoCast, autoBuy, autoSell }` — не сбрасывается при престиже, сохраняется. Авто-каст/покупка/продажа **разблокируются в магазине престижа за ПО** (`isAutomationUnlocked(key)`); тумблеры заблокированы до покупки. buy-max/×10 — бесплатно.
 
-| Фича | Хранение | Где работает | UI |
+| Фича | Разблок. | Где работает | UI |
 |------|----------|--------------|-----|
-| **Авто-каст скилла** | `autoCast: bool` | `Combat._tick()`: `if (autoCast && mobs && isSkillReady) triggerSkill()` | чекбокс в `#skill-zone` |
-| **Buy-max / ×10** | — (режим в UI) | `GameState.buyUpgradeBulk(id, count\|'max')` | `#upg-buymode` (×1/×10/МАКС) в StatsPanel |
-| **Авто-покупка** | `autoBuy: bool` | `Combat._tick()`: `autoBuyStep()` — самый дешёвый доступный апгрейд | чекбокс `#upg-autobuy` |
-| **Авто-продажа** | `autoSell: 'off'\|'common'\|'rare'` | `rollItemDrop()` → `shouldAutoSell(rarity)` продаёт минуя инвентарь | `#inv-autosell` в инвентаре |
+| **Авто-каст скилла** | `autoCast` 20 ПО | `Combat._tick()`: `if (autoCast && unlocked && mobs && isSkillReady) triggerSkill()` | чекбокс в `#skill-zone` |
+| **Buy-max / ×10** | бесплатно | `GameState.buyUpgradeBulk(id, count\|'max')` | `#upg-buymode` (×1/×10/МАКС) в StatsPanel |
+| **Авто-покупка** | `autoBuy` 15 ПО | `Combat._tick()`: `autoBuyStep()` — самый дешёвый доступный апгрейд | чекбокс `#upg-autobuy` |
+| **Авто-продажа** | `autoSell` 5 ПО | `rollItemDrop()` → `shouldAutoSell(rarity)` продаёт минуя инвентарь | `#inv-autosell` в инвентаре |
+
+**Инвариант баланса ПО:** Σ(ачивки) = 127 ПО (22 шт.) **== ** Σ(магазин по разу) = 127 ПО. Полный выкуп всех рангов = 205 ПО. Новые ачивки v1.15.0: `unstoppable` (200k убийств, 24 ПО), `deep_diver` (класс depth 7, 20 ПО). Описание скилла — динамическое (`describeSkill`).
 
 ### Milestone-система (v1.5.2)
 

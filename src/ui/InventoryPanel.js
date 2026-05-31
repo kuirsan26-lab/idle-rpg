@@ -11,8 +11,9 @@ export class InventoryPanel {
     this.state = state;
 
     this._unsubs = [
-      state.on('player:inventoryChanged', () => this._refresh()),
-      state.on('player:prestige',         () => this._refresh()),
+      state.on('player:inventoryChanged',    () => this._refresh()),
+      state.on('player:prestige',            () => this._refresh()),
+      state.on('player:prestigeShopChanged', () => this._syncAutoSell()),
     ];
 
     window.game = window.game || {};
@@ -43,6 +44,7 @@ export class InventoryPanel {
       asWrap.addEventListener('click', e => {
         const btn = e.target.closest('.inv-as-btn');
         if (!btn) return;
+        if (!this.state.isAutomationUnlocked('autoSell')) return; // 🔒 до покупки
         this.state.automation.autoSell = btn.dataset.as;
         this._syncAutoSell();
       });
@@ -75,9 +77,17 @@ export class InventoryPanel {
   }
 
   _syncAutoSell() {
-    const mode = this.state.automation.autoSell;
-    document.querySelectorAll('.inv-as-btn').forEach(b =>
-      b.classList.toggle('active', b.dataset.as === mode));
+    const unlocked = this.state.isAutomationUnlocked('autoSell');
+    const mode = unlocked ? this.state.automation.autoSell : 'off';
+    document.querySelectorAll('.inv-as-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.as === mode);
+      b.disabled = !unlocked;
+    });
+    const wrap = document.getElementById('inv-autosell');
+    if (wrap) {
+      wrap.style.opacity = unlocked ? '1' : '0.5';
+      wrap.title = unlocked ? 'Авто-продажа дропа по редкости' : '🔒 Откройте в магазине престижа';
+    }
   }
 
   // ── Кукла персонажа ──────────────────────────────────────────────────────────

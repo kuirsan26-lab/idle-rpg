@@ -57,6 +57,10 @@ export const PRESTIGE_UPGRADES = [
   { id: 'baseSpd',      name: '⚡ Скорость ветерана',    desc: '+10% базовой скорости за ранг',     cost: 7,  max: 3, group: 'stats' },
   { id: 'keepUpgrades', name: '🔒 Сохранить улучшения',  desc: 'Апгрейды магазина не сбрасываются', cost: 30, max: 1, group: 'qol'   },
   { id: 'startWave',    name: '🌊 Стартовая волна',      desc: 'Начинать каждый ран с волны 5',     cost: 15, max: 1, group: 'qol'   },
+  // Автоматизация — разблокирует тумблеры в соответствующих панелях
+  { id: 'autoSell', name: '💰 Авто-продажа',  desc: 'Авто-продажа дропа по редкости (тумблер в инвентаре)',  cost: 5,  max: 1, group: 'auto' },
+  { id: 'autoBuy',  name: '🛒 Авто-покупка',   desc: 'Авто-покупка дешёвого апгрейда (тумблер в прокачке)',   cost: 15, max: 1, group: 'auto' },
+  { id: 'autoCast', name: '⚡ Авто-каст',      desc: 'Скилл срабатывает сам по готовности (тумблер у скилла)', cost: 20, max: 1, group: 'auto' },
 ];
 export const PRESTIGE_UPGRADES_MAP = new Map(PRESTIGE_UPGRADES.map(u => [u.id, u]));
 
@@ -632,8 +636,14 @@ export class GameState extends EventBus {
     return false;
   }
 
+  /** Разблокирована ли автоматизация (куплена в магазине престижа) */
+  isAutomationUnlocked(key) {
+    return this.getPrestigeRank(key) > 0;
+  }
+
   /** Нужно ли авто-продать предмет данной редкости */
   shouldAutoSell(rarity) {
+    if (!this.isAutomationUnlocked('autoSell')) return false;
     const m = this.automation.autoSell;
     if (m === 'common') return rarity === 'common';
     if (m === 'rare')   return rarity === 'common' || rarity === 'rare';

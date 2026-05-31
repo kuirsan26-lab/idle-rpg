@@ -59,6 +59,14 @@ export const ACHIEVEMENTS = [
     check: s => s.totalKills >= 50000,
   },
   {
+    id: 'unstoppable',
+    name: 'Несокрушимый',
+    desc: '200 000 убийств',
+    pp: 24,
+    progress: s => ({ cur: Math.min(s.totalKills, 200000), max: 200000 }),
+    check: s => s.totalKills >= 200000,
+  },
+  {
     id: 'conqueror',
     name: 'Завоеватель',
     desc: 'Пройти волну 50',
@@ -110,6 +118,13 @@ export const ACHIEVEMENTS = [
     desc: 'Достичь класса глубины 5',
     pp: 5,
     check: s => (CLASS_MAP.get(s.currentClass)?.depth ?? 0) >= 5,
+  },
+  {
+    id: 'deep_diver',
+    name: 'Покоритель глубин',
+    desc: 'Достичь класса глубины 7',
+    pp: 20,
+    check: s => (CLASS_MAP.get(s.currentClass)?.depth ?? 0) >= 7,
   },
   {
     id: 'chosen',

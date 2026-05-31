@@ -104,3 +104,42 @@ export function getSkillParams(branch, level) {
   }
   return p;
 }
+
+/** Человекочитаемое описание эффекта скилла на текущем уровне прокачки */
+export function describeSkill(branch, level) {
+  const p   = getSkillParams(branch, level);
+  const cd  = (p.cdMs / 1000).toFixed(0);
+  const parts = [];
+
+  switch (branch) {
+    case 'novice':
+      parts.push(`Лечит ${Math.round(p.healPct * 100)}% HP`);
+      if (p.atkBuff)       parts.push('+20% урона на 10с');
+      if (p.respawnShield) parts.push('щит при возрождении');
+      break;
+    case 'warrior': {
+      const tgt = p.targets === 'all' ? 'всех врагов' : `${p.targets} ${p.targets > 1 ? 'врагов' : 'врага'}`;
+      parts.push(`Стан ${tgt} на ${(p.stunTicks * 0.2).toFixed(1)}с`);
+      break;
+    }
+    case 'rogue':
+      parts.push(`След. удар ×${p.dmgMult}`);
+      parts.push(`яд ${p.poisonTicks} тик (${Math.round(p.poisonPct * 100)}% ATK)`);
+      if (p.poisonStacks) parts.push('стакается');
+      break;
+    case 'archer':
+      parts.push(`${Math.round(p.dmgPct * 100)}% ATK по всем`);
+      if (p.volleyCrit) parts.push('может крит');
+      if (p.volleyDot)  parts.push('+яд');
+      break;
+    case 'mage':
+      parts.push(`${Math.round(p.dmgPct * 100)}% ATK по всем`);
+      parts.push(`горение ${p.burnTicks} тик`);
+      if (p.explodeOnDeath) parts.push('взрыв при смерти');
+      break;
+  }
+
+  let s = parts.join(', ') + ` · КД ${cd}с`;
+  if ((p.charges ?? 1) > 1) s += ` · заряды ${p.charges}`;
+  return s;
+}

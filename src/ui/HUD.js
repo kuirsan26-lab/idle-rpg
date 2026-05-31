@@ -3,6 +3,7 @@
  */
 import { CLASS_MAP, BRANCH_COLORS } from '../data/classes.js';
 import { xpForLevel } from '../core/GameState.js';
+import { describeSkill } from '../data/skills.js';
 
 export class HUD {
   /** @param {import('../core/GameState.js').GameState} state */
@@ -35,6 +36,7 @@ export class HUD {
         this._updateSkillBtn();
       }),
       state.on('player:ppChanged', () => { this._updatePrestigeBtn(); this._updateSkillUpgrade(); }),
+      state.on('player:prestigeShopChanged', () => this._syncAutoCast()),
       state.on('combat:milestone', (d) => {
         this._showMilestone(d);
         if (d.isNewRecord) {
@@ -82,7 +84,7 @@ export class HUD {
     const desc  = document.getElementById('skill-zone-desc');
     if (icon) icon.textContent = skill.icon;
     if (name) name.textContent = skill.name;
-    if (desc) desc.textContent = skill.desc;
+    if (desc) desc.textContent = describeSkill(this.state.getBranch(), this.state.getSkillLevel());
 
     const btn = document.getElementById('skill-btn');
     if (btn && !btn.dataset.bound) {
@@ -104,10 +106,25 @@ export class HUD {
       autoCb.dataset.bound = '1';
       autoCb.addEventListener('change', () => { this.state.automation.autoCast = autoCb.checked; });
     }
-    if (autoCb) autoCb.checked = this.state.automation.autoCast;
+    this._syncAutoCast();
 
     this._updateSkillUpgrade();
     this._updateSkillCd();
+  }
+
+  /** Состояние чекбокса авто-каста с учётом разблокировки в магазине престижа */
+  _syncAutoCast() {
+    const autoCb = document.getElementById('skill-autocast');
+    const wrap   = document.getElementById('skill-autocast-wrap');
+    if (!autoCb) return;
+    const unlocked = this.state.isAutomationUnlocked('autoCast');
+    autoCb.disabled = !unlocked;
+    autoCb.checked  = unlocked && this.state.automation.autoCast;
+    if (wrap) {
+      wrap.style.opacity = unlocked ? '1' : '0.5';
+      wrap.title = unlocked ? 'Авто-каст по готовности' : '🔒 Откройте в магазине престижа';
+      wrap.firstChild && (wrap.childNodes[1].textContent = unlocked ? ' Авто' : ' 🔒');
+    }
   }
 
   _updateSkillUpgrade() {

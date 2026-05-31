@@ -176,11 +176,12 @@ export class CombatSystem {
       return;
     }
 
-    // Автоматизация: авто-каст скилла и авто-покупка апгрейдов
-    if (this.state.automation.autoCast && this.mobs.length > 0 && this.state.isSkillReady()) {
+    // Автоматизация (требует разблокировки в магазине престижа)
+    if (this.state.automation.autoCast && this.state.isAutomationUnlocked('autoCast')
+        && this.mobs.length > 0 && this.state.isSkillReady()) {
       this.state.triggerSkill();
     }
-    if (this.state.automation.autoBuy) {
+    if (this.state.automation.autoBuy && this.state.isAutomationUnlocked('autoBuy')) {
       this.state.autoBuyStep();
     }
 

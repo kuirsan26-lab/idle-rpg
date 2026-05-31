@@ -113,11 +113,15 @@ main.js
 
 ### Automation (v1.15.0)
 
-`state.automation = { autoCast, autoBuy, autoSell }` — не сбрасывается при престиже, сохраняется.
-- **autoCast** (bool): `Combat._tick()` авто-кастит скилл по готовности при наличии врагов. Чекбокс в `#skill-zone`.
-- **buy-max / ×10**: `state.buyUpgradeBulk(id, count|'max')`. Режим `#upg-buymode` в StatsPanel (×1/×10/МАКС).
-- **autoBuy** (bool): `Combat._tick()` → `state.autoBuyStep()` покупает самый дешёвый доступный апгрейд. Чекбокс `#upg-autobuy`.
-- **autoSell** (`'off'|'common'|'rare'`): `rollItemDrop()` → `shouldAutoSell()` продаёт дроп минуя инвентарь. `#inv-autosell` в инвентаре.
+`state.automation = { autoCast, autoBuy, autoSell }` — не сбрасывается при престиже, сохраняется. **Авто-каст/покупка/продажа разблокируются в магазине престижа за ПО** (`isAutomationUnlocked(key)` = `getPrestigeRank(key) > 0`); тумблеры заблокированы (🔒) до покупки. buy-max/×10 — бесплатное удобство, без разблокировки.
+- **autoCast** (bool, разблок. `autoCast` 20 ПО): `Combat._tick()` авто-кастит скилл по готовности при наличии врагов. Чекбокс в `#skill-zone`.
+- **buy-max / ×10** (бесплатно): `state.buyUpgradeBulk(id, count|'max')`. Режим `#upg-buymode` в StatsPanel (×1/×10/МАКС).
+- **autoBuy** (bool, разблок. `autoBuy` 15 ПО): `Combat._tick()` → `state.autoBuyStep()` покупает самый дешёвый доступный апгрейд. Чекбокс `#upg-autobuy`.
+- **autoSell** (`'off'|'common'|'rare'`, разблок. `autoSell` 5 ПО): `rollItemDrop()` → `shouldAutoSell()` продаёт дроп минуя инвентарь. `#inv-autosell` в инвентаре.
+
+Описание скилла в `#skill-zone` — динамическое (`describeSkill(branch, level)` из `data/skills.js`), отражает текущий уровень прокачки.
+
+**Баланс ПО (инвариант):** суммарные ПО за ачивки (22 шт. = 127 ПО) **точно равны** стоимости магазина «каждый апгрейд по разу» (127 ПО). Полный выкуп всех рангов = 205 ПО. См. `data/achievements.js` + `PRESTIGE_UPGRADES`.
 
 Мобы в `combat.mobs[]` — чистые данные. Их визуальные аналоги живут в `GameScene.mobVisuals` (Map<mobId, visual>).
 

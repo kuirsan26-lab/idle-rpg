@@ -17,6 +17,7 @@ export class StatsPanel {
       state.on('player:statsChanged', () => { this._updateStats(); this._refreshAllUpgrades(); }),
       state.on('player:goldChanged',  () => { this._updateStats(); this._updateButtonStates(); }),
       state.on('player:prestige',     () => { this._updateStats(); this._refreshAllUpgrades(); }),
+      state.on('player:prestigeShopChanged', () => this._syncAutoBuy()),
     ];
   }
 
@@ -30,8 +31,21 @@ export class StatsPanel {
     });
     const autoCb = document.getElementById('upg-autobuy');
     if (autoCb) {
-      autoCb.checked = this.state.automation.autoBuy;
       autoCb.addEventListener('change', () => { this.state.automation.autoBuy = autoCb.checked; });
+    }
+    this._syncAutoBuy();
+  }
+
+  _syncAutoBuy() {
+    const autoCb = document.getElementById('upg-autobuy');
+    const wrap   = document.getElementById('upg-autobuy-wrap');
+    if (!autoCb) return;
+    const unlocked = this.state.isAutomationUnlocked('autoBuy');
+    autoCb.disabled = !unlocked;
+    autoCb.checked  = unlocked && this.state.automation.autoBuy;
+    if (wrap) {
+      wrap.style.opacity = unlocked ? '1' : '0.5';
+      wrap.title = unlocked ? 'Авто-покупка самого дешёвого апгрейда' : '🔒 Откройте в магазине престижа';
     }
   }
 
