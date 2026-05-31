@@ -115,6 +115,10 @@ public/
 Главное меню: #main-menu-overlay (position:absolute inset:0 z-index:500, внутри #app для масштабирования)
 ```
 
+**Десктоп**: `#app` (1280×720) масштабируется `transform: scale()` (`main.js → handleResize`).
+
+**Мобилка (v1.14.0, `@media (max-width:820px)`)**: reflow вместо scale. `handleResize()` снимает transform на `matchMedia('(max-width:820px)')`; `#app` → резиновый `100dvh` flex-column; HUD/skill/battle-strip переносятся; canvas `object-fit:contain`; `#stats-panel` → bottom-sheet (`body.stats-sheet-open`); нижний таб-бар `#mobile-tabbar` (`ui/MobileNav.js`) заменяет nav-иконки HUD; модалки резиновые (`calc(100vw-20px)`, `max-height:88dvh`).
+
 ### Поток данных
 
 ```
