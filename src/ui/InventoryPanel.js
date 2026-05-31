@@ -11,8 +11,9 @@ export class InventoryPanel {
     this.state = state;
 
     this._unsubs = [
-      state.on('player:inventoryChanged', () => this._refresh()),
-      state.on('player:prestige',         () => this._refresh()),
+      state.on('player:inventoryChanged',    () => this._refresh()),
+      state.on('player:prestige',            () => this._refresh()),
+      state.on('player:prestigeShopChanged', () => this._syncAutoSell()),
     ];
 
     window.game = window.game || {};
@@ -37,6 +38,18 @@ export class InventoryPanel {
   _bindEvents() {
     document.getElementById('inv-close-btn').addEventListener('click', () => this.close());
 
+    // Авто-продажа по редкости
+    const asWrap = document.getElementById('inv-autosell');
+    if (asWrap) {
+      asWrap.addEventListener('click', e => {
+        const btn = e.target.closest('.inv-as-btn');
+        if (!btn) return;
+        if (!this.state.isAutomationUnlocked('autoSell')) return; // 🔒 до покупки
+        this.state.automation.autoSell = btn.dataset.as;
+        this._syncAutoSell();
+      });
+    }
+
     // Клик по слоту куклы — снять предмет
     document.getElementById('inv-doll').addEventListener('click', e => {
       const slot = e.target.closest('[data-slot]')?.dataset.slot;
@@ -60,6 +73,21 @@ export class InventoryPanel {
   _refresh() {
     this._renderDoll();
     this._renderInventory();
+    this._syncAutoSell();
+  }
+
+  _syncAutoSell() {
+    const unlocked = this.state.isAutomationUnlocked('autoSell');
+    const mode = unlocked ? this.state.automation.autoSell : 'off';
+    document.querySelectorAll('.inv-as-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.as === mode);
+      b.disabled = !unlocked;
+    });
+    const wrap = document.getElementById('inv-autosell');
+    if (wrap) {
+      wrap.style.opacity = unlocked ? '1' : '0.5';
+      wrap.title = unlocked ? 'Авто-продажа дропа по редкости' : '🔒 Откройте в магазине престижа';
+    }
   }
 
   // ── Кукла персонажа ──────────────────────────────────────────────────────────

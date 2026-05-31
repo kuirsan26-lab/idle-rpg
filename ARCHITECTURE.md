@@ -317,12 +317,15 @@ onPlayerAttack: burn → if rand < burn% → mob.burnTicks=4, mob.burnDmg=atk*0.
 | Скорость ветерана ×3 (по +2%) | 7 ПО |
 | Сохранить улучшения | 30 ПО |
 | Стартовая волна | 15 ПО |
+| 🤖 Авто-продажа (group `auto`) | 5 ПО |
+| 🤖 Авто-покупка | 15 ПО |
+| 🤖 Авто-каст | 20 ПО |
 
-Итого максимум 92 ПО из достижений, суммарная стоимость всего магазина ~87 ПО — задуман как чуть недостижимый, требует выбора приоритетов.
+**Инвариант:** Σ(ачивки) = 127 ПО == Σ(магазин по разу) = 127 ПО. Полный выкуп всех рангов = 205 ПО.
 
 ### Достижения
 
-20 достижений в `src/data/achievements.js`, итого 92 ПО. Хранятся в `state.completedAchievements: Set<id>`.
+22 достижения в `src/data/achievements.js`, итого 127 ПО (== стоимость магазина по разу). Хранятся в `state.completedAchievements: Set<id>`.
 
 **Логика проверки:** `state.checkAchievements()` вызывается после каждого убийства, смерти, смены класса, экипировки предмета, очистки волны, загрузки сейва. Ачивка засчитывается один раз — при следующем успешном `ach.check(state)`.
 
@@ -360,11 +363,24 @@ onPlayerAttack: burn → if rand < burn% → mob.burnTicks=4, mob.burnDmg=atk*0.
 - depth 1 → ×1.0, depth 5 → ×1.48, prestige depth 5 → ×1.60 (нет UI, прозрачно для игрока)
 
 **Реализация:**
-- `src/data/skills.js` — `SKILLS_BY_BRANCH`: таблица скиллов по ветке
-- `GameState`: `getBranch()`, `getActiveSkill()`, `triggerSkill()`, `getSkillCooldownPct()` — кулдаун через `performance.now()`
-- `Combat.js`: `_applySkill(skill)` — логика каждого скилла + powerMult; DoT (`poisonTicks/Dmg`, `burnTicks/Dmg`) обрабатывается в начале `_tick()`; стан: `mob.stunTicks` пропускает атаку
-- `HUD.js`: `#skill-zone` между `#hud` и `#battle-strip`; `setInterval 100ms` обновляет кулдаун-бар
-- Событие `player:skillTriggered { skill }` — связывает GameState → Combat → HUD
+- `src/data/skills.js` — `SKILLS_BY_BRANCH`: таблица скиллов по ветке; `SKILL_UPGRADES` + `getSkillParams(branch, level)` — прокачка
+- `GameState`: `getBranch()`, `getActiveSkill()`, `getSkillParams()`, `getSkillLevel()`, `buySkillUpgrade()`, `triggerSkill()`, `getSkillCharges()`, `getSkillCooldownPct()` — заряды через `_skillCharges` + ленивую дозарядку (`_syncSkillCharges`), кулдаун через `performance.now()`
+- `Combat.js`: `_applySkill(skill)` читает `getSkillParams()` + powerMult; `_explode()` для fireball L5; DoT (`poisonTicks/Dmg`, `burnTicks/Dmg`) в начале `_tick()`; стан: `mob.stunTicks`
+- `HUD.js`: `#skill-zone` между `#hud` и `#battle-strip`; кнопка усиления `#skill-upgrade-btn`, чекбокс авто-каста `#skill-autocast`; `setInterval 100ms` обновляет кулдаун-бар + заряды
+- Событие `player:skillTriggered { skill }` — связывает GameState → Combat → HUD; `player:skillLevelChanged` — обновляет UI
+
+### Автоматизация (v1.15.0)
+
+`state.automation = { autoCast, autoBuy, autoSell }` — не сбрасывается при престиже, сохраняется. Авто-каст/покупка/продажа **разблокируются в магазине престижа за ПО** (`isAutomationUnlocked(key)`); тумблеры заблокированы до покупки. buy-max/×10 — бесплатно.
+
+| Фича | Разблок. | Где работает | UI |
+|------|----------|--------------|-----|
+| **Авто-каст скилла** | `autoCast` 20 ПО | `Combat._tick()`: `if (autoCast && unlocked && mobs && isSkillReady) triggerSkill()` | чекбокс в `#skill-zone` |
+| **Buy-max / ×10** | бесплатно | `GameState.buyUpgradeBulk(id, count\|'max')` | `#upg-buymode` (×1/×10/МАКС) в StatsPanel |
+| **Авто-покупка** | `autoBuy` 15 ПО | `Combat._tick()`: `autoBuyStep()` — самый дешёвый доступный апгрейд | чекбокс `#upg-autobuy` |
+| **Авто-продажа** | `autoSell` 5 ПО | `rollItemDrop()` → `shouldAutoSell(rarity)` продаёт минуя инвентарь | `#inv-autosell` в инвентаре |
+
+**Инвариант баланса ПО:** Σ(ачивки) = 127 ПО (22 шт.) **== ** Σ(магазин по разу) = 127 ПО. Полный выкуп всех рангов = 205 ПО. Новые ачивки v1.15.0: `unstoppable` (200k убийств, 24 ПО), `deep_diver` (класс depth 7, 20 ПО). Описание скилла — динамическое (`describeSkill`).
 
 ### Milestone-система (v1.5.2)
 
@@ -436,7 +452,7 @@ onPlayerAttack: burn → if rand < burn% → mob.burnTicks=4, mob.burnDmg=atk*0.
 
 - [x] **Поджог (burn) — DoT, игнорирует броню** — реализовано в v1.13.0
 
-- [ ] **Усиление скиллов — прокачка за золото/ПО** (`state.skillLevels: {warrior:0,...}`, не сбрасывается при престиже): 5 уровней — 1–3 за золото, 4–5 за ПО. UI: кнопка "Улучшить [▲ Xg]" под кнопкой скилла в `#skill-zone`. Пассивное масштабирование по depth уже реализовано.
+- [x] **Усиление скиллов — прокачка за золото/ПО** (v1.15.0): `state.skillLevels: {novice,warrior,rogue,archer,mage}`, не сбрасывается при престиже. 5 уровней — 1–3 за золото, 4–5 за ПО. `SKILL_UPGRADES` + `getSkillParams(branch, level)` в `data/skills.js`. UI: кнопка «▲ Ур.N · Xg/ПО» в `#skill-zone`. Система зарядов (`_skillCharges` + ленивая дозарядка), баф ATK (focus L4), щит возрождения (focus L5), стак яда (rogue L5), крит/DoT на залп (archer L2/L3), взрыв при смерти (fireball L5).
 
     | Ур. | Воин | Плут | Маг | Лучник | Новичок |
     |-----|------|------|-----|--------|---------|
@@ -463,7 +479,7 @@ onPlayerAttack: burn → if rand < burn% → mob.burnTicks=4, mob.burnDmg=atk*0.
 
 - [ ] **Звук** — Web Audio API: фоновая музыка по тиру фона + SFX ударов/крита/смерти/уровня
 - [ ] **Анимации спрайтов** — spritesheet вместо static PNG (idle/attack/hit/death)
-- [ ] **Мобильная адаптация** — responsive layout для экранов < 768px
+- [x] **Мобильная адаптация** — responsive reflow ≤820px, нижний таб-бар, bottom-sheet (v1.14.0)
 - [ ] **Волны 101–200** — новые мобы (Celestial-тир), фоны, 10 новых боссов
 - [ ] **Новые классы depth 1–4** — ветки Некромант / Берсерк
 

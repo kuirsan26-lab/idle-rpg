@@ -48,7 +48,7 @@ export class PrestigeShop {
 
   _render() {
     const body = document.getElementById('pshop-body');
-    const groups = { gold: 'Стартовое золото', mult: 'Множители', stats: 'Статы', qol: 'Качество жизни' };
+    const groups = { gold: 'Стартовое золото', mult: 'Множители', stats: 'Статы', qol: 'Качество жизни', auto: '🤖 Автоматизация' };
 
     let html = '';
     let lastGroup = null;

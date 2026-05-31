@@ -29,6 +29,8 @@ export function installSave(proto) {
       completedAchievements: [...this.completedAchievements],
       bossKillCount:   this.bossKillCount,
       poisonKillCount: this.poisonKillCount,
+      skillLevels:    { ...this.skillLevels },
+      automation:     { ...this.automation },
       timestamp:      Date.now(),
     };
     try {
@@ -82,6 +84,8 @@ export function installSave(proto) {
       this.completedAchievements = new Set(data.completedAchievements ?? []);
       this.bossKillCount   = data.bossKillCount ?? 0;
       this.poisonKillCount = data.poisonKillCount ?? 0;
+      this.skillLevels = { novice: 0, warrior: 0, rogue: 0, archer: 0, mage: 0, ...(data.skillLevels ?? {}) };
+      this.automation  = { autoCast: false, autoBuy: false, autoSell: 'off', ...(data.automation ?? {}) };
 
       // Офлайн-прогресс (до 8 часов)
       const elapsed = Math.min((Date.now() - (data.timestamp ?? Date.now())) / 1000, 8 * 3600);

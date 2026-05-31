@@ -5,6 +5,26 @@
 
 ---
 
+## [1.15.0] — 2026-05-31
+
+### Добавлено
+- **Усиление скиллов** — `state.skillLevels` (по ветке, не сбрасывается при престиже). 5 уровней: 1-3 за золото, 4-5 за ПО. `SKILL_UPGRADES` + `getSkillParams(branch, level)` в `data/skills.js`; `Combat._applySkill` читает резолвнутые параметры. UI: `#skill-upgrade-btn` в `#skill-zone`.
+- **Спец-эффекты прокачки**: система зарядов скилла (`_skillCharges` + `_syncSkillCharges`, warrior/archer L5), баф ATK +20% на 10с (`_atkBuffEnd`, focus L4), щит возрождения 30% HP (`_respawnShield`, focus L5), стак яда (rogue L5), крит/DoT на залп (archer L2/L3), взрыв при смерти `_explode()` (mage L5), стан всех врагов (warrior L3).
+- **Автоматизация** (`state.automation`, не сбрасывается при престиже):
+  - Авто-каст скилла — `Combat._tick()` при `autoCast`; чекбокс в `#skill-zone`.
+  - Buy-max / ×10 — `buyUpgradeBulk(id, count|'max')`; режим `#upg-buymode` в StatsPanel.
+  - Авто-покупка апгрейдов — `autoBuyStep()` (самый дешёвый доступный); чекбокс `#upg-autobuy`.
+  - Авто-продажа лута по редкости — `rollItemDrop` → `shouldAutoSell()`; `#inv-autosell` в инвентаре.
+- **Автоматизация разблокируется в магазине престижа за ПО**: авто-каст 20 ПО, авто-покупка 15 ПО, авто-продажа 5 ПО (group `auto`). Тумблеры заблокированы (🔒) до покупки (`isAutomationUnlocked`). buy-max/×10 — бесплатно.
+- **Динамическое описание скилла** — `describeSkill(branch, level)` в `data/skills.js`; `#skill-zone-desc` отражает текущий уровень прокачки.
+- **+2 достижения**: `unstoppable` (200k убийств, 24 ПО), `deep_diver` (класс depth 7, 20 ПО).
+
+### Баланс
+- **Инвариант ПО**: Σ(ачивки) = 127 ПО (22 шт.) == Σ(магазин «по разу») = 127 ПО. Полный выкуп всех рангов = 205 ПО.
+
+### Сохранение
+- В сейв добавлены `skillLevels` и `automation` (миграция со значениями по умолчанию для старых сейвов).
+
 ## [1.14.0] — 2026-05-31
 
 ### Добавлено
