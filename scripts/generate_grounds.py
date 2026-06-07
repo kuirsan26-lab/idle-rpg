@@ -2,12 +2,14 @@
 Генерация спрайтов земли (620x170 PNG с fade-прозрачностью вверху)
 Запуск: python -X utf8 scripts/generate_grounds.py
 """
-import requests, base64, time, os, io
+import requests, base64, time, os, io, sys
 from PIL import Image
 import numpy as np
 
-API_KEY   = "AQVN2nhLHwVLNaRTkkycJvNJ8cKIZOOLY61YaTqF"
-FOLDER_ID = "b1gh0fjpoqnud7i9u3cr"
+API_KEY   = os.environ.get("YANDEX_API_KEY")
+FOLDER_ID = os.environ.get("YANDEX_FOLDER_ID")
+if not API_KEY or not FOLDER_ID:
+    sys.exit("Задай переменные окружения YANDEX_API_KEY и YANDEX_FOLDER_ID перед запуском.")
 MODEL_URI = f"art://{FOLDER_ID}/yandex-art/latest"
 ASYNC_URL = "https://llm.api.cloud.yandex.net/foundationModels/v1/imageGenerationAsync"
 OPS_URL   = "https://llm.api.cloud.yandex.net/operations/"

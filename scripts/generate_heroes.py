@@ -2,14 +2,16 @@
 Генерация спрайтов героев через YandexART 2.0.
 Сохраняет в 256x256 RGBA PNG (вместо старых 128x128) для лучшего качества.
 """
-import json, base64, time, sys
+import os, json, base64, time, sys
 import urllib.request, urllib.error
 from PIL import Image
 import numpy as np
 from pathlib import Path
 
-FOLDER_ID = "b1gh0fjpoqnud7i9u3cr"
-API_KEY   = "AQVN2nhLHwVLNaRTkkycJvNJ8cKIZOOLY61YaTqF"
+FOLDER_ID = os.environ.get("YANDEX_FOLDER_ID")
+API_KEY   = os.environ.get("YANDEX_API_KEY")
+if not API_KEY or not FOLDER_ID:
+    sys.exit("Задай переменные окружения YANDEX_API_KEY и YANDEX_FOLDER_ID перед запуском.")
 OUT_DIR   = Path(__file__).parent.parent / "public" / "sprites"
 OUT_SIZE  = 256  # было 128 — чётче на экране
 
