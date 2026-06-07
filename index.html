@@ -783,6 +783,53 @@
       text-shadow: 0 0 12px rgba(125,218,125,0.5);
     }
 
+    /* ── Offline / Welcome back overlay ─────────────────────────── */
+    #offline-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.85); z-index: 520;
+      align-items: center; justify-content: center;
+    }
+    #offline-overlay.visible { display: flex; }
+    #offline-modal {
+      background: linear-gradient(160deg,#0e0e22,#1a1330);
+      border: 2px solid #6a5acd; border-radius: 16px;
+      padding: 26px 30px 22px; width: 380px; text-align: center;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.95), 0 0 50px rgba(106,90,205,0.3);
+      animation: offline-pop 0.4s ease;
+    }
+    @keyframes offline-pop {
+      0%   { opacity: 0; transform: scale(0.85); }
+      100% { opacity: 1; transform: scale(1.0); }
+    }
+    #offline-icon { font-size: 40px; margin-bottom: 4px; }
+    #offline-modal h2 {
+      font-size: 22px; color: #c8b8ff; letter-spacing: 1px;
+      text-shadow: 0 0 18px rgba(140,120,255,0.4); margin-bottom: 4px;
+    }
+    #offline-away { font-size: 12px; color: #888; margin-bottom: 16px; }
+    #offline-away strong { color: #c8b8ff; }
+    #offline-rows {
+      display: flex; flex-direction: column; gap: 8px;
+      margin-bottom: 20px; text-align: left;
+    }
+    .offline-row {
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(255,255,255,0.04); border: 1px solid #2a2a4a;
+      border-radius: 8px; padding: 9px 13px;
+    }
+    .offline-row-label { font-size: 12px; color: #aaa; }
+    .offline-row-label .ofl-ico { margin-right: 8px; }
+    .offline-row-value { font-size: 14px; font-weight: 700; color: #7dda7d; }
+    .offline-row-value .ofl-delta { font-size: 11px; color: #888; font-weight: 400; margin-left: 6px; }
+    #offline-collect-btn {
+      width: 100%; padding: 12px;
+      background: linear-gradient(135deg,#6a5acd,#9370db);
+      color: #fff; border: none; border-radius: 8px;
+      font-size: 14px; font-weight: 700; cursor: pointer;
+      letter-spacing: 0.5px;
+    }
+    #offline-collect-btn:hover { filter: brightness(1.15); }
+
     /* ═══════════════════════════ MAIN MENU ═══════════════════════════ */
     #main-menu-overlay {
       position: absolute;
@@ -1434,6 +1481,17 @@
 
   <!-- ACHIEVEMENT TOAST -->
   <div id="ach-toast"></div>
+
+  <!-- OFFLINE / WELCOME BACK MODAL -->
+  <div id="offline-overlay">
+    <div id="offline-modal">
+      <div id="offline-icon">⏳</div>
+      <h2>С возвращением!</h2>
+      <div id="offline-away">Тебя не было —</div>
+      <div id="offline-rows"></div>
+      <button id="offline-collect-btn">Забрать награды</button>
+    </div>
+  </div>
 
   <script type="module" src="/src/main.js"></script>
 </body>

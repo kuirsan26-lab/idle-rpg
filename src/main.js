@@ -18,6 +18,7 @@ import { MainMenu }        from './ui/MainMenu.js';
 import { ClassTreeGraph }     from './ui/ClassTreeGraph.js';
 import { AchievementsPanel }  from './ui/AchievementsPanel.js';
 import { MobileNav }          from './ui/MobileNav.js';
+import { OfflineModal }       from './ui/OfflineModal.js';
 import { CLASS_MAP }     from './data/classes.js';
 
 window._classMap = CLASS_MAP;
@@ -67,6 +68,7 @@ const inventoryPanel  = new InventoryPanel(state);
 const classTreeGraph   = new ClassTreeGraph(state);
 const achievementsPanel = new AchievementsPanel(state);
 const mobileNav         = new MobileNav();
+const offlineModal      = new OfflineModal();
 
 // Логирование боевых событий
 combat.register({
@@ -101,7 +103,15 @@ combat.register({
 
 // ── 5. Главное меню → старт боя ───────────────────────────────────────────────
 const menu = new MainMenu({
-  onStart:   () => setTimeout(() => combat.start(), 200),
+  onStart:   () => {
+    setTimeout(() => combat.start(), 200);
+    // Экран «С возвращением» — после старта боя, если был офлайн-прогресс
+    if (state.offlineSummary) {
+      const summary = state.offlineSummary;
+      state.offlineSummary = null;
+      setTimeout(() => offlineModal.show(summary), 450);
+    }
+  },
   onNewGame: () => state.hardReset(),
 });
 menu.show();

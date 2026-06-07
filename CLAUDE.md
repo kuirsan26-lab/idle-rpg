@@ -31,7 +31,7 @@ npm run preview   # предпросмотр production сборки
 
 Класс-дерево теперь — **оверлей-граф** (`ClassTreeGraph`), не панель в main-area. `ui/ClassTree.js` — легаси, не импортируется.
 
-Оверлеи/модалки: `#class-modal-overlay`, `#prestige-modal-overlay`, `#prestige-shop-overlay`, `#settings-overlay`, `#inventory-overlay`, `#achievements-overlay`, `#milestone-overlay`, `#main-menu-overlay`.
+Оверлеи/модалки: `#class-modal-overlay`, `#prestige-modal-overlay`, `#prestige-shop-overlay`, `#settings-overlay`, `#inventory-overlay`, `#achievements-overlay`, `#milestone-overlay`, `#main-menu-overlay`, `#offline-overlay`.
 
 ### Responsive / Mobile (c v1.14.0)
 
@@ -64,7 +64,8 @@ main.js
  ├── InventoryPanel (ui/InventoryPanel.js) — инвентарь + paper-doll снаряжения
  ├── ClassTreeGraph (ui/ClassTreeGraph.js) — оверлей-граф дерева классов
  ├── AchievementsPanel (ui/AchievementsPanel.js) — достижения + toast
- └── MainMenu (ui/MainMenu.js)           — стартовое меню (новая игра / продолжить / язык)
+ ├── MainMenu (ui/MainMenu.js)           — стартовое меню (новая игра / продолжить / язык)
+ └── OfflineModal (ui/OfflineModal.js)   — экран «С возвращением» (итог офлайн-прогресса)
 ```
 
 Данные: `data/classes.js`, `data/skills.js`, `data/mobs.js`, `data/items.js`, `data/achievements.js`, `data/changelog.js`. i18n: `i18n/{ru,en,index}.js`.
@@ -219,7 +220,9 @@ Credentials YandexART 2.0 — в `memory/reference_yandexart.md`.
 
 ### Save system
 
-`GameState.save()` / `GameState._load()` — localStorage (`idle_rpg_save`, версия `v:2`). Автосейв каждые 30с + `beforeunload`. При загрузке считает офлайн-прогресс (до 8 часов). Сохраняются также инвентарь/снаряжение, прогресс достижений, покупки магазина престижа.
+`GameState.save()` / `GameState._load()` — localStorage (`idle_rpg_save`, версия `v:2`). Автосейв каждые 30с + `beforeunload`. Сохраняются также инвентарь/снаряжение, прогресс достижений, покупки магазина престижа.
+
+**Офлайн-прогресс (c v1.16.0):** при загрузке `_load` вызывает `_simulateOffline(elapsedSec)` (cap 8 ч) — аналитическую волновую симуляцию вместо тиков. `evalWave(wave)` оценивает время зачистки (по DPS с учётом DEF/крита) и выживаемость (по самому опасному мобу, с учётом DEF/маг.щита/уворота/вампиризма). Фаза 1 — продвижение по волнам, пока выживаемо и хватает бюджета времени; фаза 2 — фарм последней взятой волны остатком времени (батч-награды). Сила фиксируется на момент загрузки (консервативно). Начисляет XP/золото/дроп штатными `addXp`/`addGold`/`rollItemDrop`, обновляет `currentWave`/`maxWaveReached`. Результат → транзиентное `state.offlineSummary` (не сохраняется), которое `main.js` показывает через `OfflineModal` в `onStart`. Капы: `OFFLINE_MIN_SEC=60`, `SIM_WAVE_CAP=4000`.
 
 ## Update policy
 
