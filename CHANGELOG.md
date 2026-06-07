@@ -31,7 +31,7 @@
 - **Мобильная вёрстка (адаптивный reflow)** — `@media (max-width: 820px)` в `index.html`. На узких экранах фиксированный слой 1280×720 заменяется резиновым `100dvh` flex-макетом; `main.js → handleResize()` снимает `transform: scale()` через `matchMedia('(max-width:820px)')` (слушает `resize` + `mqMobile.change`).
 - **Нижний таб-бар** (`src/ui/MobileNav.js` → `#mobile-tabbar`): Статы / Классы / Инвентарь / Ачивки / Ещё. Кнопки дёргают `window.game.openX()`; nav-иконки HUD скрыты на мобилке. `env(safe-area-inset-bottom)` для iPhone.
 - **StatsPanel как bottom-sheet** — `#stats-panel` на мобилке выезжает снизу (`body.stats-sheet-open` + `#mobile-sheet-backdrop`, grab-handle), тогглится кнопкой «Статы».
-- `viewport-fit=cover` в meta для safe-area.
+- `viewport-fit=cover` в meta для safe-area..
 
 ### Изменено
 - Все модалки (`#class-modal`, `#prestige-modal`, `#settings-modal`, `#prestige-shop-modal`, `.inv-panel`, `#achievements-modal`) на мобилке — `width: calc(100vw-20px); max-height: 88dvh; overflow:auto`. Paper-doll инвентаря и сетка магазина престижа → одна колонка.
