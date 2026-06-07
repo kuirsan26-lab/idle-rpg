@@ -408,7 +408,7 @@ onPlayerAttack: burn → if rand < burn% → mob.burnTicks=4, mob.burnDmg=atk*0.
 
 ## Ассеты
 
-### Спрайты (public/sprites/, 128×128 PNG)
+### Спрайты (public/sprites/, RGBA PNG: мобы/боссы 128×128 · герои 256×256)
 
 **Мобы (10):** goblin, slime, skeleton, orc, troll, dragonling, demon, lich, dragon, archdemon
 
