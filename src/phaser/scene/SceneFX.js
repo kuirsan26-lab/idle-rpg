@@ -55,17 +55,17 @@ export function installFX(proto) {
     this.tweens.add({ targets: this.playerContainer, x: PLAYER_X + 18, duration: 70, yoyo: true });
 
     if (isDeathblow) {
-      this._spawnDmgText(v.container.x, v.container.y - 55, '☠️ СМЕРТЬ!', '#ff00ff', '18px');
+      this._spawnDmgText(v.container.x, v.container.y - 55, '☠️ СМЕРТЬ!', '#9b59b6', '18px');
     } else if (shieldAbsorbed > 0 && damage === 0) {
       this._spawnDmgText(v.container.x, v.container.y - 55, `🛡 ${shieldAbsorbed}`, '#6699ff', '13px');
     } else if (shieldAbsorbed > 0) {
       this._spawnDmgText(v.container.x, v.container.y - 55,
-        `${damage} 🛡`, isCrit ? '#ff7755' : '#ffeecc', isCrit ? '17px' : '13px');
+        `${damage} 🛡`, isCrit ? '#9b59b6' : '#e74c3c', isCrit ? '17px' : '13px');
     } else {
       this._spawnDmgText(v.container.x, v.container.y - 55,
         isCrit ? `💥 ${damage}!` : `${damage}`,
-        isCrit ? '#ff7755' : '#ffeecc',
-        isCrit ? '17px' : '13px');
+        isCrit ? '#9b59b6' : '#e74c3c',
+        isCrit ? '17px' : '14px');
     }
     this._drawAttackFX(v.container.x, v.container.y, isCrit || isDeathblow);
   };
@@ -75,7 +75,7 @@ export function installFX(proto) {
     if (!v) return;
 
     this._spawnDmgText(v.container.x, v.container.y - 40,
-      `+${this._fmt(goldGained)}g  +${this._fmt(xpGained)}xp`, '#ffd700', '11px');
+      `+${this._fmt(goldGained)}g  +${this._fmt(xpGained)}xp`, '#f39c12', '13px');
     this._spawnDeathParticles(v.container.x, v.container.y, mob.data.color);
 
     this.tweens.add({
@@ -92,11 +92,11 @@ export function installFX(proto) {
     }
     if (this.combat.mobs[0]?.data?.isBoss) this.cameras.main.shake(110, 0.012);
 
-    const flash = this.add.rectangle(0, 0, SCENE_W, SCENE_H, 0xff0000, 0.15)
+    const flash = this.add.rectangle(0, 0, SCENE_W, SCENE_H, 0x8b0000, 0.18)
       .setOrigin(0).setDepth(15);
     this.tweens.add({ targets: flash, alpha: 0, duration: 220, onComplete: () => flash.destroy() });
 
-    this._spawnDmgText(PLAYER_X, PLAYER_Y - 60, `-${damage}`, '#ff5555', '13px');
+    this._spawnDmgText(PLAYER_X, PLAYER_Y - 60, `-${damage}`, '#e74c3c', '13px');
     this._updatePlayerHpBar();
   };
 
@@ -150,14 +150,14 @@ export function installFX(proto) {
 
   proto._onSkillUsed = function({ skill, healAmt, target }) {
     if (healAmt) {
-      this._spawnDmgText(PLAYER_X, PLAYER_Y - 70, `+${healAmt} ✨`, '#44ff88', '15px');
+      this._spawnDmgText(PLAYER_X, PLAYER_Y - 70, `+${healAmt} ✨`, '#27ae60', '15px');
     }
     if (target) {
       const v = this.mobVisuals.get(target.id);
-      if (v) this._spawnDmgText(v.container.x, v.container.y - 60, '⭐ СТАН', '#ffee44', '13px');
+      if (v) this._spawnDmgText(v.container.x, v.container.y - 60, '⭐ СТАН', '#8b0000', '13px');
     }
     if (skill.id === 'poison_stab') {
-      this._spawnDmgText(PLAYER_X, PLAYER_Y - 70, '☠️ Яд!', '#88ff44', '14px');
+      this._spawnDmgText(PLAYER_X, PLAYER_Y - 70, '☠️ Яд!', '#2d8b00', '14px');
     }
   };
 
@@ -176,7 +176,7 @@ export function installFX(proto) {
     const t = this.add.text(x, y, text, {
       fontSize, fill: color,
       fontFamily: 'Segoe UI', fontStyle: 'bold',
-      stroke: '#000000', strokeThickness: 2,
+      stroke: '#8b0000', strokeThickness: 2,
     }).setOrigin(0.5).setDepth(30);
     this.tweens.add({
       targets: t, y: y - 50, alpha: 0,
@@ -190,18 +190,18 @@ export function installFX(proto) {
     const line   = this.add.graphics().setDepth(12);
 
     if (branch === 'archer') {
-      line.lineStyle(isCrit ? 3 : 2, 0x99ff55, 0.9);
+      line.lineStyle(isCrit ? 3 : 2, 0xe74c3c, 0.9);
       line.lineBetween(PLAYER_X + 22, PLAYER_Y - 10, tx - 18, ty);
     } else if (branch === 'mage') {
-      line.lineStyle(isCrit ? 5 : 3, 0xaa55ff, 0.85);
+      line.lineStyle(isCrit ? 5 : 3, 0xff4400, 0.85);
       line.lineBetween(PLAYER_X + 20, PLAYER_Y - 10, tx - 18, ty);
       if (isCrit) {
-        line.lineStyle(2, 0xdd99ff, 0.5);
+        line.lineStyle(2, 0xff8844, 0.5);
         line.lineBetween(PLAYER_X + 20, PLAYER_Y - 5, tx - 18, ty - 6);
         line.lineBetween(PLAYER_X + 20, PLAYER_Y - 15, tx - 18, ty + 6);
       }
     } else {
-      line.lineStyle(isCrit ? 4 : 2, isCrit ? 0xff8844 : 0xffffff, 0.75);
+      line.lineStyle(isCrit ? 4 : 2, isCrit ? 0xe74c3c : 0x8b0000, 0.75);
       line.beginPath();
       line.arc(PLAYER_X + 20, PLAYER_Y, 65, -0.6, 0.6, false);
       line.strokePath();
@@ -210,8 +210,10 @@ export function installFX(proto) {
   };
 
   proto._spawnDeathParticles = function(x, y, color) {
+    const darkColors = [0x3a0a3a, 0x8b0000];
     for (let i = 0; i < 10; i++) {
-      const p     = this.add.circle(x, y, 4 + Math.random() * 3, color, 0.95).setDepth(25);
+      const pColor = darkColors[i % 2];
+      const p     = this.add.circle(x, y, 4 + Math.random() * 3, pColor, 0.95).setDepth(25);
       const angle = (i / 10) * Math.PI * 2;
       const dist  = 45 + Math.random() * 35;
       this.tweens.add({

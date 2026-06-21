@@ -90,30 +90,32 @@ export class ClassTreeGraph {
   _buildOverlay() {
     const el = document.createElement('div');
     el.id = 'class-graph-overlay';
-    el.style.cssText = 'display:none;position:fixed;inset:0;z-index:200;background:rgba(3,3,10,0.95);';
+    el.style.cssText = 'display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.88);';
 
     const hint = document.createElement('div');
-    hint.style.cssText = 'position:absolute;top:14px;left:50%;transform:translateX(-50%);color:#444;font-size:11px;pointer-events:none;white-space:nowrap;';
+    hint.style.cssText = 'position:absolute;top:14px;left:50%;transform:translateX(-50%);color:#555;font-size:11px;pointer-events:none;white-space:nowrap;letter-spacing:1px;';
     hint.textContent = 'Колесо — масштаб · Перетащить — перемещение · Клик на класс — подробности';
     el.appendChild(hint);
 
     const closeBtn = document.createElement('button');
     closeBtn.textContent = '✕ Закрыть';
-    closeBtn.style.cssText = 'position:absolute;top:10px;right:16px;z-index:1;background:#111;border:1px solid #333;color:#888;padding:5px 12px;cursor:pointer;border-radius:3px;font-size:13px;';
+    closeBtn.style.cssText = 'position:absolute;top:10px;right:16px;z-index:1;background:transparent;border:1px solid #3a1a1a;color:#8b0000;padding:5px 12px;cursor:pointer;border-radius:3px;font-size:13px;transition:color 0.15s,border-color 0.15s;';
+    closeBtn.addEventListener('mouseenter', () => { closeBtn.style.color = '#e74c3c'; closeBtn.style.borderColor = '#8b0000'; });
+    closeBtn.addEventListener('mouseleave', () => { closeBtn.style.color = '#8b0000'; closeBtn.style.borderColor = '#3a1a1a'; });
     closeBtn.addEventListener('click', () => this.close());
     el.appendChild(closeBtn);
 
     const legend = document.createElement('div');
-    legend.style.cssText = 'position:absolute;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:20px;pointer-events:none;font-size:11px;';
+    legend.style.cssText = 'position:absolute;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:20px;pointer-events:none;font-size:11px;background:rgba(6,3,10,0.7);padding:6px 14px;border-radius:6px;border:1px solid #3a1a1a;';
     legend.innerHTML = `
       <span style="color:#e05555">● Воин</span>
       <span style="color:#aa55ee">● Плут</span>
       <span style="color:#55cc66">● Лучник</span>
       <span style="color:#5588ee">● Маг</span>
-      <span style="color:#fff">◎ Текущий</span>
-      <span style="color:#7dcc7d;border:1px solid #7dcc7d88;padding:0 4px">? Доступный</span>
-      <span style="color:#2a2a3a">· Неизвестный</span>
-      <span style="color:#ffd700;border:1px solid #ffd70066;padding:0 4px">⭐ Престиж</span>
+      <span style="color:#e8d5b7">◎ Текущий</span>
+      <span style="color:#7dcc7d;border:1px solid rgba(139,0,0,0.4);padding:0 4px">? Доступный</span>
+      <span style="color:#3a1a1a">· Неизвестный</span>
+      <span style="color:#ffd700;border:1px solid #ffd70044;padding:0 4px">⭐ Престиж</span>
     `;
     el.appendChild(legend);
 
@@ -141,7 +143,7 @@ export class ClassTreeGraph {
 
     // Info panel (floating near clicked node)
     const info = document.createElement('div');
-    info.style.cssText = 'position:absolute;top:0;left:0;width:210px;background:#080812;border:1px solid #2a2a40;border-radius:5px;padding:14px;font-size:12px;color:#aaa;display:none;z-index:2;pointer-events:auto;box-shadow:0 4px 20px rgba(0,0,0,0.8);';
+    info.style.cssText = 'position:absolute;top:0;left:0;width:210px;background:#0d0510;border:1px solid #3a1a1a;border-radius:5px;padding:14px;font-size:12px;color:#e8d5b7;display:none;z-index:2;pointer-events:auto;box-shadow:0 4px 20px rgba(0,0,0,0.9),0 0 16px rgba(139,0,0,0.15);';
     el.appendChild(info);
     this._infoPanel = info;
 
@@ -166,7 +168,7 @@ export class ClassTreeGraph {
       line.setAttribute('y1', p.y.toFixed(1));
       line.setAttribute('x2', c.x.toFixed(1));
       line.setAttribute('y2', c.y.toFixed(1));
-      line.setAttribute('stroke', '#16161f');
+      line.setAttribute('stroke', 'rgba(139,0,0,0.18)');
       line.setAttribute('stroke-width', '1.5');
       this._svg.appendChild(line);
       this._edgeMap.set(id, line);
@@ -272,8 +274,8 @@ export class ClassTreeGraph {
       bonusHtml = Object.entries(cls.bonuses || {})
         .filter(([, v]) => v > 0)
         .map(([k, v]) => `<div style="display:flex;justify-content:space-between;margin:2px 0">
-          <span style="color:#555">${BNAMES[k] ?? k}</span>
-          <span style="color:#88cc66">+${Math.round(v * 100)}%</span></div>`)
+          <span style="color:#666">${BNAMES[k] ?? k}</span>
+          <span style="color:#7dcc7d">+${Math.round(v * 100)}%</span></div>`)
         .join('');
     }
 
@@ -295,7 +297,7 @@ export class ClassTreeGraph {
         })
         .join('');
       if (rows) {
-        cumulHtml = `<div style="border-top:1px solid #1a1a28;padding-top:6px;margin-top:4px">
+        cumulHtml = `<div style="border-top:1px solid #3a1a1a;padding-top:6px;margin-top:4px">
           <div style="color:#666;font-size:10px;margin-bottom:3px">Итого с цепочкой <span style="color:#ffd700;font-weight:bold">×${multLabel}</span> <span style="color:#444">(HP/ATK/DEF/SPD)</span></div>
           ${rows}
         </div>`;
@@ -304,17 +306,17 @@ export class ClassTreeGraph {
 
     let footer = '';
     if (isCur) {
-      footer = `<div style="margin-top:10px;text-align:center;color:#666;font-size:11px">▶ Текущий класс</div>`;
+      footer = `<div style="margin-top:10px;text-align:center;color:#8b0000;font-size:11px;letter-spacing:1px">▶ Текущий класс</div>`;
     } else if (isAvail) {
-      footer = `<button id="gip-switch" style="margin-top:10px;width:100%;padding:5px;background:#0f2a0f;border:1px solid #2a5a2a;color:#77cc77;cursor:pointer;border-radius:3px;font-size:11px">
+      footer = `<button id="gip-switch" style="margin-top:10px;width:100%;padding:5px;background:#12060a;border:1px solid #8b0000;color:#e8d5b7;cursor:pointer;border-radius:3px;font-size:11px;transition:background 0.15s">
         Сменить класс (−${this._fmt(cost)}g)</button>`;
     } else if (isDisc && isLocked) {
       const needLvl  = this.state.level < lvl  ? `Ур. ${lvl}` : '';
       const needGold = this.state.gold < cost  ? `${this._fmt(cost)}g` : '';
       const needs = [needLvl, needGold].filter(Boolean).join(', ');
-      footer = `<div style="margin-top:10px;text-align:center;color:#555;font-size:11px">🔒 Нужно: ${needs}</div>`;
+      footer = `<div style="margin-top:10px;text-align:center;color:#666;font-size:11px">🔒 Нужно: ${needs}</div>`;
     } else if (!isDisc) {
-      footer = `<div style="margin-top:10px;text-align:center;color:#333;font-size:11px">⊡ Неизвестный класс</div>`;
+      footer = `<div style="margin-top:10px;text-align:center;color:#3a1a1a;font-size:11px">⊡ Неизвестный класс</div>`;
     }
 
     const prestigeLabel = cls.prestige === 2 ? '⭐⭐ ' : cls.prestige === 1 ? '⭐ ' : '';
@@ -325,16 +327,16 @@ export class ClassTreeGraph {
       const items = cls.requires.map(rid => {
         const rc  = CLASS_MAP.get(rid);
         const met = this.state.discoveredClasses.has(rid);
-        return `<span style="color:${met ? '#ffd700' : '#444'}">${met && rc ? rc.name : '???'} ${met ? '✓' : '✗'}</span>`;
-      }).join(' <span style="color:#333">+</span> ');
-      requiresHtml = `<div style="margin-top:8px;padding-top:6px;border-top:1px solid #1a1a28;font-size:10px;color:#666">⭐ Требует:<br><div style="margin-top:3px">${items}</div></div>`;
+        return `<span style="color:${met ? '#ffd700' : '#555'}">${met && rc ? rc.name : '???'} ${met ? '✓' : '✗'}</span>`;
+      }).join(' <span style="color:#3a1a1a">+</span> ');
+      requiresHtml = `<div style="margin-top:8px;padding-top:6px;border-top:1px solid #3a1a1a;font-size:10px;color:#666">⭐ Требует:<br><div style="margin-top:3px">${items}</div></div>`;
     }
 
     this._infoPanel.innerHTML = `
-      <div style="font-weight:bold;color:${nameColor};font-size:13px;margin-bottom:4px">${isDisc ? `${prestigeLabel}${cls.name}` : '???'}</div>
-      <div style="color:#444;font-size:10px;margin-bottom:${bonusHtml ? 6 : 0}px;line-height:1.4">${isDisc ? cls.desc : 'Откройте, чтобы узнать'}</div>
-      ${bonusHtml ? `<div style="border-top:1px solid #1a1a28;padding-top:6px">
-        <div style="color:#444;font-size:10px;margin-bottom:3px">Бонусы класса:</div>
+      <div style="font-weight:bold;color:${nameColor};font-size:13px;margin-bottom:4px;font-family:var(--font-heading,Georgia),serif;letter-spacing:1px">${isDisc ? `${prestigeLabel}${cls.name}` : '???'}</div>
+      <div style="color:#666;font-size:10px;margin-bottom:${bonusHtml ? 6 : 0}px;line-height:1.4">${isDisc ? cls.desc : 'Откройте, чтобы узнать'}</div>
+      ${bonusHtml ? `<div style="border-top:1px solid #3a1a1a;padding-top:6px">
+        <div style="color:#555;font-size:10px;margin-bottom:3px">Бонусы класса:</div>
         ${bonusHtml}
       </div>` : ''}
       ${cumulHtml}
@@ -422,7 +424,7 @@ export class ClassTreeGraph {
           ? eOtherReqs.every(r => this.state.discoveredClasses.has(r))
           : (!ecls.requires?.length || ecls.requires.every(r => this.state.discoveredClasses.has(r))));
       if (onPath) {
-        line.setAttribute('stroke', '#2a3050');
+        line.setAttribute('stroke', 'rgba(139,0,0,0.55)');
         line.setAttribute('stroke-width', '2.5');
       } else if (eavail) {
         line.setAttribute('stroke', ecol + 'cc');
@@ -431,7 +433,7 @@ export class ClassTreeGraph {
         line.setAttribute('stroke', ecol + '44');
         line.setAttribute('stroke-width', '1.5');
       } else {
-        line.setAttribute('stroke', '#14141e');
+        line.setAttribute('stroke', 'rgba(139,0,0,0.12)');
         line.setAttribute('stroke-width', '1');
       }
     }
@@ -507,13 +509,13 @@ export class ClassTreeGraph {
     } else if (isAnc) {
       s.background = cls.prestige ? '#2a1e00' : color + '44';
       s.border     = cls.prestige ? `2px solid #ffd70077` : `2px solid ${color}aa`;
-      s.boxShadow  = cls.prestige ? '0 0 6px #ffd70033' : '';
+      s.boxShadow  = cls.prestige ? '0 0 6px #ffd70033' : `0 0 8px rgba(139,0,0,0.3)`;
       s.color      = cls.prestige ? '#ffd70099' : '#bbb';
       div.textContent = '✓';
     } else if (isDisc) {
       s.background = cls.prestige ? '#1e1400' : color + '22';
       s.border     = cls.prestige ? `1.5px solid #ffd70055` : `1.5px solid ${color}bb`;
-      s.boxShadow  = cls.prestige ? '0 0 8px #ffd70022' : `0 0 6px ${color}55`;
+      s.boxShadow  = cls.prestige ? '0 0 8px #ffd70022' : `0 0 8px rgba(139,0,0,0.3)`;
       s.color      = cls.prestige ? '#ffd70088' : color + 'dd';
       div.textContent = cls.prestige ? (cls.prestige === 2 ? '✦' : '⭐') : '';
     } else if (isAvail) {
@@ -526,10 +528,10 @@ export class ClassTreeGraph {
       div.style.setProperty('--pulse-col', pc);
       div.classList.add('node-avail-pulse');
     } else {
-      s.background = cls.prestige ? '#1a100088' : color + '18';
-      s.border     = cls.prestige ? '1px dashed #6a450044' : `1px dashed ${color}38`;
+      s.background = cls.prestige ? 'rgba(50,20,0,0.5)' : 'rgba(30,10,10,0.5)';
+      s.border     = cls.prestige ? '1px dashed #5a2a0a55' : `1px dashed #3a1a1a55`;
       s.boxShadow  = '';
-      s.color      = cls.prestige ? '#6a450055' : color + '40';
+      s.color      = cls.prestige ? '#3a1a1a88' : '#3a1a1a88';
       div.textContent = '';
     }
   }

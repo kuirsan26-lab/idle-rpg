@@ -53,30 +53,32 @@ export function installBackground(proto) {
     const hasBg    = this.textures.exists(firstKey);
 
     if (hasBg) {
-      this._bgImage = this.add.image(0, 0, firstKey).setOrigin(0).setDepth(0);
+      this._bgImage = this.add.image(0, 0, firstKey).setOrigin(0).setDepth(0).setAlpha(0.85);
     } else {
       const g = this.add.graphics();
-      g.fillGradientStyle(0x06060f, 0x06060f, 0x0c0820, 0x0c0820, 1);
+      g.fillGradientStyle(0x050210, 0x050210, 0x120418, 0x120418, 1);
       g.fillRect(0, 0, SCENE_W, GROUND_Y);
-      g.fillStyle(0xeeeedd, 0.25); g.fillCircle(520, 55, 38);
-      g.fillStyle(0x06060f, 0.6);  g.fillCircle(535, 48, 36);
+      g.fillStyle(0xc8a0ff, 0.20); g.fillCircle(520, 45, 28);
+      g.fillStyle(0x050210, 0.55);  g.fillCircle(532, 39, 26);
       const stars = this.add.graphics();
-      stars.fillStyle(0xffffff, 1);
+      stars.fillStyle(0xddccff, 1);
       for (let i = 0; i < 80; i++) {
+        const alpha = 0.4 + Math.random() * 0.2;
+        stars.fillStyle(0xddccff, alpha);
         stars.fillCircle(
           Math.random() * SCENE_W,
           Math.random() * (GROUND_Y - 40),
-          Math.random() < 0.15 ? 1.5 : 0.8,
+          Math.random() < 0.15 ? 1 : 0.5,
         );
       }
       const mtn = this.add.graphics();
-      mtn.fillStyle(0x0a0618, 1);
+      mtn.fillStyle(0x1a0a2a, 1);
       mtn.fillPoints(
         [[0,190],[80,120],[180,160],[280,100],[360,145],[450,115],[540,150],[620,180],[620,GROUND_Y],[0,GROUND_Y]]
           .map(([x,y]) => ({ x, y })), true,
       );
       const hills = this.add.graphics();
-      hills.fillStyle(0x0d0a1e, 1);
+      hills.fillStyle(0x0d0618, 1);
       hills.fillPoints(
         [[0,230],[100,185],[200,220],[320,175],[430,205],[530,180],[620,210],[620,GROUND_Y],[0,GROUND_Y]]
           .map(([x,y]) => ({ x, y })), true,
@@ -90,40 +92,43 @@ export function installBackground(proto) {
         .setOrigin(0, 0).setDepth(1);
     } else {
       const ground = this.add.graphics().setDepth(1);
-      ground.fillGradientStyle(0x1a0f2e, 0x1a0f2e, 0x0d0820, 0x0d0820, hasBg ? 0.75 : 1);
+      ground.fillGradientStyle(0x1a0510, 0x1a0510, 0x0d0210, 0x0d0210, hasBg ? 0.75 : 1);
       ground.fillRect(0, GROUND_Y, SCENE_W, SCENE_H - GROUND_Y);
       if (!hasBg) {
-        ground.lineStyle(2, 0x3a2060, 0.9);
+        ground.lineStyle(2, 0x3a1a1a, 0.9);
         ground.lineBetween(0, GROUND_Y, SCENE_W, GROUND_Y);
-        ground.lineStyle(1, 0x6040aa, 0.3);
+        ground.lineStyle(1, 0x5a2020, 0.3);
         ground.lineBetween(0, GROUND_Y - 1, SCENE_W, GROUND_Y - 1);
+      } else {
+        ground.lineStyle(2, 0x2a1010, 0.9);
+        ground.lineBetween(0, GROUND_Y, SCENE_W, GROUND_Y);
       }
     }
 
     for (let i = 0; i < 4; i++) {
       const fog = this.add.graphics();
-      fog.fillStyle(0x200840, 0.06 - i * 0.01);
+      fog.fillStyle(0x3a0010, 0.06 - i * 0.01);
       fog.fillEllipse(100 + i * 140, GROUND_Y + 5, 200, 20);
     }
   };
 
   proto._createArena = function() {
     const playerZone = this.add.graphics().setDepth(2);
-    playerZone.fillStyle(0x002233, 0.15);
+    playerZone.fillStyle(0x1a0a14, 0.15);
     playerZone.fillRect(0, 80, 200, GROUND_Y - 80);
-    playerZone.lineStyle(1, 0x004466, 0.25);
+    playerZone.lineStyle(1, 0x3a1a2a, 0.25);
     playerZone.strokeRect(0, 80, 200, GROUND_Y - 80);
 
     const divider = this.add.graphics().setDepth(2);
-    divider.lineStyle(1, 0x3a2060, 0.5);
+    divider.lineStyle(1, 0x3a1a1a, 0.5);
     divider.lineBetween(210, 60, 210, GROUND_Y);
 
     this.add.text(105, 70, '— ГЕРОЙ —', {
-      fontSize: '9px', fill: '#335577', fontFamily: 'Segoe UI', letterSpacing: 2,
+      fontSize: '9px', fill: '#552233', fontFamily: 'Segoe UI', letterSpacing: 2,
     }).setOrigin(0.5).setDepth(2);
 
     this.add.text(420, 70, '— ВРАГИ —', {
-      fontSize: '9px', fill: '#553322', fontFamily: 'Segoe UI', letterSpacing: 2,
+      fontSize: '9px', fill: '#552211', fontFamily: 'Segoe UI', letterSpacing: 2,
     }).setOrigin(0.5).setDepth(2);
 
     this._createTorch(195, GROUND_Y - 5);
@@ -132,11 +137,16 @@ export function installBackground(proto) {
 
   proto._createTorch = function(x, y) {
     const g = this.add.graphics().setDepth(2);
-    g.fillStyle(0x8844aa, 0.8);
+    g.fillStyle(0x1a0a14, 0.8);
     g.fillRect(x - 1, y - 20, 3, 20);
+    const glow = this.add.graphics().setDepth(2);
+    glow.fillStyle(0x8b0000, 0.12);
+    glow.fillCircle(x, y - 22, 10);
     const flame = this.add.graphics().setDepth(2);
-    flame.fillStyle(0xff8822, 0.9);
+    flame.fillStyle(0xe74c3c, 0.9);
     flame.fillTriangle(x, y - 25, x - 4, y - 20, x + 4, y - 20);
+    flame.fillStyle(0x8b0000, 0.7);
+    flame.fillTriangle(x, y - 22, x - 2, y - 20, x + 2, y - 20);
     this.tweens.add({
       targets: flame, scaleX: 0.7, scaleY: 1.3,
       duration: 250 + Math.random() * 150, yoyo: true, repeat: -1,

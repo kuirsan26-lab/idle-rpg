@@ -216,13 +216,27 @@ Credentials YandexART 2.0 — в `memory/reference_yandexart.md`.
 
 ### Versioning (data/changelog.js)
 
-Единый источник истины версии — `GAME_VERSION` в `src/data/changelog.js` + `CHANGELOG` (массив записей, `type: new|changed|fixed|balance`). При релизе синхронизировать с `package.json` `version`. «Что нового» в SettingsMenu и MainMenu читаются из этого массива. См. `/ship`-воркфлоу.
+Единый источник истины версии — `GAME_VERSION` в `src/data/changelog.js` + `CHANGELOG` (массив записей, `type: new|changed|fixed|balance`). При релизе синхронизировать с `package.json` `version`. «Что нового» в SettingsMenu и MainMenu читаются из этого массива. См. `/ship`-воркфлоу. Текущая версия: **v1.17.0**.
+
+### Dark Fantasy Theme (c v1.17.0)
+
+Игра использует тёмную тему на основе CSS-переменных (`:root` в `index.html`):
+- `--bg-main: #080810`, `--bg-panel: #0d0510`, `--border-red: #8b0000`
+- `--text-parchment: #e8d5b7`, `--color-souls: #9b59b6`, `--color-gold: #f39c12`
+- Шрифт заголовков: Google Fonts `Cinzel` (подключён в `index.html`)
+- FX арены: красные/пурпурные цвета в `SceneFX.js`, тёмное небо в `SceneBackground.js`
+- Счётчик Душ (`💜`) в HUD — отображает `state.souls || 0` (логика в v2.0)
 
 ### Save system
 
 `GameState.save()` / `GameState._load()` — localStorage (`idle_rpg_save`, версия `v:2`). Автосейв каждые 30с + `beforeunload`. Сохраняются также инвентарь/снаряжение, прогресс достижений, покупки магазина престижа.
 
 **Офлайн-прогресс (c v1.16.0):** при загрузке `_load` вызывает `_simulateOffline(elapsedSec)` (cap 8 ч) — аналитическую волновую симуляцию вместо тиков. `evalWave(wave)` оценивает время зачистки (по DPS с учётом DEF/крита) и выживаемость (по самому опасному мобу, с учётом DEF/маг.щита/уворота/вампиризма). Фаза 1 — продвижение по волнам, пока выживаемо и хватает бюджета времени; фаза 2 — фарм последней взятой волны остатком времени (батч-награды). Сила фиксируется на момент загрузки (консервативно). Начисляет XP/золото/дроп штатными `addXp`/`addGold`/`rollItemDrop`, обновляет `currentWave`/`maxWaveReached`. Результат → транзиентное `state.offlineSummary` (не сохраняется), которое `main.js` показывает через `OfflineModal` в `onStart`. Капы: `OFFLINE_MIN_SEC=60`, `SIM_WAVE_CAP=4000`.
+
+### Roadmap (planned)
+
+- **v1.18.0** (`feat/zone-system`): Зональная структура — 5 зон (Лес→Катакомбы→Вулкан→Небеса→Бездна), по 20 волн + финальный босс.
+- **v2.0.0** (`feat/roguelite-loop`): Рогалайк-петля — Души, Зеркало Теней (постоянные перки), экран итогов рана.
 
 ## Update policy
 
