@@ -259,7 +259,7 @@ export class BattleStrip {
 
   _updateProgress() {
     const el = document.getElementById('bs-progress');
-    if (el) el.textContent = `${this._killCount}/${this._totalMobs}`;
+    if (el) el.textContent = `◆ ${this._killCount}/${this._totalMobs}`;
     const fill = document.getElementById('bs-wave-prog-fill');
     if (fill) {
       const pct = this._totalMobs > 0 ? Math.round((this._killCount / this._totalMobs) * 100) : 0;
