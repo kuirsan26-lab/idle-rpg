@@ -17,7 +17,7 @@
       --bg-deep: #06030a;
       --border-dark: #3a1a1a;
       --border-red: #8b0000;
-      --accent-red: #8b0000;
+      --accent-red: #a00010;
       --accent-bright: #e74c3c;
       --text-parchment: #e8d5b7;
       --text-muted: #666;
@@ -26,7 +26,7 @@
       --color-gold: #f39c12;
       --color-atk: #e74c3c;
       --color-def: #3498db;
-      --color-spd: #f39c12;
+      --color-speed: #f39c12;
       --color-crit: #9b59b6;
       --font-heading: 'Cinzel', 'Georgia', serif;
       --font-body: 'Georgia', serif;
@@ -164,8 +164,8 @@
     /* ═══════════════════════════ SKILL ZONE ═══════════════════════════ */
     #skill-zone {
       height: 40px;
-      background: #0a0510;
-      border-bottom: 1px solid #1a0a1a;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border-dark);
       display: flex;
       align-items: center;
       padding: 0 14px;
@@ -228,8 +228,8 @@
     /* ═══════════════════════════ BATTLE STRIP ═══════════════════════════ */
     #battle-strip {
       height: 52px;
-      background: #0d0510;
-      border-bottom: 1px solid #1a0a1a;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border-dark);
       display: flex;
       align-items: center;
       padding: 0 10px;
@@ -323,7 +323,7 @@
 
 /* ═══════════════════════════ CANVAS ═══════════════════════════ */
     #game-container {
-      flex: 1; background: #080810;
+      flex: 1; background: var(--bg-main);
       display: flex; align-items: center; justify-content: center;
       overflow: hidden;
     }
