@@ -28,7 +28,7 @@ export class HUD {
         const txt = d.isBoss ? `⚠️ ВОЛНА ${d.wave} — появился БОСС!` : `⚔️ Волна ${d.wave}`;
         this._log(txt, d.isBoss ? 'kill' : 'wave');
       }),
-      state.on('player:death',    () => { this._log('💀 Вы погибли! Возрождение...', 'player:death'); this._updateGold(); }),
+      state.on('player:death',    () => { this._log('💀 Вы погибли! Возрождение...', 'death'); this._updateGold(); }),
       state.on('player:respawn',  () => this._log('✨ Возрождение!', 'wave')),
       state.on('player:prestige', (d) => {
         this._log(`⭐ ПЕРЕРОЖДЕНИЕ #${d.count}!`, 'player:prestige');
@@ -37,7 +37,7 @@ export class HUD {
         this._updateSkillBtn();
       }),
       state.on('player:ppChanged', () => { this._updatePrestigeBtn(); this._updateSkillUpgrade(); }),
-      state.on('player:soulsChanged', () => this._updateSouls()),
+
       state.on('player:prestigeShopChanged', () => this._syncAutoCast()),
       state.on('combat:milestone', (d) => {
         this._showMilestone(d);
