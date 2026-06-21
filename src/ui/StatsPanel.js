@@ -31,7 +31,10 @@ export class StatsPanel {
     });
     const autoCb = document.getElementById('upg-autobuy');
     if (autoCb) {
-      autoCb.addEventListener('change', () => { this.state.automation.autoBuy = autoCb.checked; });
+      autoCb.addEventListener('change', () => {
+        this.state.automation.autoBuy = autoCb.checked;
+        this._syncAutoBuy();
+      });
     }
     this._syncAutoBuy();
   }
@@ -46,6 +49,7 @@ export class StatsPanel {
     if (wrap) {
       wrap.style.opacity = unlocked ? '1' : '0.5';
       wrap.title = unlocked ? 'Авто-покупка самого дешёвого апгрейда' : '🔒 Откройте в магазине престижа';
+      wrap.classList.toggle('enabled', unlocked && this.state.automation.autoBuy);
     }
   }
 
@@ -105,7 +109,7 @@ export class StatsPanel {
           <div class="upg-level">Уровень: <span id="upg-lvl-${upg.id}">0</span></div>
         </div>
         <button class="upg-buy-btn" id="upg-btn-${upg.id}" data-id="${upg.id}">
-          <span id="upg-cost-${upg.id}">...</span>g
+          💰<span id="upg-cost-${upg.id}" style="color:var(--color-gold)">...</span>
         </button>
       </div>
     `).join('');

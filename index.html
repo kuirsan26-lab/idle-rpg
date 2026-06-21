@@ -267,9 +267,10 @@
       width: 220px;
       flex-shrink: 0;
       padding: 4px 10px;
-      background: rgba(255,255,255,0.04);
+      background: #12060a;
       border-radius: 6px;
-      border: 1px solid rgba(255,255,255,0.07);
+      border: 1px solid var(--border-dark);
+      border-left: 2px solid var(--border-red);
       transition: outline 0.1s;
     }
     .bs-player-header {
@@ -277,33 +278,35 @@
       margin-bottom: 4px;
     }
     .bs-class-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-    .bs-player-name { font-size: 12px; font-weight: 700; color: #ccc; }
+    .bs-player-name { font-size: 10px; font-weight: 700; color: var(--text-parchment); }
     .bs-level { font-size: 10px; color: #555; margin-left: 2px; }
     .bs-player-status { font-size: 10px; margin-left: auto; }
     .bs-hp-wrap { display: flex; align-items: center; gap: 6px; }
     .bs-hp-bar { flex: 1; height: 5px; background: #111; border-radius: 3px; overflow: hidden; }
-    .bs-hp-fill { height: 100%; border-radius: 3px; transition: width 0.2s, background 0.3s; background: #44dd44; width: 100%; }
-    .bs-hp-text { font-size: 9px; color: #666; white-space: nowrap; }
+    .bs-hp-fill { height: 100%; border-radius: 3px; transition: width 0.2s, background 0.3s; background: linear-gradient(90deg, #1a5c1a, #2ecc71); width: 100%; }
+    .bs-hp-text { font-size: 9px; color: var(--accent-bright); white-space: nowrap; }
 
     .bs-vs-block {
       display: flex; flex-direction: column; align-items: center; gap: 2px;
       flex-shrink: 0; width: 76px;
     }
-    .bs-vs-text { font-size: 16px; line-height: 1; }
-    .bs-progress { font-size: 10px; color: #666; }
+    .bs-vs-text { font-size: 18px; line-height: 1; color: var(--border-red); opacity: 0.8; }
+    .bs-progress { font-size: 10px; color: var(--border-red); letter-spacing: 2px; text-transform: uppercase; }
+    .bs-wave-prog-bar { width: 64px; height: 3px; background: #1a0a1a; border-radius: 2px; overflow: hidden; }
+    .bs-wave-prog-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #3a0a0a, #8b0000); border-radius: 2px; transition: width 0.3s; }
     .bs-wave-badge {
-      font-size: 9px; color: #aaa; padding: 1px 6px;
-      border-radius: 10px; background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.1);
-      white-space: nowrap;
+      font-size: 9px; color: var(--border-red); padding: 1px 6px;
+      border-radius: 10px; background: #1a0a1a;
+      border: 1px solid var(--border-dark);
+      white-space: nowrap; letter-spacing: 2px; text-transform: uppercase;
     }
 
     .bs-enemies-block {
       flex: 1; min-width: 0;
       padding: 4px 8px;
-      background: rgba(255,80,0,0.04);
+      background: #12060a;
       border-radius: 6px;
-      border: 1px solid rgba(180,60,0,0.12);
+      border: 1px solid #2a1010;
     }
     .bs-enemies-list {
       display: flex; flex-wrap: wrap; gap: 5px; align-items: center;
@@ -313,31 +316,31 @@
     .bs-enemy-chip {
       display: flex; flex-direction: column; gap: 2px;
       padding: 2px 7px;
-      background: rgba(180,40,0,0.18);
-      border: 1px solid rgba(200,60,0,0.25);
+      background: #12060a;
+      border: 1px solid #2a1010;
       border-radius: 4px;
       min-width: 60px;
     }
-    .bs-boss-chip  { border-color: rgba(255,150,50,0.5); background: rgba(200,80,0,0.25); }
+    .bs-boss-chip  { border-color: var(--border-red); background: #12060a; box-shadow: 0 0 6px rgba(139,0,0,0.4); }
     .bs-elite-chip { border-color: rgba(255,220,0,0.6); background: rgba(160,120,0,0.25); }
     .bs-flags { font-size: 9px; letter-spacing: 1px; opacity: 0.9; }
 
     /* Tooltip моба */
     .bs-mob-tooltip {
       position: fixed; z-index: 9999;
-      background: #111622; border: 1px solid #334;
+      background: #0d0510; border: 1px solid var(--border-dark);
       border-radius: 6px; padding: 8px 10px;
       width: 210px; pointer-events: none;
-      font-size: 11px; color: #ccc;
+      font-size: 11px; color: var(--text-parchment);
       box-shadow: 0 4px 14px rgba(0,0,0,0.7);
       line-height: 1.5;
     }
-    .bstt-name { font-size: 13px; font-weight: bold; color: #eee; margin-bottom: 4px; }
+    .bstt-name { font-size: 13px; font-weight: bold; color: var(--text-parchment); margin-bottom: 4px; }
     .bstt-row  { margin: 1px 0; }
-    .bstt-flags { margin-top: 5px; border-top: 1px solid #334; padding-top: 4px; }
+    .bstt-flags { margin-top: 5px; border-top: 1px solid var(--border-dark); padding-top: 4px; }
     .bstt-flag  { color: #aaa; margin: 1px 0; }
-    .bs-enemy-name { font-size: 10px; color: #cc8866; white-space: nowrap; }
-    .bs-enemy-hp-bar { height: 3px; background: #222; border-radius: 2px; overflow: hidden; }
+    .bs-enemy-name { font-size: 10px; color: #c0392b; white-space: nowrap; }
+    .bs-enemy-hp-bar { height: 3px; background: #1a0a1a; border-radius: 2px; overflow: hidden; }
     .bs-enemy-hp-fill { height: 100%; border-radius: 2px; transition: width 0.2s; }
 
     /* ═══════════════════════════ MAIN AREA ═══════════════════════════ */
@@ -362,24 +365,32 @@
       border-left: 1px solid var(--border-dark);
       display: flex; flex-direction: column; overflow: hidden;
     }
-    .panel-section { border-bottom: 1px solid #1e1e36; padding: 8px 12px; }
-    .panel-section-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #555; margin-bottom: 6px; }
-    .stat-row { display: flex; justify-content: space-between; align-items: center; padding: 2px 0; font-size: 11px; }
-    .stat-row .sname { color: #777; }
-    .stat-row .sval { color: #e0d8c8; font-weight: 600; }
+    .panel-section { border-bottom: 1px solid var(--border-dark); padding: 10px 14px; }
+    .panel-section-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 3px; color: var(--border-red); margin-bottom: 6px; border-bottom: 1px solid var(--border-dark); padding-bottom: 4px; }
+    .panel-section-title::before { content: '◆ '; }
+    .stat-row { display: flex; justify-content: space-between; align-items: center; padding: 2px 0; font-size: 11px; border-bottom: 1px solid rgba(58,26,26,0.3); }
+    .stat-row:hover { background: rgba(139,0,0,0.05); }
+    .stat-row .sname { color: #888; letter-spacing: 1px; font-size: 11px; }
+    .stat-row .sval { color: var(--text-parchment); font-weight: 600; }
+    .stat-row .sval.s-atk { color: var(--color-atk); }
+    .stat-row .sval.s-def { color: var(--color-def); }
+    .stat-row .sval.s-spd { color: var(--color-speed); }
+    .stat-row .sval.s-crit { color: var(--color-crit); }
     .stat-row .smult { font-size: 9px; color: #6c6; margin-left: 3px; }
     #upgrades-scroll { flex: 1; overflow-y: auto; padding: 6px 10px; }
     #upgrades-scroll::-webkit-scrollbar { width: 3px; }
-    #upgrades-scroll::-webkit-scrollbar-thumb { background: #2a2a4a; border-radius: 2px; }
+    #upgrades-scroll::-webkit-scrollbar-thumb { background: var(--border-dark); border-radius: 2px; }
     .upgrade-item {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 6px 7px; margin-bottom: 4px;
-      background: #12122a; border-radius: 5px; border: 1px solid #1e1e3a;
+      padding: 6px 7px; margin-bottom: 2px;
+      background: transparent; border-radius: 5px;
+      border-bottom: 1px solid rgba(58,26,26,0.2);
     }
+    .upgrade-item:hover { background: rgba(139,0,0,0.08); }
     .upgrade-item .upg-info { flex: 1; }
-    .upgrade-item .upg-name { font-size: 11px; font-weight: 600; color: #ccc; }
+    .upgrade-item .upg-name { font-size: 11px; font-weight: 600; color: var(--text-parchment); }
     .upgrade-item .upg-desc { font-size: 9px; color: #555; margin-top: 1px; }
-    .upgrade-item .upg-level { font-size: 9px; color: #777; }
+    .upgrade-item .upg-level { font-size: 9px; color: #666; }
     .upg-buy-btn {
       padding: 4px 9px; border: none; border-radius: 4px;
       background: linear-gradient(135deg, #1e3a1e, #2a5a2a);
@@ -394,16 +405,17 @@
     #upg-buymode { display: flex; gap: 3px; }
     .upg-mode-btn {
       padding: 3px 8px; border-radius: 4px; cursor: pointer;
-      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      background: #12060a; border: 1px solid var(--border-dark);
       color: #888; font-size: 10px; font-weight: 700; font-family: 'Segoe UI', sans-serif;
     }
-    .upg-mode-btn:hover { background: rgba(255,255,255,0.1); color: #ccc; }
-    .upg-mode-btn.active { background: rgba(100,80,200,0.25); border-color: rgba(120,100,220,0.5); color: #c8b0ff; }
+    .upg-mode-btn:hover { background: rgba(139,0,0,0.12); color: var(--text-parchment); }
+    .upg-mode-btn.active { background: #1a0010; border-color: var(--border-red); color: var(--text-parchment); }
     #upg-autobuy-wrap {
       display: flex; align-items: center; gap: 4px; cursor: pointer;
-      font-size: 10px; color: #888; user-select: none;
+      font-size: 11px; color: #888; user-select: none;
     }
-    #upg-autobuy-wrap input { cursor: pointer; accent-color: #7dda7d; }
+    #upg-autobuy-wrap.enabled { color: var(--text-parchment); }
+    #upg-autobuy-wrap input { cursor: pointer; accent-color: var(--border-red); }
 
     /* ═══════════════════════════ COMBAT LOG ═══════════════════════════ */
     #combat-log {
@@ -1362,11 +1374,11 @@
         <div class="panel-section">
           <div class="panel-section-title">⚡ Характеристики</div>
           <div class="stat-row"><span class="sname">❤️ Здоровье</span><span><span class="sval" id="stat-hp">100</span><span class="smult" id="stat-hp-mult"></span></span></div>
-          <div class="stat-row"><span class="sname">⚔️ Урон</span><span><span class="sval" id="stat-atk">10</span><span class="smult" id="stat-atk-mult"></span></span></div>
-          <div class="stat-row"><span class="sname">🛡️ Защита</span><span><span class="sval" id="stat-def">5</span><span class="smult" id="stat-def-mult"></span></span></div>
-          <div class="stat-row"><span class="sname">⚡ Скорость</span><span><span class="sval" id="stat-spd">1.0</span><span class="smult" id="stat-spd-mult">/с</span></span></div>
-          <div class="stat-row"><span class="sname">🎯 Крит шанс</span><span><span class="sval" id="stat-crit">5</span><span class="smult">%</span></span></div>
-          <div class="stat-row"><span class="sname">💥 Крит урон</span><span><span class="sval" id="stat-critdmg">150</span><span class="smult">%</span></span></div>
+          <div class="stat-row"><span class="sname">⚔️ Урон</span><span><span class="sval s-atk" id="stat-atk">10</span><span class="smult" id="stat-atk-mult"></span></span></div>
+          <div class="stat-row"><span class="sname">🛡️ Защита</span><span><span class="sval s-def" id="stat-def">5</span><span class="smult" id="stat-def-mult"></span></span></div>
+          <div class="stat-row"><span class="sname">⚡ Скорость</span><span><span class="sval s-spd" id="stat-spd">1.0</span><span class="smult" id="stat-spd-mult">/с</span></span></div>
+          <div class="stat-row"><span class="sname">🎯 Крит шанс</span><span><span class="sval s-crit" id="stat-crit">5</span><span class="smult">%</span></span></div>
+          <div class="stat-row"><span class="sname">💥 Крит урон</span><span><span class="sval s-crit" id="stat-critdmg">150</span><span class="smult">%</span></span></div>
           <div class="stat-row"><span class="sname">📚 Опыт ×</span><span><span class="sval" id="stat-xpmult">1.00</span></span></div>
           <div class="stat-row"><span class="sname">💰 Золото ×</span><span><span class="sval" id="stat-goldmult">1.00</span></span></div>
           <div class="stat-row"><span class="sname">🏆 Престиж ×</span><span><span class="sval" id="stat-prestmult">1.00</span></span></div>

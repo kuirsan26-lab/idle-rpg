@@ -60,6 +60,7 @@ export class BattleStrip {
     this._totalMobs = mobs.length;
     this._renderEnemies();
     this._updateWave();
+    this._updateProgress();
   }
 
   onMobDeath({ mob }) {
@@ -145,7 +146,8 @@ export class BattleStrip {
       <div class="bs-vs-block">
         <div class="bs-vs-text">⚔️</div>
         <div class="bs-progress" id="bs-progress">0/0</div>
-        <div class="bs-wave-badge" id="bs-wave-badge">Волна 1</div>
+        <div class="bs-wave-prog-bar"><div class="bs-wave-prog-fill" id="bs-wave-prog-fill"></div></div>
+        <div class="bs-wave-badge" id="bs-wave-badge">◆ Волна 1 ◆</div>
       </div>
 
       <!-- ВРАГИ -->
@@ -231,7 +233,11 @@ export class BattleStrip {
     const cur   = this.state.currentHp;
     const max   = this._cachedMaxHp;
     const pct   = Math.max(0, Math.min(100, (cur / max) * 100));
-    const color = pct > 50 ? '#44dd44' : pct > 25 ? '#ffaa00' : '#dd3333';
+    const color = pct > 50
+      ? 'linear-gradient(90deg, #1a5c1a, #2ecc71)'
+      : pct > 25
+        ? 'linear-gradient(90deg, #7a4800, #ffaa00)'
+        : 'linear-gradient(90deg, #8b0000, #e74c3c)';
 
     const fill = document.getElementById('bs-player-hp-fill');
     const text = document.getElementById('bs-player-hp-text');
@@ -245,14 +251,20 @@ export class BattleStrip {
     if (!badge) return;
     const wave   = this.state.currentWave;
     const isBoss = wave % 10 === 0;
-    badge.textContent = isBoss ? `⚠️ Волна ${wave} БОСС` : `Волна ${wave}`;
-    badge.style.background = isBoss ? 'rgba(200,80,0,0.3)' : 'rgba(255,255,255,0.06)';
-    badge.style.borderColor = isBoss ? '#cc4400' : 'rgba(255,255,255,0.1)';
+    badge.textContent = isBoss ? `⚠️ ВОЛНА ${wave} БОСС` : `◆ Волна ${wave} ◆`;
+    badge.style.background = isBoss ? 'rgba(139,0,0,0.25)' : '#1a0a1a';
+    badge.style.borderColor = isBoss ? 'var(--border-red)' : 'var(--border-dark)';
+    badge.style.color = 'var(--border-red)';
   }
 
   _updateProgress() {
     const el = document.getElementById('bs-progress');
     if (el) el.textContent = `${this._killCount}/${this._totalMobs}`;
+    const fill = document.getElementById('bs-wave-prog-fill');
+    if (fill) {
+      const pct = this._totalMobs > 0 ? Math.round((this._killCount / this._totalMobs) * 100) : 0;
+      fill.style.width = pct + '%';
+    }
   }
 
   /** Преобразует имя моба в стабильный CSS-id */
@@ -290,7 +302,7 @@ export class BattleStrip {
 
     list.innerHTML = [...groups.entries()].map(([name, g]) => {
       const pct      = Math.max(0, (g.hp / g.maxHp) * 100);
-      const color    = g.isBoss ? '#ff6644' : g.isElite ? '#ffcc00' : '#dd4444';
+      const color    = g.isBoss ? 'linear-gradient(90deg, #3a0a0a, #8b0000)' : g.isElite ? 'linear-gradient(90deg, #5a4a00, #ffcc00)' : 'linear-gradient(90deg, #3a0a0a, #8b0000)';
       const cntLabel = g.count > 1 ? ` ×${g.count}` : '';
       const fillId   = this._slug(name);
       const flagStr  = g.flags.map(f => FLAG_ICONS[f] ?? '').join('');
@@ -302,9 +314,10 @@ export class BattleStrip {
         : '';
       const bossPrefix = g.isBoss ? '👑 ' : '';
       const chipClass  = g.isBoss ? 'bs-boss-chip' : g.isElite ? 'bs-elite-chip' : '';
+      const nameStyle  = g.isBoss ? 'style="color:var(--accent-bright)"' : '';
       return `
         <div class="bs-enemy-chip ${chipClass}" data-name="${name}">
-          <span class="bs-enemy-name">${g.icon} ${bossPrefix}${name}${cntLabel}${flagStr ? ` <span class="bs-flags">${flagStr}</span>` : ''}</span>
+          <span class="bs-enemy-name" ${nameStyle}>${g.icon} ${bossPrefix}${name}${cntLabel}${flagStr ? ` <span class="bs-flags">${flagStr}</span>` : ''}</span>
           <div class="bs-enemy-hp-bar">
             <div class="bs-enemy-hp-fill" id="${fillId}" style="width:${pct}%;background:${color}"></div>
           </div>
