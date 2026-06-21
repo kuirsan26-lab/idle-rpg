@@ -2,8 +2,9 @@
  * Игровой цикл боя
  * Отвечает за: тики атаки, очередь мобов, волны, респолн
  */
-import { createMobData, getMobCount } from '../data/mobs.js';
+import { createMobData, getMobCount, createZoneBossData } from '../data/mobs.js';
 import { CLASS_MAP } from '../data/classes.js';
+import { ZONE_IDS } from '../data/zones.js';
 
 const TICK_MS            = 200;   // базовый тик логики
 const RESPAWN_MS         = 3000;  // время до воскрешения
@@ -38,6 +39,7 @@ export class CombatSystem {
       this._pendingPoison = null;
       this.state.isAlive  = true;
       this.state.currentHp = this.state.getStats().maxHp;
+      this.state.zoneWave  = 1; // сброс волны внутри зоны; globalWave и zonesProgress — мета-прогресс, не трогаем
       this._emit('onRespawn', {});
       this._spawnWave();
     });
@@ -119,13 +121,18 @@ export class CombatSystem {
         this.waveState = 'fighting';
 
         // Откат на предыдущую волну: сразу при смерти на боссе ИЛИ после MAX_DEATHS_PER_WAVE смертей
-        const isBossWave = this.state.currentWave % 10 === 0;
-        const shouldRollback = (isBossWave || this.deathsOnWave >= MAX_DEATHS_PER_WAVE) && this.state.currentWave > 1;
+        const zone = this.state.getCurrentZone();
+        const isBossWave = this.state.zoneWave > zone.waves;
+        const shouldRollback = (isBossWave || this.deathsOnWave >= MAX_DEATHS_PER_WAVE) && this.state.globalWave > 1;
         if (shouldRollback) {
-          this.state.currentWave--;
+          if (this.state.zoneWave > 1) {
+            this.state.zoneWave--;
+            this.state.globalWave = Math.max(1, this.state.globalWave - 1);
+            this.state.currentWave = this.state.globalWave;
+          }
           this.deathsOnWave = 0;
-          this._emit('onWaveRollback', { wave: this.state.currentWave });
-          this.state.emit('combat:waveRollback', { wave: this.state.currentWave });
+          this._emit('onWaveRollback', { wave: this.state.globalWave });
+          this.state.emit('combat:waveRollback', { wave: this.state.globalWave });
         }
 
         this._spawnWave();
@@ -152,24 +159,53 @@ export class CombatSystem {
     if (this.mobs.length === 0 && this.waveState === 'fighting') {
       this.deathsOnWave = 0;
       this.waveState = 'paused';
-      const clearedWave = this.state.currentWave;
-      this.state.currentWave++;
+
+      const zone = this.state.getCurrentZone();
+      const zoneWave = this.state.zoneWave;
+      const isBossWave = zoneWave > zone.waves;
+      const clearedGlobalWave = this.state.globalWave;
+
+      if (isBossWave) {
+        // Финальный босс зоны повержен → завершить зону, войти в следующую
+        this.state.completeZone(zone.id); // разблокирует следующую зону
+        const nextZoneId = this._getNextZoneId();
+        if (nextZoneId) {
+          this.state.enterZone(nextZoneId); // сбрасывает zoneWave = 1
+        } else {
+          // Последняя зона (Бездна) пройдена — зацикливаемся в ней с волны 1
+          this.state.zoneWave = 1;
+        }
+        this.state.globalWave++;
+        this.state.currentWave = this.state.globalWave;
+      } else {
+        // Обычная волна зоны пройдена
+        this.state.zonesProgress[zone.id].wavesCleared = Math.max(
+          this.state.zonesProgress[zone.id].wavesCleared,
+          zoneWave
+        );
+        this.state.zoneWave++;
+        this.state.globalWave++;
+        this.state.currentWave = this.state.globalWave;
+      }
+
       // Полное лечение между волнами
       this.state.currentHp = stats.maxHp;
       this.state.emit('player:hpChanged', { hp: this.state.currentHp });
-      this.state.emit('combat:waveCleared', { wave: clearedWave });
+      this.state.emit('combat:waveCleared', { wave: clearedGlobalWave, zoneWave, isBoss: isBossWave });
 
-      // Milestone: каждая волна кратная 10
-      if (clearedWave % 10 === 0) {
-        const isNewRecord = clearedWave > this.state.maxWaveReached;
+      // Обновить рекорд
+      if (clearedGlobalWave > (this.state.maxWaveReached || 0)) {
+        this.state.maxWaveReached = clearedGlobalWave;
+      }
+
+      // Milestone: каждые 10 глобальных волн
+      if (clearedGlobalWave % 10 === 0) {
+        const isNewRecord = clearedGlobalWave >= this.state.maxWaveReached;
         let bonusGold = 0;
         if (isNewRecord) {
-          this.state.maxWaveReached = clearedWave;
-          bonusGold = this.state.addGold(clearedWave * 50);
+          bonusGold = this.state.addGold(clearedGlobalWave * 50);
         }
-        this.state.emit('combat:milestone', { wave: clearedWave, isNewRecord, bonusGold });
-      } else if (clearedWave > this.state.maxWaveReached) {
-        this.state.maxWaveReached = clearedWave;
+        this.state.emit('combat:milestone', { wave: clearedGlobalWave, isNewRecord, bonusGold });
       }
 
       this.state.checkAchievements();
@@ -419,27 +455,64 @@ export class CombatSystem {
 
   // ── Спавн волны ─────────────────────────────────────────────────────────────
   _spawnWave() {
-    const wave        = this.state.currentWave;
-    const isBoss      = wave % 10 === 0;
-    const isEliteWave = wave % 5 === 0 && !isBoss;
-    const count = getMobCount(wave);
-    this.mobs   = [];
+    const zone       = this.state.getCurrentZone();
+    const zoneWave   = this.state.zoneWave;
+    const globalWave = this.state.globalWave;
+    const isBossWave = zoneWave > zone.waves; // волна 21 зоны = финальный босс
 
-    for (let i = 0; i < count; i++) {
-      const isElite = isEliteWave && i === 0;
-      const data = createMobData(wave, isElite);
+    this.mobs = [];
+
+    if (isBossWave) {
+      // Финальный босс зоны
+      const bossData = createZoneBossData(zone.bossId, globalWave);
       this.mobs.push({
         id:             this.nextMobId++,
-        data,
-        hp:             data.maxHp,
-        shield:         data.shieldHp ?? 0,
+        data:           bossData,
+        hp:             bossData.maxHp,
+        shield:         bossData.shieldHp ?? 0,
         regenTimer:     0,
-        attackCooldown: 1000 + Math.random() * 800,
+        attackCooldown: 1000,
+        stunTicks:      0,
+        poisonTicks:    0,
+        poisonDmg:      0,
+        burnTicks:      0,
+        burnDmg:        0,
       });
+    } else {
+      // Обычные мобы волны зоны; элитная волна каждые 5 волн внутри зоны
+      const isEliteWave = zoneWave % 5 === 0;
+      const count       = getMobCount(globalWave);
+
+      for (let i = 0; i < count; i++) {
+        const isElite = isEliteWave && i === 0;
+        const data    = createMobData(globalWave, isElite);
+        this.mobs.push({
+          id:             this.nextMobId++,
+          data,
+          hp:             data.maxHp,
+          shield:         data.shieldHp ?? 0,
+          regenTimer:     0,
+          attackCooldown: 1000 + Math.random() * 800,
+          stunTicks:      0,
+          poisonTicks:    0,
+          poisonDmg:      0,
+          burnTicks:      0,
+          burnDmg:        0,
+        });
+      }
     }
 
-    this._emit('onWaveSpawn', { wave, mobs: this.mobs });
-    this.state.emit('combat:waveStarted', { wave, isBoss, isEliteWave });
+    this._emit('onWaveSpawn', { wave: globalWave, zoneWave, mobs: this.mobs });
+    this.state.emit('combat:waveStarted', { wave: globalWave, zoneWave, isBoss: isBossWave });
+  }
+
+  /** Найти следующую разблокированную зону после текущей */
+  _getNextZoneId() {
+    const currentIdx = ZONE_IDS.indexOf(this.state.currentZoneId);
+    for (let i = currentIdx + 1; i < ZONE_IDS.length; i++) {
+      if (this.state.zonesProgress[ZONE_IDS[i]]?.unlocked) return ZONE_IDS[i];
+    }
+    return null;
   }
 
   // ── Emit ─────────────────────────────────────────────────────────────────────

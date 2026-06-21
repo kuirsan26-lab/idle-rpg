@@ -8,6 +8,7 @@ import { generateItem, SELL_VALUE } from '../data/items.js';
 import { SKILLS_BY_BRANCH, SKILL_UPGRADES, SKILL_MAX_LEVEL, getSkillParams } from '../data/skills.js';
 import { installSave } from './GameStateSave.js';
 import { ACHIEVEMENTS } from '../data/achievements.js';
+import { ZONES_MAP, ZONE_IDS } from '../data/zones.js';
 
 // Базовые статы на 1-м уровне
 const BASE_STATS = { hp: 130, atk: 14, def: 7, spd: 1.3 };
@@ -135,6 +136,18 @@ export class GameState extends EventBus {
       autoCast: false,           // авто-каст скилла по готовности
       autoBuy:  false,           // авто-покупка самого дешёвого апгрейда
       autoSell: 'off',           // 'off' | 'common' | 'rare' — авто-продажа дропа
+    };
+
+    // ── Зоны ─────────────────────────────────────────────────────────
+    this.currentZoneId = 'forest'; // текущая активная зона
+    this.zoneWave      = 1;        // волна внутри зоны (1–20, 21 = финальный босс)
+    this.globalWave    = 1;        // суммарные волны всех зон (для скейлинга мобов)
+    this.zonesProgress = {         // прогресс по каждой зоне
+      forest:    { wavesCleared: 0, bossDefeated: false, unlocked: true  },
+      catacombs: { wavesCleared: 0, bossDefeated: false, unlocked: false },
+      volcano:   { wavesCleared: 0, bossDefeated: false, unlocked: false },
+      skyfort:   { wavesCleared: 0, bossDefeated: false, unlocked: false },
+      abyss:     { wavesCleared: 0, bossDefeated: false, unlocked: false },
     };
   }
 
@@ -675,6 +688,42 @@ export class GameState extends EventBus {
       this.emit('player:achievementUnlocked', { ach });
       this.emit('player:ppChanged', { pp: this.prestigePoints });
     }
+  }
+
+  // ── Зоны ───────────────────────────────────────────────────────────────────
+
+  /** Объект текущей активной зоны */
+  getCurrentZone() {
+    return ZONES_MAP.get(this.currentZoneId);
+  }
+
+  /**
+   * Войти в зону (только если разблокирована).
+   * Сбрасывает zoneWave в 1.
+   * @returns {boolean} успех
+   */
+  enterZone(zoneId) {
+    if (!this.zonesProgress[zoneId]?.unlocked) return false;
+    this.currentZoneId = zoneId;
+    this.zoneWave = 1;
+    this.emit('zone:entered', { zoneId });
+    return true;
+  }
+
+  /**
+   * Зафиксировать победу над финальным боссом зоны.
+   * Разблокирует следующую зону и испускает события.
+   */
+  completeZone(zoneId) {
+    if (!this.zonesProgress[zoneId]) return;
+    this.zonesProgress[zoneId].bossDefeated = true;
+    const idx = ZONE_IDS.indexOf(zoneId);
+    if (idx >= 0 && idx + 1 < ZONE_IDS.length) {
+      const nextId = ZONE_IDS[idx + 1];
+      this.zonesProgress[nextId].unlocked = true;
+      this.emit('zone:unlocked', { zoneId: nextId });
+    }
+    this.emit('zone:completed', { zoneId });
   }
 
 }

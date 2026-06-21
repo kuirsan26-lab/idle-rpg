@@ -19,6 +19,7 @@ import { ClassTreeGraph }     from './ui/ClassTreeGraph.js';
 import { AchievementsPanel }  from './ui/AchievementsPanel.js';
 import { MobileNav }          from './ui/MobileNav.js';
 import { OfflineModal }       from './ui/OfflineModal.js';
+import { ZoneMap }            from './ui/ZoneMap.js';
 import { CLASS_MAP }     from './data/classes.js';
 
 window._classMap = CLASS_MAP;
@@ -69,6 +70,7 @@ const classTreeGraph   = new ClassTreeGraph(state);
 const achievementsPanel = new AchievementsPanel(state);
 const mobileNav         = new MobileNav();
 const offlineModal      = new OfflineModal();
+const zoneMap           = new ZoneMap(state);
 
 // Логирование боевых событий
 combat.register({

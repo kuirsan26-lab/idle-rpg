@@ -154,14 +154,14 @@
       transition: background 0.15s;
     }
     #settings-btn:hover { background: rgba(139,0,0,0.15); color: var(--text-parchment); }
-    #achievements-btn {
+    #achievements-btn, #zone-map-btn {
       padding: 5px 10px; background: #12060a;
       border: 1px solid var(--border-dark); border-radius: 6px;
       color: #9b7; font-size: 12px; cursor: pointer; white-space: nowrap;
       letter-spacing: 1px;
       transition: background 0.15s;
     }
-    #achievements-btn:hover { background: rgba(139,0,0,0.15); color: var(--text-parchment); }
+    #achievements-btn:hover, #zone-map-btn:hover { background: rgba(139,0,0,0.15); color: var(--text-parchment); }
     #class-tree-btn {
       padding: 5px 10px; background: #12060a;
       border: 1px solid var(--border-dark); border-radius: 6px;
@@ -1243,7 +1243,7 @@
       .hud-stat .lbl { font-size: 11px; }
       #xp-bar-wrap { order: 5; flex-basis: 100%; }
       /* nav-иконки переехали в нижний таб-бар */
-      #achievements-btn, #class-tree-btn, #inventory-btn, #settings-btn { display: none; }
+      #achievements-btn, #zone-map-btn, #class-tree-btn, #inventory-btn, #settings-btn { display: none; }
       #prestige-btn { font-size: 12px; padding: 7px 12px; }
       #prestige-pp-badge { font-size: 12px; padding: 7px 10px; }
 
@@ -1397,6 +1397,7 @@
         <div id="prestige-pp-badge" onclick="window.game && window.game.openPrestigeShop()">🏆 <span id="hud-pp">0</span> ПО</div>
       </div>
       <button id="achievements-btn" onclick="window.game && window.game.openAchievements()" title="Достижения">🏆 Ачивки</button>
+      <button id="zone-map-btn" onclick="window.game && window.game.openZoneMap()" title="Карта мира">🗺 Зоны</button>
       <button id="class-tree-btn" onclick="window.game && window.game.openClassGraph()" title="Дерево классов">🌿 Классы</button>
       <button id="inventory-btn" onclick="window.game && window.game.openInventory()" title="Инвентарь">🎒 <span id="hud-inv-count"></span></button>
       <button id="settings-btn" onclick="window.game && window.game.openSettings()" title="Настройки">⚙️</button>

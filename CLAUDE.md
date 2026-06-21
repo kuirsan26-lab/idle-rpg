@@ -216,7 +216,7 @@ Credentials YandexART 2.0 — в `memory/reference_yandexart.md`.
 
 ### Versioning (data/changelog.js)
 
-Единый источник истины версии — `GAME_VERSION` в `src/data/changelog.js` + `CHANGELOG` (массив записей, `type: new|changed|fixed|balance`). При релизе синхронизировать с `package.json` `version`. «Что нового» в SettingsMenu и MainMenu читаются из этого массива. См. `/ship`-воркфлоу. Текущая версия: **v1.17.0**.
+Единый источник истины версии — `GAME_VERSION` в `src/data/changelog.js` + `CHANGELOG` (массив записей, `type: new|changed|fixed|balance`). При релизе синхронизировать с `package.json` `version`. «Что нового» в SettingsMenu и MainMenu читаются из этого массива. См. `/ship`-воркфлоу. Текущая версия: **v1.18.0**.
 
 ### Dark Fantasy Theme (c v1.17.0)
 
@@ -227,6 +227,26 @@ Credentials YandexART 2.0 — в `memory/reference_yandexart.md`.
 - FX арены: красные/пурпурные цвета в `SceneFX.js`, тёмное небо в `SceneBackground.js`
 - Счётчик Душ (`💜`) в HUD — отображает `state.souls || 0` (логика в v2.0)
 
+### Zone System (c v1.18.0)
+
+5 линейных зон, данные в `src/data/zones.js` (`ZONES`, `ZONES_MAP`, `ZONE_IDS`):
+
+| Зона | id | Мобы | Босс |
+|------|----|------|------|
+| Тёмный Лес | forest | goblin, slime, skeleton | Страж Леса |
+| Катакомбы | catacombs | skeleton, orc, demon | Король Мертвецов |
+| Вулкан. Пещеры | volcano | troll, dragonling, demon | Огненный Титан |
+| Небесная Крепость | skyfort | dragonling, dragon, lich | Тёмный Архангел |
+| Бездна | abyss | lich, dragon, archdemon | Повелитель Хаоса |
+
+**GameState зональные поля:** `currentZoneId`, `zoneWave` (1–21, 21=босс), `globalWave` (суммарно, для скейлинга), `zonesProgress`.
+
+**Методы:** `getCurrentZone()`, `enterZone(zoneId)`, `completeZone(zoneId)`.
+
+**Combat:** `zoneWave > zone.waves` → спавн финального босса через `createZoneBossData(bossId, globalWave)`. После победы над боссом — `completeZone()` разблокирует следующую зону. Откат при смерти: `zoneWave--`, `globalWave--`.
+
+**UI:** `ZoneMap.js` → `#zone-map-overlay`, `window.game.openZoneMap()`. Кнопка 🗺 в HUD.
+
 ### Save system
 
 `GameState.save()` / `GameState._load()` — localStorage (`idle_rpg_save`, версия `v:2`). Автосейв каждые 30с + `beforeunload`. Сохраняются также инвентарь/снаряжение, прогресс достижений, покупки магазина престижа.
@@ -235,7 +255,6 @@ Credentials YandexART 2.0 — в `memory/reference_yandexart.md`.
 
 ### Roadmap (planned)
 
-- **v1.18.0** (`feat/zone-system`): Зональная структура — 5 зон (Лес→Катакомбы→Вулкан→Небеса→Бездна), по 20 волн + финальный босс.
 - **v2.0.0** (`feat/roguelite-loop`): Рогалайк-петля — Души, Зеркало Теней (постоянные перки), экран итогов рана.
 
 ## Update policy

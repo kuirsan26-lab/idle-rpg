@@ -5,6 +5,7 @@
  */
 import { CLASS_MAP, BRANCH_COLORS } from '../data/classes.js';
 import { FLAG_ICONS } from '../data/mobs.js';
+import { ZONES_MAP } from '../data/zones.js';
 
 const FLAG_DESC = {
   shield:  'Щит — поглощает урон перед HP',
@@ -42,7 +43,7 @@ export class BattleStrip {
 
   // ── Callbacks от CombatSystem ────────────────────────────────────────────────
 
-  onWaveSpawn({ wave, mobs }) {
+  onWaveSpawn({ wave, zoneWave, mobs }) {
     this._currentMobs = mobs.map(m => ({
       id:       m.id,
       name:     m.data.name,
@@ -58,6 +59,7 @@ export class BattleStrip {
     }));
     this._killCount = 0;
     this._totalMobs = mobs.length;
+    this._lastZoneWave = zoneWave ?? null;
     this._renderEnemies();
     this._updateWave();
     this._updateProgress();
@@ -249,17 +251,40 @@ export class BattleStrip {
   _updateWave() {
     const badge = document.getElementById('bs-wave-badge');
     if (!badge) return;
-    const wave   = this.state.currentWave;
-    const isBoss = wave % 10 === 0;
-    badge.textContent = isBoss ? `⚠️ ВОЛНА ${wave} БОСС` : `◆ Волна ${wave} ◆`;
-    badge.style.background = isBoss ? 'rgba(139,0,0,0.25)' : '#1a0a1a';
-    badge.style.borderColor = isBoss ? 'var(--border-red)' : 'var(--border-dark)';
+
+    const zone     = this.state.getCurrentZone?.();
+    const zoneWave = this._lastZoneWave ?? this.state.zoneWave ?? null;
+
+    if (zone && zoneWave != null) {
+      const isBoss = zoneWave > 20;
+      if (isBoss) {
+        badge.textContent = `◆ 👑 ФИНАЛЬНЫЙ БОСС ◆`;
+      } else {
+        badge.textContent = `◆ ${zone.icon} ${zone.name} · Волна ${zoneWave}/20 ◆`;
+      }
+      badge.style.background  = isBoss ? 'rgba(139,0,0,0.25)' : '#1a0a1a';
+      badge.style.borderColor = isBoss ? 'var(--border-red)' : 'var(--border-dark)';
+    } else {
+      // Fallback: нет зональных данных (старый режим)
+      const wave   = this.state.currentWave;
+      const isBoss = wave % 10 === 0;
+      badge.textContent  = isBoss ? `⚠️ ВОЛНА ${wave} БОСС` : `◆ Волна ${wave} ◆`;
+      badge.style.background  = isBoss ? 'rgba(139,0,0,0.25)' : '#1a0a1a';
+      badge.style.borderColor = isBoss ? 'var(--border-red)' : 'var(--border-dark)';
+    }
     badge.style.color = 'var(--border-red)';
   }
 
   _updateProgress() {
     const el = document.getElementById('bs-progress');
-    if (el) el.textContent = `◆ ${this._killCount}/${this._totalMobs}`;
+    const zoneWave = this._lastZoneWave ?? this.state.zoneWave ?? null;
+    if (el) {
+      if (zoneWave != null) {
+        el.textContent = zoneWave > 20 ? `◆ БОСС` : `◆ ${zoneWave}/20`;
+      } else {
+        el.textContent = `◆ ${this._killCount}/${this._totalMobs}`;
+      }
+    }
     const fill = document.getElementById('bs-wave-prog-fill');
     if (fill) {
       const pct = this._totalMobs > 0 ? Math.round((this._killCount / this._totalMobs) * 100) : 0;

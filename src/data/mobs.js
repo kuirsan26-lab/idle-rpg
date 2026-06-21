@@ -149,6 +149,12 @@ export const BOSS_TYPES = [
   { id: 'boss_lich_king',    name: 'Король Личей',       tier: 8,  color: 0xaa00ff, shape: 'rect',   hpMult: 12, atkMult: 5,  defMult: 4,  xpMult: 20, goldMult: 15 },
   { id: 'boss_dragon_ancient',name: 'Праотец Драконов', tier: 9,  color: 0xff2200, shape: 'diamond',hpMult: 15, atkMult: 6,  defMult: 5,  xpMult: 25, goldMult: 20 },
   { id: 'boss_chaos_lord',   name: 'Повелитель Хаоса',  tier: 10, color: 0xff0088, shape: 'circle', hpMult: 20, atkMult: 8,  defMult: 6,  xpMult: 35, goldMult: 30 },
+  // Зональные боссы (финалы каждой из 5 зон)
+  { id: 'boss_forest_guardian', name: 'Страж Леса',       tier: 2,  color: 0x228b22, shape: 'diamond', hpMult: 10, atkMult: 5, defMult: 3, xpMult: 12, goldMult: 10 },
+  { id: 'boss_undead_king',     name: 'Король Мертвецов', tier: 4,  color: 0xaaaaff, shape: 'rect',    hpMult: 10, atkMult: 5, defMult: 3, xpMult: 12, goldMult: 10 },
+  { id: 'boss_fire_titan',      name: 'Огненный Титан',   tier: 6,  color: 0xff6600, shape: 'circle',  hpMult: 12, atkMult: 6, defMult: 4, xpMult: 15, goldMult: 12 },
+  { id: 'boss_dark_archangel',  name: 'Тёмный Архангел',  tier: 8,  color: 0xcc00ff, shape: 'diamond', hpMult: 15, atkMult: 7, defMult: 5, xpMult: 20, goldMult: 15 },
+  // boss_chaos_lord (tier 10) — уже в списке выше, служит финальным боссом зоны Бездна
 ];
 
 // Иконки для каждого типа моба
@@ -160,6 +166,11 @@ export const MOB_ICONS = {
   boss_orc_warlord: '🐗', boss_troll_ancient: '🧌', boss_fire_dragon: '🔥',
   boss_demon_lord: '😈', boss_lich_king: '🧟', boss_dragon_ancient: '🐉',
   boss_chaos_lord: '💀',
+  // Зональные боссы
+  boss_forest_guardian: '🌿',
+  boss_undead_king:     '👑',
+  boss_fire_titan:      '🌋',
+  boss_dark_archangel:  '⚡',
 };
 
 // ── Флаги мобов ────────────────────────────────────────────────────────────────
@@ -267,4 +278,44 @@ export function createMobData(wave, isElite = false) {
 export function getMobCount(wave) {
   if (wave % 10 === 0) return 1; // босс — один
   return Math.min(3 + Math.floor(wave / 4), 8);
+}
+
+/**
+ * Создать данные зонального босса по его ID и текущей глобальной волне.
+ * Используется боевой системой при финале каждой зоны (волна 21 зоны).
+ * @param {string} bossId  — id из ZONES[].bossId
+ * @param {number} globalWave — суммарный номер волны для масштабирования
+ * @returns {object} данные моба (аналог createMobData, isBoss=true)
+ */
+export function createZoneBossData(bossId, globalWave) {
+  const bossTemplate = BOSS_TYPES.find(b => b.id === bossId);
+  if (!bossTemplate) return createMobData(globalWave); // fallback
+
+  const baseType = MOB_TYPES[Math.min(bossTemplate.tier - 1, MOB_TYPES.length - 1)];
+  const cs    = combatScale(globalWave);
+  const rs    = rewardScale(globalWave);
+  const flags = rollFlags(true, false);
+
+  let maxHp = Math.round(baseType.baseHp * cs * bossTemplate.hpMult);
+  let def   = Math.round(baseType.baseDef * Math.sqrt(cs) * bossTemplate.defMult);
+  let speed = baseType.speed * 1.1;
+  if (flags.includes('armored')) def   = Math.round(def * 1.5);
+  if (flags.includes('swift'))   { speed *= 2; maxHp = Math.round(maxHp * 0.5); }
+  const shieldHp = flags.includes('shield') ? Math.ceil(maxHp * 0.25) : 0;
+
+  return {
+    id:    bossTemplate.id,
+    name:  bossTemplate.name,
+    color: bossTemplate.color,
+    shape: bossTemplate.shape,
+    icon:  MOB_ICONS[bossTemplate.id] ?? '👹',
+    maxHp,
+    atk:   Math.round(baseType.baseAtk * cs * bossTemplate.atkMult),
+    def,
+    xp:    Math.round(baseType.baseXp   * rs * bossTemplate.xpMult),
+    gold:  Math.round(baseType.baseGold * rs * bossTemplate.goldMult),
+    speed, isBoss: true, isElite: false,
+    tier:  bossTemplate.tier,
+    flags, shieldHp,
+  };
 }
