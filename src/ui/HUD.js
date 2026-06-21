@@ -12,6 +12,7 @@ export class HUD {
 
     this._update();
     this._updateSkillBtn();
+    this._updateSouls();
 
     this._unsubs = [
       state.on('player:inventoryChanged', () => this._updateInvCount()),
@@ -36,6 +37,7 @@ export class HUD {
         this._updateSkillBtn();
       }),
       state.on('player:ppChanged', () => { this._updatePrestigeBtn(); this._updateSkillUpgrade(); }),
+      state.on('player:soulsChanged', () => this._updateSouls()),
       state.on('player:prestigeShopChanged', () => this._syncAutoCast()),
       state.on('combat:milestone', (d) => {
         this._showMilestone(d);
@@ -215,6 +217,7 @@ export class HUD {
     this._updateGold();
     this._updateKills();
     this._updatePrestigeBtn();
+    this._updateSouls();
   }
 
   _updateClass() {
@@ -226,7 +229,11 @@ export class HUD {
 
     document.getElementById('hud-class-name').textContent = name;
     const icon = document.getElementById('hud-class-icon');
-    if (icon) { icon.style.background = color; }
+    if (icon) {
+      icon.style.background = `radial-gradient(circle, ${color}55, #0d0510)`;
+      icon.style.borderColor = color;
+      icon.style.boxShadow  = `0 0 8px ${color}88`;
+    }
 
     const stars = document.getElementById('hud-prestige-stars');
     if (stars) stars.textContent = pCount > 0 ? '★'.repeat(Math.min(pCount, 5)) : '';
@@ -248,6 +255,11 @@ export class HUD {
 
   _updateGold() {
     document.getElementById('hud-gold').textContent = this._fmt(this.state.gold);
+  }
+
+  _updateSouls() {
+    const el = document.getElementById('hud-souls');
+    if (el) el.textContent = `💜 ${this._fmt(this.state.souls || 0)}`;
   }
 
   _updateKills() {

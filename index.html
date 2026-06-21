@@ -104,56 +104,79 @@
       border: 1px solid rgba(255,255,255,0.13);
       font-size: 12px; font-weight: 600;
     }
-    #hud-class-icon { width: 14px; height: 14px; border-radius: 50%; }
-    .hud-stat { display: flex; align-items: center; gap: 5px; font-size: 12px; }
-    .hud-stat .lbl { color: #666; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
-    .hud-stat .val { color: #ffd700; font-weight: 700; }
+    #hud-class-icon {
+      width: 14px; height: 14px; border-radius: 50%;
+      background: radial-gradient(circle, #3a0a0a, #0d0510);
+      border: 1px solid var(--border-red);
+      box-shadow: 0 0 8px rgba(139,0,0,0.5);
+    }
+    #hud-class-name {
+      color: var(--text-parchment);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    #hud-prestige-stars { color: #ffd700; font-size: 9px; }
+    .hud-stat { display: flex; align-items: center; gap: 5px; font-size: 12px; border-left: 1px solid #1a0a0a; padding-left: 10px; }
+    .hud-stat .lbl { color: var(--border-red); font-size: 9px; text-transform: uppercase; letter-spacing: 1px; }
+    .hud-stat .val { color: var(--text-parchment); font-size: 15px; font-weight: 700; }
+    .hud-stat .val.gold { color: var(--color-gold); }
+    .hud-stat .val.souls { color: var(--color-souls); }
     #xp-bar-wrap { flex: 1; display: flex; align-items: center; gap: 8px; min-width: 0; }
-    #xp-bar-bg { flex: 1; height: 9px; background: #1a1a2e; border-radius: 5px; overflow: hidden; border: 1px solid #2a2a4a; }
-    #xp-bar { height: 100%; background: linear-gradient(90deg, #6c3fc5, #9b6bff); border-radius: 5px; transition: width 0.3s; width: 0%; }
+    #xp-bar-bg { flex: 1; height: 6px; background: #1a0a0a; border-radius: 1px; overflow: hidden; border: 1px solid #2a1010; }
+    #xp-bar { height: 100%; background: linear-gradient(90deg, #4a0080, #9b59b6); border-radius: 1px; transition: width 0.3s; width: 0%; }
     #xp-label { font-size: 10px; color: #666; white-space: nowrap; }
     #prestige-area { display: flex; align-items: center; gap: 5px; }
     #prestige-btn {
-      padding: 4px 10px; background: linear-gradient(135deg, #b8860b, #ffd700);
-      color: #1a0a00; border: none; border-radius: 4px;
+      padding: 4px 10px;
+      background: #12060a;
+      color: var(--accent-bright);
+      border: 1px solid var(--border-red);
+      border-radius: 4px;
       font-size: 10px; font-weight: 700; cursor: pointer;
+      letter-spacing: 1px;
+      box-shadow: 0 0 8px rgba(139,0,0,0.3);
+      transition: filter 0.15s, box-shadow 0.15s;
     }
-    #prestige-btn:disabled { opacity: 0.45; cursor: default; filter: grayscale(0.5); }
-    #prestige-btn:not(:disabled):hover { filter: brightness(1.15); }
+    #prestige-btn:disabled { opacity: 0.45; cursor: default; filter: grayscale(0.5); box-shadow: none; }
+    #prestige-btn:not(:disabled):hover { filter: brightness(1.25); box-shadow: 0 0 14px rgba(139,0,0,0.6); }
     #prestige-pp-badge {
       padding: 4px 9px; background: rgba(184,134,11,0.18);
-      border: 1px solid #b8860b; border-radius: 4px;
-      font-size: 10px; font-weight: 700; color: #ffd700; cursor: pointer; white-space: nowrap;
+      border: 1px solid var(--border-dark); border-radius: 4px;
+      font-size: 10px; font-weight: 700; color: var(--color-gold); cursor: pointer; white-space: nowrap;
+      letter-spacing: 1px;
     }
     #prestige-pp-badge:hover { background: rgba(184,134,11,0.32); }
     #settings-btn {
-      padding: 5px 10px; background: rgba(255,255,255,0.07);
-      border: 1px solid rgba(255,255,255,0.12); border-radius: 6px;
-      color: #aaa; font-size: 15px; cursor: pointer; line-height: 1;
+      padding: 5px 10px; background: #12060a;
+      border: 1px solid var(--border-dark); border-radius: 6px;
+      color: #9b7; font-size: 15px; cursor: pointer; line-height: 1;
+      letter-spacing: 1px;
       transition: background 0.15s;
     }
-    #settings-btn:hover { background: rgba(255,255,255,0.14); color: #fff; }
+    #settings-btn:hover { background: rgba(139,0,0,0.15); color: var(--text-parchment); }
     #achievements-btn {
-      padding: 5px 10px; background: rgba(255,215,0,0.08);
-      border: 1px solid rgba(255,215,0,0.22); border-radius: 6px;
-      color: #b8960b; font-size: 12px; cursor: pointer; white-space: nowrap;
+      padding: 5px 10px; background: #12060a;
+      border: 1px solid var(--border-dark); border-radius: 6px;
+      color: #9b7; font-size: 12px; cursor: pointer; white-space: nowrap;
+      letter-spacing: 1px;
       transition: background 0.15s;
     }
-    #achievements-btn:hover { background: rgba(255,215,0,0.18); color: #ffd700; }
+    #achievements-btn:hover { background: rgba(139,0,0,0.15); color: var(--text-parchment); }
     #class-tree-btn {
-      padding: 5px 10px; background: rgba(100,200,100,0.08);
-      border: 1px solid rgba(100,200,100,0.25); border-radius: 6px;
-      color: #5a9a5a; font-size: 12px; cursor: pointer; white-space: nowrap;
+      padding: 5px 10px; background: #12060a;
+      border: 1px solid var(--border-dark); border-radius: 6px;
+      color: #9b7; font-size: 12px; cursor: pointer; white-space: nowrap;
+      letter-spacing: 1px;
       transition: background 0.15s, box-shadow 0.15s;
     }
-    #class-tree-btn:hover { background: rgba(100,200,100,0.18); color: #7dda7d; }
+    #class-tree-btn:hover { background: rgba(139,0,0,0.15); color: var(--text-parchment); }
     @keyframes pulse-available {
-      0%,100% { box-shadow: 0 0 0 0 rgba(100,220,100,0); border-color: rgba(100,200,100,0.25); }
-      50%      { box-shadow: 0 0 8px 3px rgba(100,220,100,0.55); border-color: rgba(100,220,100,0.8); }
+      0%,100% { box-shadow: 0 0 0 0 rgba(139,0,0,0); border-color: var(--border-dark); }
+      50%      { box-shadow: 0 0 10px 3px rgba(139,0,0,0.6); border-color: var(--border-red); }
     }
     #class-tree-btn.available-pulse {
       animation: pulse-available 1.4s ease-in-out infinite;
-      color: #7dda7d;
+      color: var(--text-parchment);
     }
     @keyframes node-avail-pulse {
       0%,100% { box-shadow: 0 0 5px var(--pulse-col); opacity: 0.75; }
@@ -179,30 +202,33 @@
     #skill-btn {
       display: flex; align-items: center; gap: 7px;
       padding: 4px 12px 4px 9px;
-      background: rgba(100, 80, 200, 0.12);
-      border: 1px solid rgba(120, 100, 220, 0.28);
-      border-radius: 6px; cursor: pointer; color: #ccc;
+      background: linear-gradient(135deg, #3a0a0a, #1a0520);
+      border: 1px solid var(--border-red);
+      border-radius: 6px; cursor: pointer; color: var(--text-parchment);
       font-family: 'Segoe UI', sans-serif;
-      transition: background 0.15s, border-color 0.15s;
+      transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
       position: relative; overflow: hidden; min-width: 170px;
+      letter-spacing: 1px;
+      box-shadow: 0 0 10px rgba(139,0,0,0.2);
     }
     #skill-btn:not(:disabled):hover {
-      background: rgba(120, 100, 220, 0.22);
-      border-color: rgba(140, 120, 255, 0.5);
+      background: linear-gradient(135deg, #5a1010, #2a0830);
+      border-color: var(--accent-bright);
+      box-shadow: 0 0 16px rgba(139,0,0,0.45);
     }
     #skill-btn:disabled { opacity: 0.55; cursor: default; }
     #skill-btn-icon  { font-size: 18px; line-height: 1; }
     #skill-btn-text  { display: flex; flex-direction: column; gap: 1px; }
-    #skill-btn-name  { font-size: 11px; font-weight: 700; color: #c8c0ff; line-height: 1.1; }
+    #skill-btn-name  { font-size: 11px; font-weight: 700; color: var(--text-parchment); line-height: 1.1; }
     #skill-btn-cd    { font-size: 9px; color: #888; }
     #skill-btn-ready { font-size: 9px; color: #88ff88; font-weight: 700; }
     /* Полоска кулдауна снизу кнопки */
     #skill-cd-bar {
       position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
-      background: rgba(255,255,255,0.06);
+      background: #1a0a1a; border-radius: 1px;
     }
     #skill-cd-fill {
-      height: 100%; background: #7755ff;
+      height: 100%; background: linear-gradient(90deg, #8b0000, #e74c3c);
       transition: width 0.1s linear;
     }
     #skill-zone-desc {
@@ -212,11 +238,11 @@
     /* Усиление скилла + авто-каст */
     #skill-upgrade-btn {
       padding: 4px 9px; border-radius: 6px; cursor: pointer; white-space: nowrap;
-      background: rgba(184,134,11,0.14); border: 1px solid rgba(184,134,11,0.35);
-      color: #e8c060; font-size: 10px; font-weight: 700; font-family: 'Segoe UI', sans-serif;
+      background: #12060a; border: 1px solid var(--border-dark);
+      color: var(--text-parchment); font-size: 10px; font-weight: 700; font-family: 'Segoe UI', sans-serif;
       transition: background 0.15s;
     }
-    #skill-upgrade-btn:not(:disabled):hover { background: rgba(184,134,11,0.28); }
+    #skill-upgrade-btn:not(:disabled):hover { background: rgba(139,0,0,0.2); }
     #skill-upgrade-btn:disabled { opacity: 0.5; cursor: default; }
     #skill-upgrade-btn.maxed { color: #7dda7d; border-color: rgba(125,218,125,0.4); background: rgba(40,120,40,0.14); }
     #skill-autocast-wrap {
@@ -384,20 +410,30 @@
       height: 96px; background: var(--bg-deep); border-top: 1px solid var(--border-dark);
       display: flex; flex-direction: column; flex-shrink: 0;
     }
-    #log-header { padding: 3px 12px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #444; border-bottom: 1px solid #1a1a2e; flex-shrink: 0; }
+    #log-header {
+      padding: 3px 12px; font-size: 8px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 3px; color: #3a1a1a; border-bottom: 1px solid #1a0a0a; flex-shrink: 0;
+    }
     #log-entries { flex: 1; overflow-y: auto; padding: 3px 12px; display: flex; flex-direction: column-reverse; gap: 1px; }
     #log-entries::-webkit-scrollbar { width: 3px; }
-    #log-entries::-webkit-scrollbar-thumb { background: #2a2a4a; }
-    .log-entry { font-size: 10px; line-height: 1.35; color: #666; animation: fadeIn 0.2s ease; }
-    .log-entry.kill { color: #e8a84a; }
-    .log-entry.crit { color: #ff6b6b; }
-    .log-entry.level { color: #9b6bff; font-weight: 600; }
-    .log-entry.class-change { color: #ffd700; font-weight: 600; }
-    .log-entry.wave { color: #6bb8ff; }
-    .log-entry.death { color: #cc4444; }
-    .log-entry.prestige { color: #ff9f3f; font-weight: 700; }
-    .log-entry.system { color: #cc88ff; font-weight: 600; }
-    .log-entry.hit { color: #ff9966; }
+    #log-entries::-webkit-scrollbar-thumb { background: var(--border-dark); }
+    /* Default (old) entries */
+    .log-entry { font-size: 10px; line-height: 1.35; color: #555; animation: fadeIn 0.2s ease; }
+    /* Most recent entry gets brighter red */
+    .log-entry:first-child { color: #c0392b; }
+    /* Type-based colors */
+    .log-entry.kill    { color: #6a0080; }
+    .log-entry.crit    { color: #8b2020; }
+    .log-entry.level   { color: #7a6010; font-weight: 600; }
+    .log-entry.class-change { color: #7a6010; font-weight: 600; }
+    .log-entry.wave    { color: #8b2020; }
+    .log-entry.death   { color: #8b2020; font-weight: 600; }
+    .log-entry.prestige { color: #7a6010; font-weight: 700; }
+    .log-entry.system  { color: #6a0080; font-weight: 600; }
+    .log-entry.hit     { color: #8b2020; }
+    .log-entry:first-child.kill    { color: #c0392b; }
+    .log-entry:first-child.level   { color: #c0392b; }
+    .log-entry:first-child.prestige { color: #c0392b; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: translateY(0); } }
 
     /* ═══════════════════════════ CLASS MODAL ═══════════════════════════ */
@@ -604,10 +640,11 @@
     /* ═══════════════════════════ PRESTIGE SHOP ═══════════════════════════ */
     /* ── Кнопка инвентаря ── */
     #inventory-btn {
-      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);
-      color: #ccc; font-size: 11px; padding: 3px 8px; border-radius: 4px; cursor: pointer;
+      background: #12060a; border: 1px solid var(--border-dark);
+      color: #9b7; font-size: 11px; padding: 3px 8px; border-radius: 4px; cursor: pointer;
+      letter-spacing: 1px;
     }
-    #inventory-btn:hover { background: rgba(255,255,255,0.14); color: #fff; }
+    #inventory-btn:hover { background: rgba(139,0,0,0.15); color: var(--text-parchment); }
     #hud-inv-count { font-size: 9px; color: #ffd700; }
 
     /* ── Оверлей инвентаря ── */
@@ -1280,7 +1317,8 @@
         <div id="xp-bar-bg"><div id="xp-bar"></div></div>
         <span id="xp-label">0 / 100 XP</span>
       </div>
-      <div class="hud-stat"><span class="lbl">Золото</span><span class="val" id="hud-gold">0</span></div>
+      <div class="hud-stat"><span class="lbl">Золото</span><span class="val gold" id="hud-gold">0</span></div>
+      <div class="hud-stat" id="hud-souls-stat"><span class="lbl">Души</span><span class="val souls" id="hud-souls">💜 0</span></div>
       <div class="hud-stat"><span class="lbl">Волна</span><span class="val" id="hud-wave">1</span></div>
       <div class="hud-stat"><span class="lbl">Убито</span><span class="val" id="hud-kills">0</span></div>
       <div id="prestige-area">
@@ -1362,7 +1400,7 @@
 
     <!-- Combat Log -->
     <div id="combat-log">
-      <div id="log-header">📜 Журнал Боя</div>
+      <div id="log-header">ЖУРНАЛ БИТВЫ</div>
       <div id="log-entries"></div>
     </div>
 
