@@ -36,6 +36,11 @@ export function installSave(proto) {
       poisonKillCount: this.poisonKillCount,
       skillLevels:    { ...this.skillLevels },
       automation:     { ...this.automation },
+      // Зоны
+      currentZoneId:  this.currentZoneId,
+      zoneWave:       this.zoneWave,
+      globalWave:     this.globalWave,
+      zonesProgress:  JSON.parse(JSON.stringify(this.zonesProgress)),
       timestamp:      Date.now(),
     };
     try {
@@ -91,6 +96,23 @@ export function installSave(proto) {
       this.poisonKillCount = data.poisonKillCount ?? 0;
       this.skillLevels = { novice: 0, warrior: 0, rogue: 0, archer: 0, mage: 0, ...(data.skillLevels ?? {}) };
       this.automation  = { autoCast: false, autoBuy: false, autoSell: 'off', ...(data.automation ?? {}) };
+
+      // Зоны — миграция: старые сейвы без zonesProgress получают дефолт
+      this.currentZoneId = data.currentZoneId ?? 'forest';
+      this.zoneWave      = data.zoneWave      ?? 1;
+      this.globalWave    = data.globalWave     ?? (data.currentWave ?? 1);
+      const defaultZones = {
+        forest:    { wavesCleared: 0, bossDefeated: false, unlocked: true  },
+        catacombs: { wavesCleared: 0, bossDefeated: false, unlocked: false },
+        volcano:   { wavesCleared: 0, bossDefeated: false, unlocked: false },
+        skyfort:   { wavesCleared: 0, bossDefeated: false, unlocked: false },
+        abyss:     { wavesCleared: 0, bossDefeated: false, unlocked: false },
+      };
+      // Мерж: каждая зона отдельно, чтобы новые поля не терялись при расширении
+      this.zonesProgress = {};
+      for (const [id, def] of Object.entries(defaultZones)) {
+        this.zonesProgress[id] = { ...def, ...(data.zonesProgress?.[id] ?? {}) };
+      }
 
       // Офлайн-прогресс (до 8 часов) — волновая симуляция + экран возвращения
       const elapsed = Math.min((Date.now() - (data.timestamp ?? Date.now())) / 1000, OFFLINE_CAP_SEC);
