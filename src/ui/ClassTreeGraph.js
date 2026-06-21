@@ -528,8 +528,8 @@ export class ClassTreeGraph {
       div.style.setProperty('--pulse-col', pc);
       div.classList.add('node-avail-pulse');
     } else {
-      s.background = cls.prestige ? 'rgba(30,10,10,0.5)' : 'rgba(30,10,10,0.5)';
-      s.border     = cls.prestige ? '1px dashed #3a1a1a44' : `1px dashed #3a1a1a55`;
+      s.background = cls.prestige ? 'rgba(50,20,0,0.5)' : 'rgba(30,10,10,0.5)';
+      s.border     = cls.prestige ? '1px dashed #5a2a0a55' : `1px dashed #3a1a1a55`;
       s.boxShadow  = '';
       s.color      = cls.prestige ? '#3a1a1a88' : '#3a1a1a88';
       div.textContent = '';

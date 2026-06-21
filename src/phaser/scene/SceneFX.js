@@ -150,7 +150,7 @@ export function installFX(proto) {
 
   proto._onSkillUsed = function({ skill, healAmt, target }) {
     if (healAmt) {
-      this._spawnDmgText(PLAYER_X, PLAYER_Y - 70, `+${healAmt} ✨`, '#9b59b6', '15px');
+      this._spawnDmgText(PLAYER_X, PLAYER_Y - 70, `+${healAmt} ✨`, '#27ae60', '15px');
     }
     if (target) {
       const v = this.mobVisuals.get(target.id);
