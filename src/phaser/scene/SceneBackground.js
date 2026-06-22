@@ -119,17 +119,6 @@ export function installBackground(proto) {
     playerZone.lineStyle(1, 0x3a1a2a, 0.25);
     playerZone.strokeRect(0, 80, 200, GROUND_Y - 80);
 
-    const divider = this.add.graphics().setDepth(2);
-    divider.lineStyle(1, 0x3a1a1a, 0.5);
-    divider.lineBetween(210, 60, 210, GROUND_Y);
-
-    this.add.text(105, 70, '— ГЕРОЙ —', {
-      fontSize: '9px', fill: '#552233', fontFamily: 'Segoe UI', letterSpacing: 2,
-    }).setOrigin(0.5).setDepth(2);
-
-    this.add.text(420, 70, '— ВРАГИ —', {
-      fontSize: '9px', fill: '#552211', fontFamily: 'Segoe UI', letterSpacing: 2,
-    }).setOrigin(0.5).setDepth(2);
 
     this._createTorch(195, GROUND_Y - 5);
     this._createTorch(215, GROUND_Y - 5);

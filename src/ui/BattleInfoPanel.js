@@ -63,7 +63,7 @@ export class BattleInfoPanel {
     this._kills++;
     if (this._killCountEl) {
       this._killCountEl.textContent = this._kills;
-      this._killCountEl.dataset.zero = 'false';
+      this._killCountEl.style.visibility = 'visible';
     }
   }
 
@@ -71,7 +71,7 @@ export class BattleInfoPanel {
     this._kills = 0;
     if (this._killCountEl) {
       this._killCountEl.textContent = '0';
-      this._killCountEl.dataset.zero = 'true';
+      this._killCountEl.style.visibility = 'hidden';
     }
     this._updateWave();
   }
