@@ -16,6 +16,7 @@ export class ClassTreeGraph {
     this.state      = state;
     this._nodeEls   = new Map(); // id → div
     this._deepShown = false;
+    this._filter    = 'all'; // 'all' | 'unlocked' | 'available'
 
     this._buildOverlay();
     this._buildTable();
@@ -86,6 +87,24 @@ export class ClassTreeGraph {
     header.appendChild(legend);
     header.appendChild(closeBtn);
     el.appendChild(header);
+
+    const filterBar = document.createElement('div');
+    filterBar.className = 'cls-filter-bar';
+    filterBar.innerHTML = `
+      <button class="cls-filter-btn cls-filter-active" data-filter="all">Все</button>
+      <button class="cls-filter-btn" data-filter="unlocked">Открытые</button>
+      <button class="cls-filter-btn" data-filter="available">Доступные</button>
+    `;
+    filterBar.querySelectorAll('.cls-filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        this._filter = btn.dataset.filter;
+        filterBar.querySelectorAll('.cls-filter-btn').forEach(b => b.classList.remove('cls-filter-active'));
+        btn.classList.add('cls-filter-active');
+        this._applyFilter();
+      });
+    });
+    el.appendChild(filterBar);
+    this._filterBar = filterBar;
 
     // Scrollable table area
     const body = document.createElement('div');
@@ -439,6 +458,7 @@ export class ClassTreeGraph {
       if (!cls) continue;
       this._styleNode(node, id, cls, cur, anc);
     }
+    this._applyFilter();
   }
 
   _styleNode(node, id, cls, cur, anc) {
@@ -496,7 +516,54 @@ export class ClassTreeGraph {
   // ── Open / close ──────────────────────────────────────────────────────────
   open() {
     this._overlay.style.display = 'flex';
+    this._filter = 'all';
+    this._filterBar?.querySelectorAll('.cls-filter-btn').forEach(b =>
+      b.classList.toggle('cls-filter-active', b.dataset.filter === 'all')
+    );
     this._refreshNodes();
+    this._applyFilter();
+  }
+
+  _applyFilter() {
+    const filter = this._filter;
+    const cur = this.state.currentClass;
+
+    for (const [id, node] of this._nodeEls) {
+      let visible = true;
+      if (filter === 'unlocked') {
+        visible = this._isAncestorOrCurrent(id, cur);
+      } else if (filter === 'available') {
+        visible = this._isAvailableNext(id, cur);
+      }
+      node.style.display = visible ? '' : 'none';
+    }
+
+    // Hide depth columns where all nodes are hidden
+    this._tableWrap?.querySelectorAll('.cls-depth-col').forEach(col => {
+      const nodes = col.querySelectorAll('.cls-node');
+      const anyVisible = Array.from(nodes).some(n => n.style.display !== 'none');
+      col.style.display = (nodes.length === 0 || anyVisible) ? '' : 'none';
+    });
+  }
+
+  _isAncestorOrCurrent(clsId, cur) {
+    if (clsId === cur) return true;
+    let id = cur;
+    while (id) {
+      const cls = CLASS_MAP.get(id);
+      if (!cls) break;
+      if (cls.parent === clsId || id === clsId) return true;
+      id = cls.parent;
+    }
+    return false;
+  }
+
+  _isAvailableNext(clsId, cur) {
+    const cls = CLASS_MAP.get(clsId);
+    if (!cls) return false;
+    if (cls.parent === cur) return true;
+    if (cls.prestige && cls.requires?.includes(cur) && cls.parent !== cur) return true;
+    return false;
   }
 
   close() {
