@@ -397,8 +397,19 @@ export class GameState extends EventBus {
     this.inventory = [];
     this.equipment = { weapon: null, armor: null, accessory: null };
 
-    // Стартовая волна
-    this.currentWave = this.getPrestigeRank('startWave') ? 5 : 1;
+    // Стартовая волна — сбрасываем все волновые счётчики включая зональные
+    const startWave = this.getPrestigeRank('startWave') ? 5 : 1;
+    this.currentWave = startWave;
+    this.zoneWave    = startWave;
+    this.globalWave  = startWave;
+    this.currentZoneId = 'forest';
+    this.zonesProgress = {
+      forest:    { wavesCleared: 0, bossDefeated: false, unlocked: true  },
+      catacombs: { wavesCleared: 0, bossDefeated: false, unlocked: false },
+      volcano:   { wavesCleared: 0, bossDefeated: false, unlocked: false },
+      skyfort:   { wavesCleared: 0, bossDefeated: false, unlocked: false },
+      abyss:     { wavesCleared: 0, bossDefeated: false, unlocked: false },
+    };
 
     // Стартовое золото из магазина престижа
     let startGold = 0;
