@@ -210,6 +210,32 @@ export function installFX(proto) {
     this.tweens.add({ targets: line, alpha: 0, duration: 200, onComplete: () => line.destroy() });
   };
 
+  proto._showLevelUpFX = function() {
+    const x = PLAYER_X;
+    const y = PLAYER_Y - 20;
+    const ring = this.add.graphics().setDepth(14);
+    ring.lineStyle(3, 0xf39c12, 1);
+    ring.strokeCircle(0, 0, 10);
+    ring.setPosition(x, y);
+    this.tweens.add({
+      targets: ring,
+      scaleX: 7, scaleY: 7, alpha: 0,
+      duration: 600, ease: 'Quad.Out',
+      onComplete: () => ring.destroy(),
+    });
+    // Второе кольцо чуть задержанное
+    const ring2 = this.add.graphics().setDepth(14);
+    ring2.lineStyle(2, 0xffd700, 0.7);
+    ring2.strokeCircle(0, 0, 10);
+    ring2.setPosition(x, y);
+    this.tweens.add({
+      targets: ring2,
+      scaleX: 5, scaleY: 5, alpha: 0,
+      delay: 100, duration: 500, ease: 'Quad.Out',
+      onComplete: () => ring2.destroy(),
+    });
+  };
+
   proto._spawnDeathParticles = function(x, y, color) {
     const darkColors = [0x3a0a3a, 0x8b0000];
     for (let i = 0; i < 10; i++) {

@@ -22,6 +22,7 @@ import { OfflineModal }       from './ui/OfflineModal.js';
 import { ZoneMap }            from './ui/ZoneMap.js';
 import { RunSummary }         from './ui/RunSummary.js';
 import { ShadowMirror }       from './ui/ShadowMirror.js';
+import { Tutorial }           from './ui/Tutorial.js';
 import { CLASS_MAP }     from './data/classes.js';
 
 window._classMap = CLASS_MAP;
@@ -122,6 +123,8 @@ combat.register({
 });
 
 // ── 5. Главное меню → старт боя ───────────────────────────────────────────────
+const tutorial = new Tutorial(state);
+
 const menu = new MainMenu({
   onStart:   () => {
     setTimeout(() => combat.start(), 200);
@@ -131,6 +134,8 @@ const menu = new MainMenu({
       state.offlineSummary = null;
       setTimeout(() => offlineModal.show(summary), 450);
     }
+    // Онбординг первого запуска (после небольшой задержки, чтобы всё успело отрендериться)
+    setTimeout(() => tutorial.start(), 600);
   },
   onNewGame: () => state.hardReset(),
 });

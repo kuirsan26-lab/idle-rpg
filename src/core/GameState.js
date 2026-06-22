@@ -135,6 +135,9 @@ export class GameState extends EventBus {
     this.souls       = 0;          // накопительная валюта между ранами
     this.shadowPerks = {};         // { perkId: rank }
 
+    // ── Онбординг (постоянное — не сбрасывается при hardReset) ──────────
+    this.tutorialDone = false;
+
     // ── Автоматизация (не сбрасывается при престиже) ──────────────────
     this.automation = {
       autoCast: false,           // авто-каст скилла по готовности

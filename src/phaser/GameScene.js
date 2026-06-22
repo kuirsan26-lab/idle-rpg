@@ -58,6 +58,7 @@ export class GameScene extends Phaser.Scene {
     this.gameState.on('player:statsChanged', () => { this._cachedMaxHp = this.gameState.getStats().maxHp; });
     this.gameState.on('player:hpChanged',    () => this._updatePlayerHpBar());
     this.gameState.on('combat:waveStarted',  (d) => { this._showWaveBanner(d); this._updateBackground(d.wave); });
+    this.gameState.on('player:levelUp',      () => this._showLevelUpFX());
   }
 
   update() {
