@@ -46,6 +46,8 @@ export function installFX(proto) {
 
     this._updateMobHpBar(v);
     this.tweens.add({ targets: v.body, alpha: 0.25, duration: 55, yoyo: true });
+    // Hit flash на мобе
+    this._flashHit(v.body, 0xff6666);
 
     const ox = v.container.x;
     this.tweens.add({
@@ -60,12 +62,12 @@ export function installFX(proto) {
       this._spawnDmgText(v.container.x, v.container.y - 55, `🛡 ${shieldAbsorbed}`, '#6699ff', '13px');
     } else if (shieldAbsorbed > 0) {
       this._spawnDmgText(v.container.x, v.container.y - 55,
-        `${damage} 🛡`, isCrit ? '#9b59b6' : '#e74c3c', isCrit ? '17px' : '13px');
+        `${damage} 🛡`, isCrit ? '#f1c40f' : '#ffffff', isCrit ? '28px' : '20px');
     } else {
       this._spawnDmgText(v.container.x, v.container.y - 55,
-        isCrit ? `💥 ${damage}!` : `${damage}`,
-        isCrit ? '#9b59b6' : '#e74c3c',
-        isCrit ? '17px' : '14px');
+        isCrit ? `⚡ ${damage}!` : `${damage}`,
+        isCrit ? '#f1c40f' : '#ffffff',
+        isCrit ? '28px' : '20px');
     }
     this._drawAttackFX(v.container.x, v.container.y, isCrit || isDeathblow);
   };
@@ -78,11 +80,7 @@ export function installFX(proto) {
       `+${this._fmt(goldGained)}g  +${this._fmt(xpGained)}xp`, '#f39c12', '13px');
     this._spawnDeathParticles(v.container.x, v.container.y, mob.data.color);
 
-    this.tweens.add({
-      targets: v.container, alpha: 0, scaleX: 0.1, scaleY: 0.1, y: v.container.y + 35,
-      duration: 380, ease: 'Power3',
-      onComplete: () => { v.container.destroy(); this.mobVisuals.delete(mob.id); },
-    });
+    this._deathTween(v.container, () => this.mobVisuals.delete(mob.id));
   };
 
   proto._onPlayerHit = function({ damage, dodged }) {
@@ -96,7 +94,10 @@ export function installFX(proto) {
       .setOrigin(0).setDepth(15);
     this.tweens.add({ targets: flash, alpha: 0, duration: 220, onComplete: () => flash.destroy() });
 
-    this._spawnDmgText(PLAYER_X, PLAYER_Y - 60, `-${damage}`, '#e74c3c', '13px');
+    // Hit flash на игроке
+    this._flashHit(this.playerBody, 0xff3333);
+
+    this._spawnDmgText(PLAYER_X, PLAYER_Y - 60, `-${damage}`, '#e74c3c', '20px');
     this._updatePlayerHpBar();
   };
 
@@ -165,9 +166,9 @@ export function installFX(proto) {
     const v = this.mobVisuals.get(mob.id);
     if (!v) return;
     this._updateMobHpBar(v);
-    const icon  = type === 'poison' ? '☠️' : '🔥';
-    const color = type === 'poison' ? '#88ff44' : '#ff8822';
-    this._spawnDmgText(v.container.x, v.container.y - 40, `${icon} ${damage}`, color, '11px');
+    const icon  = type === 'poison' ? '☠' : '🔥';
+    const color = type === 'poison' ? '#2ecc71' : '#e67e22';
+    this._spawnDmgText(v.container.x, v.container.y - 40, `${icon} ${damage}`, color, '18px');
   };
 
   // ── Визуальные эффекты ───────────────────────────────────────────────────────
@@ -176,11 +177,11 @@ export function installFX(proto) {
     const t = this.add.text(x, y, text, {
       fontSize, fill: color,
       fontFamily: 'Segoe UI', fontStyle: 'bold',
-      stroke: '#8b0000', strokeThickness: 2,
+      stroke: '#000000', strokeThickness: 3,
     }).setOrigin(0.5).setDepth(30);
     this.tweens.add({
-      targets: t, y: y - 50, alpha: 0,
-      duration: 950, ease: 'Power2',
+      targets: t, y: y - 55, alpha: 0,
+      duration: 800, ease: 'Power2',
       onComplete: () => t.destroy(),
     });
   };
@@ -225,5 +226,27 @@ export function installFX(proto) {
         onComplete: () => p.destroy(),
       });
     }
+  };
+
+  // ── Hit-реакция: красный flash и death tween ─────────────────────────────────
+
+  proto._flashHit = function(target, tintColor) {
+    if (!target || typeof target.setTint !== 'function') return;
+    target.setTint(tintColor);
+    this.time.delayedCall(80, () => {
+      if (target?.active) target.clearTint();
+    });
+  };
+
+  proto._deathTween = function(container, onDeleteFn) {
+    this.tweens.add({
+      targets: container,
+      scaleX: 0, scaleY: 0, alpha: 0,
+      duration: 250, ease: 'Back.In',
+      onComplete: () => {
+        container.destroy();
+        if (onDeleteFn) onDeleteFn();
+      },
+    });
   };
 }
