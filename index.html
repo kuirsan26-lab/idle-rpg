@@ -231,11 +231,11 @@
     #skill-btn-ready { font-size: 9px; color: #88ff88; font-weight: 700; }
     /* Полоска кулдауна снизу кнопки */
     #skill-cd-bar {
-      position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+      position: absolute; bottom: 0; left: 0; right: 0; height: 6px;
       background: #1a0a1a; border-radius: 1px;
     }
     #skill-cd-fill {
-      height: 100%; background: linear-gradient(90deg, #8b0000, #e74c3c);
+      height: 100%; background: linear-gradient(90deg, #9b59b6, #8b0000);
       transition: width 0.1s linear;
     }
     #skill-zone-desc {
@@ -452,6 +452,47 @@
     .log-entry.hit     { color: #8b2020; }
 
     @keyframes fadeIn { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes logSlideIn { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: translateX(0); } }
+    .log-entry.log-attack { color: #c0392b; }
+    .log-entry.log-hit    { color: #8b2020; }
+    .log-entry.log-kill   { color: #9b59b6; }
+    .log-entry.log-level  { color: #f39c12; font-weight: 600; }
+    .log-entry.log-skill  { color: #3498db; }
+
+    /* HUD divider between action and utility buttons */
+    #hud-divider { width: 1px; height: 28px; background: #3a1a1a; margin: 0 6px; align-self: center; flex-shrink: 0; }
+
+    /* Zone + wave info highlight in HUD */
+    #hud-zone-info { font-size: 14px; letter-spacing: 2px; color: var(--text-parchment); font-family: var(--font-heading, 'Cinzel', serif); }
+
+    /* Class tree horizontal table layout */
+    .cls-tree-table { display: flex; gap: 0; overflow-x: auto; padding: 10px; min-height: 200px; }
+    .cls-depth-col { display: flex; flex-direction: column; gap: 6px; min-width: 140px; padding: 0 8px; border-right: 1px solid #1a0a1a; flex-shrink: 0; }
+    .cls-depth-col:last-child { border-right: none; }
+    .cls-depth-header { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; text-align: center; flex-shrink: 0; }
+    .cls-node {
+      padding: 6px 8px; border-radius: 4px; border: 1px solid #2a1a2a;
+      font-size: 11px; cursor: pointer; transition: all 0.15s;
+      background: #0d0510; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .cls-node:hover { border-color: #8b0000; color: var(--text-parchment); }
+    .cls-node.cls-current { border-color: #f39c12; color: #f39c12; box-shadow: 0 0 8px rgba(243,156,18,0.3); background: #1a0f00; }
+    .cls-node.cls-ancestor { border-color: rgba(139,0,0,0.5); color: #aaa; background: #0d0510; }
+    .cls-node.cls-available { border-color: #8b0000; color: var(--text-parchment); background: #0d0510; }
+    .cls-node.cls-available.node-avail-pulse { animation: node-avail-pulse 1.4s ease-in-out infinite; --pulse-col: #8b0000; }
+    .cls-node.cls-locked { opacity: 0.35; cursor: default; }
+    .cls-node.cls-prestige { border-color: #ffd700 !important; color: #ffd700 !important; }
+    .cls-node.cls-branch-warrior { border-left: 3px solid #e74c3c; }
+    .cls-node.cls-branch-rogue   { border-left: 3px solid #2ecc71; }
+    .cls-node.cls-branch-archer  { border-left: 3px solid #3498db; }
+    .cls-node.cls-branch-mage    { border-left: 3px solid #9b59b6; }
+    .cls-show-deep-btn {
+      margin-top: 8px; padding: 6px 10px; border-radius: 4px;
+      background: #12060a; border: 1px solid #3a1a1a;
+      color: #666; font-size: 11px; cursor: pointer; text-align: center;
+      transition: all 0.15s; white-space: nowrap;
+    }
+    .cls-show-deep-btn:hover { border-color: #8b0000; color: var(--text-parchment); }
 
     /* ═══════════════════════════ CLASS MODAL ═══════════════════════════ */
     #class-modal-overlay {
@@ -1403,6 +1444,7 @@
         <button id="prestige-btn" onclick="window.game && window.game.showPrestigeModal()">⚡ Завершить ран</button>
         <div id="prestige-pp-badge" onclick="window.game && window.game.openShadowMirror()" title="Зеркало Теней">💜 <span id="hud-pp">0</span> Душ</div>
       </div>
+      <div id="hud-divider"></div>
       <button id="shadow-mirror-btn" onclick="window.game && window.game.openShadowMirror()" title="Зеркало Теней">💜 Зеркало</button>
       <button id="achievements-btn" onclick="window.game && window.game.openAchievements()" title="Достижения">🏆 Ачивки</button>
       <button id="zone-map-btn" onclick="window.game && window.game.openZoneMap()" title="Карта мира">🗺 Зоны</button>
