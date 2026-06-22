@@ -73,7 +73,7 @@ export function installEntities(proto) {
     const key    = `hero_${branch}`;
     if (this._hasSprite(key)) {
       const spr = this.add.image(0, 0, 'sprites', key);
-      spr.setScale(70 / spr.height).setOrigin(0.5, 1).setY(24);
+      spr.setScale(110 / spr.height).setOrigin(0.5, 1).setY(24);
       return spr;
     }
     const gfx = this.add.graphics();
@@ -206,7 +206,7 @@ export function installEntities(proto) {
     const key = MOB_SPRITES[data.id];
     if (key && this._hasSprite(key)) {
       const sprite = this.add.image(0, 0, 'sprites', key);
-      sprite.setScale(70 / sprite.height).setOrigin(0.5, 1).setY(24);
+      sprite.setScale(105 / sprite.height).setOrigin(0.5, 1).setY(24);
       return sprite;
     }
     const gfx = this.add.graphics();

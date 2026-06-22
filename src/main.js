@@ -145,12 +145,13 @@ function handleResize() {
   if (!app) return;
   if (mqMobile.matches) {
     app.style.transform = 'none';
+    app.style.transformOrigin = '';
     return;
   }
   const scale = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
-  const x = (window.innerWidth  - 1280 * scale) / 2;
-  const y = (window.innerHeight - 720  * scale) / 2;
-  app.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+  const x = (window.innerWidth - 1280 * scale) / 2;
+  app.style.transformOrigin = 'top left';
+  app.style.transform = `translate(${x}px, 0px) scale(${scale})`;
 }
 window.addEventListener('resize', handleResize);
 mqMobile.addEventListener('change', handleResize);
