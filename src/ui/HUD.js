@@ -310,8 +310,11 @@ export class HUD {
     const container = document.getElementById('log-entries');
     if (!container) return;
 
+    // Map event type → colored CSS class
+    const typeClass = this._logClass(type, text);
+
     const el = document.createElement('div');
-    el.className = `log-entry ${type}`;
+    el.className = `log-entry ${type} ${typeClass}`.trim();
     el.textContent = `[${this._time()}] ${text}`;
     container.prepend(el);
 
@@ -319,6 +322,25 @@ export class HUD {
     while (container.children.length > 80) {
       container.removeChild(container.lastChild);
     }
+  }
+
+  /** Determine a typed CSS class for the log entry */
+  _logClass(type, text) {
+    if (type === 'kill')           return 'log-kill';
+    if (type === 'level')          return 'log-level';
+    if (type === 'death')          return 'log-hit';
+    if (type === 'prestige' || type === 'player:prestige') return 'log-level';
+    if (type === 'wave')           return 'log-attack';
+    if (type === 'crit' || type === 'hit') return 'log-hit';
+    if (type === 'skill')          return 'log-skill';
+    // Fallback: detect from text content
+    const t = text.toLowerCase();
+    if (t.includes('скилл') || t.includes('⚡')) return 'log-skill';
+    if (t.includes('уровень') || t.includes('перерождение') || t.includes('рекорд') || t.includes('открыт')) return 'log-level';
+    if (t.includes('убит') || t.includes('пройдена') || t.includes('boss')) return 'log-kill';
+    if (t.includes('волна') || t.includes('⚔')) return 'log-attack';
+    if (t.includes('погиб') || t.includes('смерт')) return 'log-hit';
+    return '';
   }
 
   logCombat(text, type) { this._log(text, type); }

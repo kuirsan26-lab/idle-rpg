@@ -1,70 +1,24 @@
 /**
- * Radial class tree graph — depth 0–5, pan+zoom overlay
+ * Class tree — horizontal DOM table (depth 1-5 eager, depth 6-10 lazy)
+ * Replaces radial canvas graph for better readability.
  */
 import {
   CLASS_MAP, CHILDREN_MAP, BRANCH_COLORS,
   DEPTH_LEVEL_REQ, DEPTH_GOLD_COST, getAncestors, getCumulativeBonuses,
 } from '../data/classes.js';
 
-// ── Layout constants ──────────────────────────────────────────────────────────
-const CX = 900, CY = 900, CANVAS_SZ = 1800;
-const RADII     = [0, 120, 230, 360, 510, 680];
-const NODE_R    = 18;
-const MAX_DEPTH = 5;
-
-// ── Visible children (depth ≤ MAX_DEPTH) ─────────────────────────────────────
-function vcr(id) {
-  return (CHILDREN_MAP.get(id) || []).filter(c => (CLASS_MAP.get(c)?.depth ?? 99) <= MAX_DEPTH);
-}
-
-// ── Leaf count: number of MAX_DEPTH descendants in subtree (memoized) ────────
-const _lc = new Map();
-function leafCount(id) {
-  if (_lc.has(id)) return _lc.get(id);
-  const cls = CLASS_MAP.get(id);
-  if (!cls || cls.depth > MAX_DEPTH) { _lc.set(id, 0); return 0; }
-  const ch = vcr(id);
-  const n  = (!ch.length || cls.depth === MAX_DEPTH)
-    ? 1 : ch.reduce((s, c) => s + leafCount(c), 0);
-  _lc.set(id, n);
-  return n;
-}
-
-// ── Radial positions (computed once at module load) ───────────────────────────
-const POS = new Map(); // id → {x, y}
-function place(id, a0, a1) {
-  const cls = CLASS_MAP.get(id);
-  if (!cls || cls.depth > MAX_DEPTH) return;
-  const mid = (a0 + a1) / 2;
-  const r   = RADII[cls.depth] ?? RADII[MAX_DEPTH];
-  POS.set(id, { x: CX + r * Math.cos(mid), y: CY + r * Math.sin(mid) });
-  const ch  = vcr(id);
-  if (!ch.length) return;
-  const tot = ch.reduce((s, c) => s + (leafCount(c) || 1), 0);
-  let a = a0;
-  for (const c of ch) {
-    const f = (leafCount(c) || 1) / tot;
-    place(c, a, a + f * (a1 - a0));
-    a += f * (a1 - a0);
-  }
-}
-place('novice', -Math.PI / 2, Math.PI * 1.5); // top, clockwise
+// ── Depth column labels ────────────────────────────────────────────────────────
+const DEPTH_LABELS = ['', 'Начало', 'Ветка', 'Специализация', 'Путь', 'Мастерство'];
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export class ClassTreeGraph {
   constructor(state) {
-    this.state    = state;
-    this._nodeEls  = new Map();
-    this._edgeMap  = new Map();
-    this._reqEdgeMap = new Map(); // id → [line, ...] for requires edges
-    this._tx = 0; this._ty = 0; this._scale = 1;
-    this._dragging = false;
-    this._drag0    = { x: 0, y: 0, tx: 0, ty: 0 };
+    this.state      = state;
+    this._nodeEls   = new Map(); // id → div
+    this._deepShown = false;
 
     this._buildOverlay();
-    this._buildEdges();
-    this._buildNodes();
-    this._bindPanZoom();
+    this._buildTable();
 
     this._unsubs = [
       state.on('player:classChanged',    () => this._refreshNodes()),
@@ -81,8 +35,6 @@ export class ClassTreeGraph {
 
   destroy() {
     this._unsubs.forEach(u => u());
-    window.removeEventListener('mousemove', this._onMove);
-    window.removeEventListener('mouseup',   this._onUp);
     this._overlay?.remove();
   }
 
@@ -90,160 +42,242 @@ export class ClassTreeGraph {
   _buildOverlay() {
     const el = document.createElement('div');
     el.id = 'class-graph-overlay';
-    el.style.cssText = 'display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.88);';
+    el.style.cssText = `
+      display:none;position:fixed;inset:0;z-index:200;
+      background:rgba(0,0,0,0.92);
+      display:none;flex-direction:column;
+    `;
 
-    const hint = document.createElement('div');
-    hint.style.cssText = 'position:absolute;top:14px;left:50%;transform:translateX(-50%);color:#555;font-size:11px;pointer-events:none;white-space:nowrap;letter-spacing:1px;';
-    hint.textContent = 'Колесо — масштаб · Перетащить — перемещение · Клик на класс — подробности';
-    el.appendChild(hint);
+    // Header bar
+    const header = document.createElement('div');
+    header.style.cssText = `
+      display:flex;align-items:center;justify-content:space-between;
+      padding:12px 20px;border-bottom:1px solid #3a1a1a;
+      background:linear-gradient(180deg,#12060a,#0d0510);
+      flex-shrink:0;
+    `;
+    const title = document.createElement('div');
+    title.style.cssText = 'font-size:15px;font-family:var(--font-heading,Cinzel,serif);color:#e8d5b7;letter-spacing:2px;';
+    title.textContent = '🌿 Дерево Классов';
+
+    const legend = document.createElement('div');
+    legend.style.cssText = 'display:flex;gap:14px;font-size:11px;align-items:center;';
+    legend.innerHTML = `
+      <span style="color:#e05555">◆ Воин</span>
+      <span style="color:#2ecc71">◆ Лучник</span>
+      <span style="color:#aa55ee">◆ Плут</span>
+      <span style="color:#5588ee">◆ Маг</span>
+      <span style="color:#f39c12;border:1px solid rgba(243,156,18,0.4);padding:0 5px;border-radius:3px">★ Текущий</span>
+      <span style="color:#ffd700;border:1px solid rgba(255,215,0,0.3);padding:0 5px;border-radius:3px">⭐ Престиж</span>
+    `;
 
     const closeBtn = document.createElement('button');
     closeBtn.textContent = '✕ Закрыть';
-    closeBtn.style.cssText = 'position:absolute;top:10px;right:16px;z-index:1;background:transparent;border:1px solid #3a1a1a;color:#8b0000;padding:5px 12px;cursor:pointer;border-radius:3px;font-size:13px;transition:color 0.15s,border-color 0.15s;';
+    closeBtn.style.cssText = `
+      background:transparent;border:1px solid #3a1a1a;color:#8b0000;
+      padding:5px 12px;cursor:pointer;border-radius:3px;font-size:13px;
+      transition:color 0.15s,border-color 0.15s;
+    `;
     closeBtn.addEventListener('mouseenter', () => { closeBtn.style.color = '#e74c3c'; closeBtn.style.borderColor = '#8b0000'; });
     closeBtn.addEventListener('mouseleave', () => { closeBtn.style.color = '#8b0000'; closeBtn.style.borderColor = '#3a1a1a'; });
     closeBtn.addEventListener('click', () => this.close());
-    el.appendChild(closeBtn);
 
-    const legend = document.createElement('div');
-    legend.style.cssText = 'position:absolute;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:20px;pointer-events:none;font-size:11px;background:rgba(6,3,10,0.7);padding:6px 14px;border-radius:6px;border:1px solid #3a1a1a;';
-    legend.innerHTML = `
-      <span style="color:#e05555">● Воин</span>
-      <span style="color:#aa55ee">● Плут</span>
-      <span style="color:#55cc66">● Лучник</span>
-      <span style="color:#5588ee">● Маг</span>
-      <span style="color:#e8d5b7">◎ Текущий</span>
-      <span style="color:#7dcc7d;border:1px solid rgba(139,0,0,0.4);padding:0 4px">? Доступный</span>
-      <span style="color:#3a1a1a">· Неизвестный</span>
-      <span style="color:#ffd700;border:1px solid #ffd70044;padding:0 4px">⭐ Престиж</span>
-    `;
-    el.appendChild(legend);
+    header.appendChild(title);
+    header.appendChild(legend);
+    header.appendChild(closeBtn);
+    el.appendChild(header);
 
-    const vp = document.createElement('div');
-    vp.style.cssText = 'position:absolute;inset:0;overflow:hidden;cursor:grab;';
-    el.appendChild(vp);
-    this._viewport = vp;
+    // Scrollable table area
+    const body = document.createElement('div');
+    body.style.cssText = 'flex:1;overflow:auto;display:flex;align-items:flex-start;';
+    el.appendChild(body);
+    this._tableBody = body;
 
-    const canvas = document.createElement('div');
-    canvas.style.cssText = `position:absolute;width:${CANVAS_SZ}px;height:${CANVAS_SZ}px;transform-origin:0 0;`;
-    vp.appendChild(canvas);
-    this._canvas = canvas;
-
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('width', CANVAS_SZ);
-    svg.setAttribute('height', CANVAS_SZ);
-    svg.style.cssText = `position:absolute;top:0;left:0;width:${CANVAS_SZ}px;height:${CANVAS_SZ}px;pointer-events:none;`;
-    canvas.appendChild(svg);
-    this._svg = svg;
-
-    // Click on empty area — hide info panel only
-    vp.addEventListener('click', e => {
-      if (e.target === vp || e.target === canvas || e.target === svg) this._hideInfo();
-    });
-
-    // Info panel (floating near clicked node)
+    // Info panel (floating)
     const info = document.createElement('div');
-    info.style.cssText = 'position:absolute;top:0;left:0;width:210px;background:#0d0510;border:1px solid #3a1a1a;border-radius:5px;padding:14px;font-size:12px;color:#e8d5b7;display:none;z-index:2;pointer-events:auto;box-shadow:0 4px 20px rgba(0,0,0,0.9),0 0 16px rgba(139,0,0,0.15);';
+    info.style.cssText = `
+      position:fixed;width:220px;
+      background:#0d0510;border:1px solid #3a1a1a;border-radius:5px;
+      padding:14px;font-size:12px;color:#e8d5b7;
+      display:none;z-index:300;pointer-events:auto;
+      box-shadow:0 4px 20px rgba(0,0,0,0.9),0 0 16px rgba(139,0,0,0.15);
+    `;
     el.appendChild(info);
     this._infoPanel = info;
+
+    // Click outside info to close it
+    body.addEventListener('click', e => {
+      if (e.target === body) this._hideInfo();
+    });
 
     document.body.appendChild(el);
     this._overlay = el;
 
-    // Escape key
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape' && this._overlay.style.display !== 'none') this.close();
     });
   }
 
-  // ── SVG edges ─────────────────────────────────────────────────────────────
-  _buildEdges() {
+  // ── Build horizontal table ─────────────────────────────────────────────────
+  _buildTable() {
+    const wrap = document.createElement('div');
+    wrap.className = 'cls-tree-table';
+    this._tableBody.appendChild(wrap);
+    this._tableWrap = wrap;
+
+    // Group classes by depth 1-5
+    const byDepth = new Map();
+    for (let d = 1; d <= 5; d++) byDepth.set(d, []);
+
     for (const [id, cls] of CLASS_MAP) {
-      if (!cls || cls.depth < 1 || cls.depth > MAX_DEPTH) continue;
-      const p = POS.get(cls.parent);
-      const c = POS.get(id);
-      if (!p || !c) continue;
-      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      line.setAttribute('x1', p.x.toFixed(1));
-      line.setAttribute('y1', p.y.toFixed(1));
-      line.setAttribute('x2', c.x.toFixed(1));
-      line.setAttribute('y2', c.y.toFixed(1));
-      line.setAttribute('stroke', 'rgba(139,0,0,0.18)');
-      line.setAttribute('stroke-width', '1.5');
-      this._svg.appendChild(line);
-      this._edgeMap.set(id, line);
+      if (!cls || cls.depth < 1 || cls.depth > 5) continue;
+      byDepth.get(cls.depth).push({ id, cls });
     }
 
-    // Дополнительные рёбра от requires-родителей (пунктир, золотой)
-    for (const [id, cls] of CLASS_MAP) {
-      if (!cls?.requires?.length || cls.depth > MAX_DEPTH) continue;
-      const c = POS.get(id);
-      if (!c) continue;
-      for (const reqId of cls.requires) {
-        if (reqId === cls.parent) continue; // основное ребро уже нарисовано
-        const r = POS.get(reqId);
-        if (!r) continue;
-        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        line.setAttribute('x1', r.x.toFixed(1));
-        line.setAttribute('y1', r.y.toFixed(1));
-        line.setAttribute('x2', c.x.toFixed(1));
-        line.setAttribute('y2', c.y.toFixed(1));
-        line.setAttribute('stroke', 'none');
-        line.setAttribute('stroke-width', '1');
-        line.setAttribute('stroke-dasharray', '3,7');
-        line.dataset.prestigeReq = '1';
-        this._svg.appendChild(line);
-        if (!this._reqEdgeMap.has(id)) this._reqEdgeMap.set(id, []);
-        this._reqEdgeMap.get(id).push(line);
+    // Sort each depth by branch then name for readability
+    const BRANCH_ORDER = { novice: 0, warrior: 1, rogue: 2, archer: 3, mage: 4 };
+    for (const [, arr] of byDepth) {
+      arr.sort((a, b) => {
+        const bo = (BRANCH_ORDER[a.cls.branch] ?? 9) - (BRANCH_ORDER[b.cls.branch] ?? 9);
+        if (bo !== 0) return bo;
+        return (a.cls.name ?? '').localeCompare(b.cls.name ?? '', 'ru');
+      });
+    }
+
+    // Render depth columns 1-5
+    for (let d = 1; d <= 5; d++) {
+      const col = document.createElement('div');
+      col.className = 'cls-depth-col';
+
+      const hdr = document.createElement('div');
+      hdr.className = 'cls-depth-header';
+      hdr.textContent = `${DEPTH_LABELS[d] ?? `Уровень ${d}`}`;
+      col.appendChild(hdr);
+
+      for (const { id, cls } of byDepth.get(d)) {
+        const node = this._makeNode(id, cls);
+        col.appendChild(node);
+        this._nodeEls.set(id, node);
       }
+      wrap.appendChild(col);
     }
+
+    // Deep column — toggle button + lazy-built column
+    const deepCol = document.createElement('div');
+    deepCol.className = 'cls-depth-col';
+    deepCol.style.minWidth = '160px';
+
+    const deepHdr = document.createElement('div');
+    deepHdr.className = 'cls-depth-header';
+    deepHdr.textContent = 'Продвинутые';
+    deepCol.appendChild(deepHdr);
+
+    // Count deep classes
+    let deepCount = 0;
+    for (const [, cls] of CLASS_MAP) {
+      if (cls && cls.depth >= 6) deepCount++;
+    }
+
+    const showDeepBtn = document.createElement('button');
+    showDeepBtn.className = 'cls-show-deep-btn';
+    showDeepBtn.textContent = `▶ Показать глубины 6-10 (${deepCount})`;
+    showDeepBtn.addEventListener('click', () => {
+      if (this._deepShown) return;
+      this._deepShown = true;
+      showDeepBtn.remove();
+      this._buildDeepColumns(wrap);
+    });
+    deepCol.appendChild(showDeepBtn);
+    wrap.appendChild(deepCol);
+    this._deepToggleCol = deepCol;
   }
 
-  // ── Node divs ─────────────────────────────────────────────────────────────
-  _buildNodes() {
-    for (const [id] of CLASS_MAP) {
-      const pos = POS.get(id);
-      if (!pos) continue;
-      const div = document.createElement('div');
-      div.dataset.id = id;
-      div.style.cssText = `position:absolute;left:${(pos.x - NODE_R).toFixed(1)}px;top:${(pos.y - NODE_R).toFixed(1)}px;width:${NODE_R * 2}px;height:${NODE_R * 2}px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:bold;box-sizing:border-box;transition:transform 0.1s;`;
-      div.addEventListener('click', e => { e.stopPropagation(); this._onNodeClick(id); });
-      div.addEventListener('mouseenter', () => { div.style.transform = 'scale(1.4)'; });
-      div.addEventListener('mouseleave', () => { div.style.transform = ''; });
-      this._canvas.appendChild(div);
-      this._nodeEls.set(id, div);
+  _makeNode(id, cls) {
+    const node = document.createElement('div');
+    node.className = 'cls-node';
+    node.dataset.id = id;
+    // Branch left-border color class
+    if (cls.branch && cls.branch !== 'novice') {
+      node.classList.add(`cls-branch-${cls.branch}`);
     }
+    node.textContent = cls.name ?? id;
+    node.title = cls.desc ?? '';
+    node.addEventListener('click', e => {
+      e.stopPropagation();
+      this._onNodeClick(id, node);
+    });
+    return node;
   }
 
-  _onNodeClick(id) {
+  _buildDeepColumns(wrap) {
+    // Group deep classes by depth 6-10
+    const byDepth = new Map();
+    for (let d = 6; d <= 10; d++) byDepth.set(d, []);
+
+    for (const [id, cls] of CLASS_MAP) {
+      if (!cls || cls.depth < 6 || cls.depth > 10) continue;
+      if (!byDepth.has(cls.depth)) byDepth.set(cls.depth, []);
+      byDepth.get(cls.depth).push({ id, cls });
+    }
+
+    // Remove the placeholder deep col
+    this._deepToggleCol?.remove();
+
+    for (const [d, arr] of byDepth) {
+      if (!arr.length) continue;
+      const col = document.createElement('div');
+      col.className = 'cls-depth-col';
+
+      const hdr = document.createElement('div');
+      hdr.className = 'cls-depth-header';
+      hdr.textContent = `Глубина ${d}`;
+      col.appendChild(hdr);
+
+      // Limit to first 200 per depth to avoid DOM flooding (still ~1000 total)
+      const display = arr.slice(0, 200);
+      for (const { id: nodeId, cls: nodeCls } of display) {
+        const node = this._makeNode(nodeId, nodeCls);
+        col.appendChild(node);
+        this._nodeEls.set(nodeId, node);
+      }
+      if (arr.length > 200) {
+        const more = document.createElement('div');
+        more.style.cssText = 'font-size:10px;color:#555;padding:4px 8px;text-align:center;';
+        more.textContent = `... ещё ${arr.length - 200}`;
+        col.appendChild(more);
+      }
+      wrap.appendChild(col);
+    }
+
+    // Refresh state on newly built nodes
+    this._refreshNodes();
+  }
+
+  // ── Node click → show info panel ──────────────────────────────────────────
+  _onNodeClick(id, nodeEl) {
     this._showInfo(id);
-    this._positionInfo(id);
-  }
-
-  _positionInfo(id) {
-    const pos = POS.get(id);
-    if (!pos) return;
-    // Convert canvas coords to screen coords
-    let px = this._tx + pos.x * this._scale;
-    let py = this._ty + (pos.y + NODE_R) * this._scale + 10; // below node
-    // Clamp so panel stays within viewport
-    const pw = 210 + 28, ph = 260; // panel width + padding, estimated height
-    px = Math.max(8, Math.min(px - pw / 2, window.innerWidth  - pw - 8));
-    py = Math.max(8, Math.min(py,          window.innerHeight - ph - 8));
+    // Position info panel near clicked node
+    const rect = nodeEl.getBoundingClientRect();
+    const pw = 220 + 16;
+    const ph = 300;
+    let px = rect.right + 8;
+    let py = rect.top;
+    if (px + pw > window.innerWidth - 8) px = rect.left - pw - 8;
+    py = Math.max(8, Math.min(py, window.innerHeight - ph - 8));
     this._infoPanel.style.left = px + 'px';
     this._infoPanel.style.top  = py + 'px';
   }
 
-  // ── Info panel ────────────────────────────────────────────────────────────
+  // ── Info panel (reused from original) ─────────────────────────────────────
   _showInfo(id) {
-    const cls    = CLASS_MAP.get(id);
+    const cls = CLASS_MAP.get(id);
     if (!cls) return;
-    const isCur   = id === this.state.currentClass;
-    const cur     = this.state.currentClass;
-    const anc     = new Set(getAncestors(cur));
-    const color   = BRANCH_COLORS[cls.branch] ?? '#888';
-    const cost    = DEPTH_GOLD_COST[cls.depth] ?? 0;
-    const lvl     = DEPTH_LEVEL_REQ[cls.depth] ?? 0;
+    const isCur  = id === this.state.currentClass;
+    const cur    = this.state.currentClass;
+    const anc    = new Set(getAncestors(cur));
+    const color  = BRANCH_COLORS[cls.branch] ?? '#888';
+    const cost   = DEPTH_GOLD_COST[cls.depth] ?? 0;
+    const lvl    = DEPTH_LEVEL_REQ[cls.depth] ?? 0;
     const isPrestigeFromCur = !!(cls.prestige && cls.requires?.includes(cur) && cls.parent !== cur);
     const allReqsMet = !!(cls.prestige && cls.requires?.length &&
       cls.requires.every(rid => this.state.discoveredClasses.has(rid) || rid === cur || anc.has(rid)));
@@ -279,9 +313,7 @@ export class ClassTreeGraph {
         .join('');
     }
 
-    // Только эти четыре стата усиливаются depthMult
     const DEPTH_SCALED = new Set(['hp', 'atk', 'def', 'spd']);
-
     let cumulHtml = '';
     if (isDisc && cls.depth > 0) {
       const cb = getCumulativeBonuses(id);
@@ -294,8 +326,7 @@ export class ClassTreeGraph {
           return `<div style="display:flex;justify-content:space-between;margin:2px 0">
             <span style="color:#666">${BNAMES[k] ?? k}</span>
             <span style="color:${col}">+${scaled}%</span></div>`;
-        })
-        .join('');
+        }).join('');
       if (rows) {
         cumulHtml = `<div style="border-top:1px solid #3a1a1a;padding-top:6px;margin-top:4px">
           <div style="color:#666;font-size:10px;margin-bottom:3px">Итого с цепочкой <span style="color:#ffd700;font-weight:bold">×${multLabel}</span> <span style="color:#444">(HP/ATK/DEF/SPD)</span></div>
@@ -312,7 +343,7 @@ export class ClassTreeGraph {
         Сменить класс (−${this._fmt(cost)}g)</button>`;
     } else if (isDisc && isLocked) {
       const needLvl  = this.state.level < lvl  ? `Ур. ${lvl}` : '';
-      const needGold = this.state.gold < cost  ? `${this._fmt(cost)}g` : '';
+      const needGold = this.state.gold < cost   ? `${this._fmt(cost)}g` : '';
       const needs = [needLvl, needGold].filter(Boolean).join(', ');
       footer = `<div style="margin-top:10px;text-align:center;color:#666;font-size:11px">🔒 Нужно: ${needs}</div>`;
     } else if (!isDisc) {
@@ -366,7 +397,7 @@ export class ClassTreeGraph {
 
   // ── State-driven visual refresh ────────────────────────────────────────────
   _hasAvailableClass() {
-    const cur      = this.state.currentClass;
+    const cur = this.state.currentClass;
     const children = CHILDREN_MAP.get(cur) || [];
     for (const id of children) {
       const cls = CLASS_MAP.get(id);
@@ -377,7 +408,6 @@ export class ClassTreeGraph {
       if (cls.requires?.length && !cls.requires.every(rid => this.state.discoveredClasses.has(rid))) continue;
       return true;
     }
-    // Check prestige classes reachable via requires[] from current class
     for (const [id, cls] of CLASS_MAP) {
       if (!cls.prestige || !cls.requires?.includes(cur)) continue;
       if (this.state.unlockedClasses.has(id)) continue;
@@ -400,82 +430,23 @@ export class ClassTreeGraph {
   _refreshNodes() {
     this._updateBtnPulse();
     if (this._overlay.style.display === 'none') return;
+
     const cur = this.state.currentClass;
     const anc = new Set(getAncestors(cur));
 
-    for (const [id, div] of this._nodeEls) {
+    for (const [id, node] of this._nodeEls) {
       const cls = CLASS_MAP.get(id);
-      if (cls) this._styleNode(div, id, cls, cur, anc);
-    }
-
-    for (const [id, line] of this._edgeMap) {
-      const onPath  = id === cur || anc.has(id);
-      const disc    = this.state.discoveredClasses.has(id);
-      const ecls    = CLASS_MAP.get(id);
-      const ecol    = BRANCH_COLORS[ecls?.branch] ?? '#888';
-      const edepth  = ecls?.depth ?? 99;
-      const ePrestigeFromCur = !!(ecls?.prestige && ecls.requires?.includes(cur) && ecls.parent !== cur);
-      const eOtherReqs = ecls?.requires?.filter(r => r !== cur) ?? [];
-      const eavail  = ecls && (ecls.parent === cur || ePrestigeFromCur)
-        && !this.state.unlockedClasses.has(id)
-        && this.state.level  >= (DEPTH_LEVEL_REQ[edepth]  ?? 999)
-        && this.state.gold   >= (DEPTH_GOLD_COST[edepth]  ?? Infinity)
-        && (ePrestigeFromCur
-          ? eOtherReqs.every(r => this.state.discoveredClasses.has(r))
-          : (!ecls.requires?.length || ecls.requires.every(r => this.state.discoveredClasses.has(r))));
-      if (onPath) {
-        line.setAttribute('stroke', 'rgba(139,0,0,0.55)');
-        line.setAttribute('stroke-width', '2.5');
-      } else if (eavail) {
-        line.setAttribute('stroke', ecol + 'cc');
-        line.setAttribute('stroke-width', '2');
-      } else if (disc) {
-        line.setAttribute('stroke', ecol + '44');
-        line.setAttribute('stroke-width', '1.5');
-      } else {
-        line.setAttribute('stroke', 'rgba(139,0,0,0.12)');
-        line.setAttribute('stroke-width', '1');
-      }
-    }
-
-    // Prestige requires edges — show only when class is known/available
-    for (const [id, lines] of this._reqEdgeMap) {
-      const cls    = CLASS_MAP.get(id);
-      const edepth = cls?.depth ?? 99;
-      const allReqsMet = !!(cls?.prestige && cls.requires?.length &&
-        cls.requires.every(rid => this.state.discoveredClasses.has(rid) || rid === cur || anc.has(rid)));
-      const disc   = this.state.discoveredClasses.has(id) || id === cur || anc.has(id) || allReqsMet;
-      const isPrestigeFromCur = !!(cls?.prestige && cls.requires?.includes(cur) && cls.parent !== cur);
-      const otherReqs = cls?.requires?.filter(rid => rid !== cur) ?? [];
-      const avail  = cls && (cls.parent === cur || isPrestigeFromCur)
-        && !this.state.unlockedClasses.has(id)
-        && this.state.level  >= (DEPTH_LEVEL_REQ[edepth]  ?? 999)
-        && this.state.gold   >= (DEPTH_GOLD_COST[edepth]  ?? Infinity)
-        && (isPrestigeFromCur
-          ? otherReqs.every(r => this.state.discoveredClasses.has(r))
-          : (!cls.requires?.length || cls.requires.every(r => this.state.discoveredClasses.has(r))));
-      const isCurNode = id === cur;
-      const show = disc || avail;
-      for (const line of lines) {
-        if (show) {
-          const bright = isCurNode || anc.has(id);
-          line.setAttribute('stroke', bright ? '#ffd70099' : avail ? '#ffd70077' : '#ffd70033');
-          line.setAttribute('stroke-width', bright ? '1.5' : avail ? '1.2' : '0.8');
-        } else {
-          line.setAttribute('stroke', 'none');
-        }
-      }
+      if (!cls) continue;
+      this._styleNode(node, id, cls, cur, anc);
     }
   }
 
-  _styleNode(div, id, cls, cur, anc) {
-    const isCur   = id === cur;
-    const isAnc   = anc.has(id) && !isCur;
-    const cost    = DEPTH_GOLD_COST[cls.depth] ?? Infinity;
-    const lvl     = DEPTH_LEVEL_REQ[cls.depth] ?? 999;
-    // Prestige accessible from current class via requires[] (not as direct parent)
+  _styleNode(node, id, cls, cur, anc) {
+    const isCur  = id === cur;
+    const isAnc  = anc.has(id) && !isCur;
+    const cost   = DEPTH_GOLD_COST[cls.depth] ?? Infinity;
+    const lvl    = DEPTH_LEVEL_REQ[cls.depth] ?? 999;
     const isPrestigeFromCur = !!(cls.prestige && cls.requires?.includes(cur) && cls.parent !== cur);
-    // All prestige requirements discovered (auto-reveal node info)
     const allReqsMet = !!(cls.prestige && cls.requires?.length &&
       cls.requires.every(rid => this.state.discoveredClasses.has(rid) || rid === cur || anc.has(rid)));
     const isDisc  = this.state.discoveredClasses.has(id) || isCur || isAnc || allReqsMet;
@@ -487,102 +458,44 @@ export class ClassTreeGraph {
       && this.state.level >= lvl
       && this.state.gold >= cost
       && reqsMet;
-    const color   = BRANCH_COLORS[cls.branch] ?? '#888';
-    const s       = div.style;
 
+    // Reset state classes
+    node.classList.remove('cls-current', 'cls-ancestor', 'cls-available', 'cls-locked', 'cls-prestige', 'node-avail-pulse');
+
+    // Tooltip
     const requiresHint = isDisc && cls.requires?.length
       ? '\nТребует: ' + cls.requires.map(rid => CLASS_MAP.get(rid)?.name ?? rid).join(' + ')
       : '';
-    const multHint = isDisc && cls.depth > 0
-      ? `\nМножитель глубины ×${Math.pow(1.30, cls.depth).toFixed(2)}`
-      : '';
-    div.title = isDisc ? `${cls.name}\n${cls.desc}${requiresHint}${multHint}` : `???\nОткройте, чтобы узнать`;
+    node.title = isDisc ? `${cls.name}\n${cls.desc}${requiresHint}` : '??? — Откройте, чтобы узнать';
 
-    div.classList.remove('node-avail-pulse');
+    // Display name
+    if (isDisc) {
+      const prefix = cls.prestige === 2 ? '⭐⭐ ' : cls.prestige === 1 ? '⭐ ' : (isCur ? '★ ' : isAnc ? '✓ ' : '');
+      node.textContent = prefix + (cls.name ?? id);
+    } else {
+      node.textContent = '???';
+    }
+
+    // State class
+    if (cls.prestige) node.classList.add('cls-prestige');
 
     if (isCur) {
-      s.background = cls.prestige ? '#3a2a00' : color;
-      s.border     = cls.prestige ? '3px solid #ffd700' : '3px solid #fff';
-      s.boxShadow  = cls.prestige ? `0 0 12px #ffd700,0 0 24px #ffd70044` : `0 0 10px ${color},0 0 22px ${color}44`;
-      s.color      = cls.prestige ? '#ffd700' : '#fff';
-      div.textContent = cls.prestige === 2 ? '✦' : cls.prestige === 1 ? '⭐' : '★';
+      node.classList.add('cls-current');
     } else if (isAnc) {
-      s.background = cls.prestige ? '#2a1e00' : color + '44';
-      s.border     = cls.prestige ? `2px solid #ffd70077` : `2px solid ${color}aa`;
-      s.boxShadow  = cls.prestige ? '0 0 6px #ffd70033' : `0 0 8px rgba(139,0,0,0.3)`;
-      s.color      = cls.prestige ? '#ffd70099' : '#bbb';
-      div.textContent = '✓';
-    } else if (isDisc) {
-      s.background = cls.prestige ? '#1e1400' : color + '22';
-      s.border     = cls.prestige ? `1.5px solid #ffd70055` : `1.5px solid ${color}bb`;
-      s.boxShadow  = cls.prestige ? '0 0 8px #ffd70022' : `0 0 8px rgba(139,0,0,0.3)`;
-      s.color      = cls.prestige ? '#ffd70088' : color + 'dd';
-      div.textContent = cls.prestige ? (cls.prestige === 2 ? '✦' : '⭐') : '';
+      node.classList.add('cls-ancestor');
     } else if (isAvail) {
-      const pc = cls.prestige ? '#ffd700' : color;
-      s.background = cls.prestige ? '#1e1400' : '#080812';
-      s.border     = cls.prestige ? `2px solid #ffd700bb` : `2px solid ${color}bb`;
-      s.boxShadow  = '';
-      s.color      = cls.prestige ? '#ffd700' : color + 'cc';
-      div.textContent = cls.prestige ? '⭐' : '?';
-      div.style.setProperty('--pulse-col', pc);
-      div.classList.add('node-avail-pulse');
-    } else {
-      s.background = cls.prestige ? 'rgba(50,20,0,0.5)' : 'rgba(30,10,10,0.5)';
-      s.border     = cls.prestige ? '1px dashed #5a2a0a55' : `1px dashed #3a1a1a55`;
-      s.boxShadow  = '';
-      s.color      = cls.prestige ? '#3a1a1a88' : '#3a1a1a88';
-      div.textContent = '';
+      node.classList.add('cls-available');
+      node.classList.add('node-avail-pulse');
+      node.style.setProperty('--pulse-col', cls.prestige ? '#ffd700' : '#8b0000');
+    } else if (!isDisc) {
+      node.classList.add('cls-locked');
     }
-  }
-
-  // ── Pan / zoom ─────────────────────────────────────────────────────────────
-  _bindPanZoom() {
-    const vp = this._viewport;
-
-    vp.addEventListener('mousedown', e => {
-      if (e.target.dataset?.id) return;
-      this._dragging = true;
-      vp.style.cursor = 'grabbing';
-      this._drag0 = { x: e.clientX, y: e.clientY, tx: this._tx, ty: this._ty };
-    });
-
-    this._onMove = e => {
-      if (!this._dragging) return;
-      this._tx = this._drag0.tx + e.clientX - this._drag0.x;
-      this._ty = this._drag0.ty + e.clientY - this._drag0.y;
-      this._applyTx();
-    };
-    this._onUp = () => { this._dragging = false; vp.style.cursor = 'grab'; };
-    window.addEventListener('mousemove', this._onMove);
-    window.addEventListener('mouseup',   this._onUp);
-
-    vp.addEventListener('wheel', e => {
-      e.preventDefault();
-      const rect  = vp.getBoundingClientRect();
-      const mx    = e.clientX - rect.left;
-      const my    = e.clientY - rect.top;
-      const delta = e.deltaY < 0 ? 1.12 : 0.89;
-      const ns    = Math.max(0.12, Math.min(4, this._scale * delta));
-      this._tx    = mx - (mx - this._tx) * (ns / this._scale);
-      this._ty    = my - (my - this._ty) * (ns / this._scale);
-      this._scale = ns;
-      this._applyTx();
-    }, { passive: false });
-  }
-
-  _applyTx() {
-    this._canvas.style.transform = `translate(${this._tx}px,${this._ty}px) scale(${this._scale})`;
+    // discovered but not current/ancestor/avail → default style (slightly visible)
   }
 
   // ── Open / close ──────────────────────────────────────────────────────────
   open() {
-    this._overlay.style.display = 'block';
-    const vw = window.innerWidth, vh = window.innerHeight;
-    this._scale = Math.min(0.38, (vw * 0.88) / CANVAS_SZ, (vh * 0.88) / CANVAS_SZ);
-    this._tx    = Math.round(vw / 2 - CX * this._scale);
-    this._ty    = Math.round(vh / 2 - CY * this._scale);
-    this._applyTx();
+    this._overlay.style.display = 'flex';
     this._refreshNodes();
   }
 
@@ -590,5 +503,4 @@ export class ClassTreeGraph {
     this._overlay.style.display = 'none';
     this._hideInfo();
   }
-
 }
