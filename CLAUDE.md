@@ -24,8 +24,9 @@ npm run preview   # предпросмотр production сборки
 #skill-zone (40px)   — активный скилл ветки (кнопка #skill-btn + кулдаун-бар)
 #battle-strip (52px) — [карточка игрока HP] ⚔️ [прогресс волны] [чипы врагов]
 #main-area (flex)
-  #game-container (flex:1)  — Phaser canvas (620×480), центрирован flexbox
-  #stats-panel (300px)      — статы + магазин апгрейдов
+  #battle-info-panel (160px) — левая панель: зона, волна, враги+HP, убийства (BattleInfoPanel.js)
+  #game-container (flex:1)   — Phaser canvas (620×480), центрирован flexbox
+  #stats-panel (300px)       — статы + магазин апгрейдов
 #combat-log (96px)   — последние события боя
 ```
 
@@ -62,7 +63,9 @@ main.js
  ├── SettingsMenu (ui/SettingsMenu.js)   — меню настроек (статистика/управление/changelog)
  ├── PrestigeShop (ui/PrestigeShop.js)   — магазин очков престижа (ПО)
  ├── InventoryPanel (ui/InventoryPanel.js) — инвентарь + paper-doll снаряжения
- ├── ClassTreeGraph (ui/ClassTreeGraph.js) — оверлей-граф дерева классов
+ ├── ClassTreeGraph (ui/ClassTreeGraph.js) — горизонтальная DOM-таблица дерева классов (фильтры: Все/Открытые/Доступные)
+ ├── BattleInfoPanel (ui/BattleInfoPanel.js) — левая панель арены: зона, враги+HP, счётчик убийств
+ ├── Tutorial (ui/Tutorial.js)           — онбординг первого запуска (4 шага, state.tutorialDone)
  ├── AchievementsPanel (ui/AchievementsPanel.js) — достижения + toast
  ├── MainMenu (ui/MainMenu.js)           — стартовое меню (новая игра / продолжить / язык)
  └── OfflineModal (ui/OfflineModal.js)   — экран «С возвращением» (итог офлайн-прогресса)
@@ -216,7 +219,7 @@ Credentials YandexART 2.0 — в `memory/reference_yandexart.md`.
 
 ### Versioning (data/changelog.js)
 
-Единый источник истины версии — `GAME_VERSION` в `src/data/changelog.js` + `CHANGELOG` (массив записей, `type: new|changed|fixed|balance`). При релизе синхронизировать с `package.json` `version`. «Что нового» в SettingsMenu и MainMenu читаются из этого массива. См. `/ship`-воркфлоу. Текущая версия: **v1.18.0**.
+Единый источник истины версии — `GAME_VERSION` в `src/data/changelog.js` + `CHANGELOG` (массив записей, `type: new|changed|fixed|balance`). При релизе синхронизировать с `package.json` `version`. «Что нового» в SettingsMenu и MainMenu читаются из этого массива. См. `/ship`-воркфлоу. Текущая версия: **v2.1.0**.
 
 ### Dark Fantasy Theme (c v1.17.0)
 
