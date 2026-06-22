@@ -131,6 +131,10 @@ export class GameState extends EventBus {
     this._atkBuffEnd  = 0;  // performance.now() конца бафа +20% урона (focus L4)
     this._respawnShield = 0;// поглощение урона после возрождения (focus L5)
 
+    // ── Зеркало Теней (постоянные перки, не сбрасываются никогда) ──────
+    this.souls       = 0;          // накопительная валюта между ранами
+    this.shadowPerks = {};         // { perkId: rank }
+
     // ── Автоматизация (не сбрасывается при престиже) ──────────────────
     this.automation = {
       autoCast: false,           // авто-каст скилла по готовности
@@ -185,11 +189,19 @@ export class GameState extends EventBus {
     const pXp   = 1 + this.getPrestigeRank('xpBonus') * 0.20;
     const pGold = 1 + this.getPrestigeRank('goldBonus') * 0.20;
 
-    // Сырые базовые значения с учётом постоянных бонусов престижа
-    const rawHp  = BASE_STATS.hp  * pHp  + LEVEL_GROWTH.hp  * (lvl - 1);
-    const rawAtk = BASE_STATS.atk * pAtk + LEVEL_GROWTH.atk * (lvl - 1);
-    const rawDef = BASE_STATS.def         + LEVEL_GROWTH.def * (lvl - 1);
-    const rawSpd = BASE_STATS.spd * pSpd  + LEVEL_GROWTH.spd * (lvl - 1);
+    // Постоянные перки Зеркала Теней
+    const spAtk = 1 + (this.shadowPerks?.dark_strength    || 0) * 0.05;
+    const spHp  = 1 + (this.shadowPerks?.cursed_armor     || 0) * 0.05;
+    const spSpd = 1 + (this.shadowPerks?.shadow_step      || 0) * 0.04;
+    const spLifesteal = (this.shadowPerks?.bloodthirst     || 0) * 2;
+    const spGold = 1  + (this.shadowPerks?.dark_ritual    || 0) * 0.10;
+    const spXp   = 1  + (this.shadowPerks?.cursed_knowledge || 0) * 0.15;
+
+    // Сырые базовые значения с учётом престижа + Shadow Perks
+    const rawHp  = BASE_STATS.hp  * pHp  * spHp  + LEVEL_GROWTH.hp  * (lvl - 1);
+    const rawAtk = BASE_STATS.atk * pAtk * spAtk + LEVEL_GROWTH.atk * (lvl - 1);
+    const rawDef = BASE_STATS.def                 + LEVEL_GROWTH.def * (lvl - 1);
+    const rawSpd = BASE_STATS.spd * pSpd  * spSpd + LEVEL_GROWTH.spd * (lvl - 1);
 
     // Суммарный бонус от улучшений магазина
     const upgBonuses = {};
@@ -219,10 +231,10 @@ export class GameState extends EventBus {
       spd:      parseFloat((rawSpd * spdMult).toFixed(2)),
       crit:     Math.min(95, 5  + (cb.crit    || 0) * 100 + (upgBonuses.crit    || 0) * 100 + (eq.crit    || 0) * 100),
       critDmg:  150 + (cb.critDmg || 0) * 100 + (upgBonuses.critDmg || 0) * 100 + (eq.critDmg || 0) * 100,
-      xpMult:   parseFloat(((1 + (cb.xpMult  || 0) + (eq.xpMult  || 0)) * pXp).toFixed(3)),
-      goldMult: parseFloat(((1 + (cb.goldMult || 0) + (eq.goldMult || 0)) * pGold).toFixed(3)),
+      xpMult:   parseFloat(((1 + (cb.xpMult  || 0) + (eq.xpMult  || 0)) * pXp  * spXp).toFixed(3)),
+      goldMult: parseFloat(((1 + (cb.goldMult || 0) + (eq.goldMult || 0)) * pGold * spGold).toFixed(3)),
       dodge:       Math.min(75, (cb.dodge       || 0) * 100 + (eq.dodge       || 0) * 100),
-      lifesteal:   (cb.lifesteal   || 0) * 100 + (eq.lifesteal   || 0) * 100,
+      lifesteal:   (cb.lifesteal   || 0) * 100 + (eq.lifesteal   || 0) * 100 + spLifesteal,
       thorns:      (cb.thorns      || 0) * 100 + (eq.thorns      || 0) * 100,
       magicShield: Math.min(75, (cb.magicShield || 0) * 100 + (eq.magicShield || 0) * 100),
       pierce:      Math.min(75, (cb.pierce      || 0) * 100),
@@ -741,3 +753,106 @@ export class GameState extends EventBus {
 
 // Save/load/autosave/hardReset вынесены в GameStateSave.js
 installSave(GameState.prototype);
+
+// ── Зеркало Теней: постоянные перки между ранами ─────────────────────────────
+export const SHADOW_PERKS = [
+  { id: 'dark_strength',    name: '⚔️ Тёмная сила',       icon: '⚔️', maxRank: 10, cost: 3,  effect: 'atk',      bonus: 0.05, desc: '+5% базового урона за ранг' },
+  { id: 'cursed_armor',     name: '🛡️ Проклятая броня',    icon: '🛡️', maxRank: 10, cost: 3,  effect: 'hp',       bonus: 0.05, desc: '+5% базового HP за ранг' },
+  { id: 'shadow_step',      name: '⚡ Теневой шаг',        icon: '⚡', maxRank: 5,  cost: 5,  effect: 'spd',      bonus: 0.04, desc: '+4% скорости атаки за ранг' },
+  { id: 'bloodthirst',      name: '🩸 Жажда крови',        icon: '🩸', maxRank: 5,  cost: 8,  effect: 'lifesteal',bonus: 2,    desc: '+2% вампиризма за ранг' },
+  { id: 'dark_ritual',      name: '🔮 Тёмный ритуал',      icon: '🔮', maxRank: 3,  cost: 15, effect: 'goldMult', bonus: 0.10, desc: '+10% золота за ранг' },
+  { id: 'cursed_knowledge', name: '📖 Проклятие знания',   icon: '📖', maxRank: 3,  cost: 15, effect: 'xpMult',   bonus: 0.15, desc: '+15% XP за ранг' },
+  { id: 'eternal_rage',     name: '🔥 Вечная ярость',      icon: '🔥', maxRank: 1,  cost: 50, effect: 'startWave5', bonus: 1, desc: 'Начинать с волны 5 Зоны 1' },
+  { id: 'abyss_seal',       name: '🌀 Печать бездны',      icon: '🌀', maxRank: 1,  cost: 80, effect: 'invSlot',  bonus: 1,    desc: '+1 слот инвентаря навсегда' },
+];
+export const SHADOW_PERKS_MAP = new Map(SHADOW_PERKS.map(p => [p.id, p]));
+
+/** Получить ранг перка Зеркала Теней */
+GameState.prototype.getShadowPerkRank = function(id) {
+  return this.shadowPerks[id] ?? 0;
+};
+
+/** Купить ранг перка Зеркала Теней */
+GameState.prototype.buyShadowPerk = function(id) {
+  const perk = SHADOW_PERKS_MAP.get(id);
+  if (!perk) return false;
+  const rank = this.getShadowPerkRank(id);
+  if (rank >= perk.maxRank) return false;
+  if (this.souls < perk.cost) return false;
+  this.souls -= perk.cost;
+  this.shadowPerks[id] = rank + 1;
+  this.emit('shadow:perkBought', { id, rank: rank + 1 });
+  this.emit('player:statsChanged');
+  return true;
+};
+
+/** Рассчитать Души за текущий ран */
+GameState.prototype.calcRunSouls = function() {
+  const zonesCleared = Object.values(this.zonesProgress).filter(z => z.bossDefeated).length;
+  const zoneBonus  = zonesCleared * 25;
+  const waveBonus  = Math.floor(this.globalWave / 10);
+  const levelBonus = Math.floor(this.level / 5);
+  return Math.max(1, zoneBonus + waveBonus + levelBonus);
+};
+
+/** Завершить ран: начислить Души, вернуть итоги, сбросить прогресс */
+GameState.prototype.endRun = function() {
+  const soulsEarned = this.calcRunSouls();
+  const summary = {
+    zonesCleared: Object.values(this.zonesProgress).filter(z => z.bossDefeated).length,
+    globalWave:   this.globalWave,
+    totalKills:   this.totalKills,
+    level:        this.level,
+    soulsEarned,
+  };
+
+  this.souls += soulsEarned;
+  this.prestigeCount++;
+
+  // Сброс прогресса рана (souls/shadowPerks/skillLevels/achievements — сохраняются)
+  this.level = 1;
+  this.xp    = 0;
+  this.currentClass    = 'novice';
+  this.unlockedClasses = new Set(['novice']);
+  if (!this.getPrestigeRank('keepUpgrades')) {
+    this.upgrades = { atk: 0, def: 0, hp: 0, spd: 0, crit: 0, critDmg: 0 };
+  }
+  this.inventory = [];
+  this.equipment = { weapon: null, armor: null, accessory: null };
+  this.totalKills = 0;
+
+  const startWave = (this.getPrestigeRank('startWave') || this.getShadowPerkRank('eternal_rage')) ? 5 : 1;
+  this.currentWave = startWave;
+  this.zoneWave    = startWave;
+  this.globalWave  = startWave;
+  this.currentZoneId = 'forest';
+  this.zonesProgress = {
+    forest:    { wavesCleared: 0, bossDefeated: false, unlocked: true  },
+    catacombs: { wavesCleared: 0, bossDefeated: false, unlocked: false },
+    volcano:   { wavesCleared: 0, bossDefeated: false, unlocked: false },
+    skyfort:   { wavesCleared: 0, bossDefeated: false, unlocked: false },
+    abyss:     { wavesCleared: 0, bossDefeated: false, unlocked: false },
+  };
+
+  let startGold = 0;
+  if (this.getPrestigeRank('startGold1')) startGold += 1_000;
+  if (this.getPrestigeRank('startGold2')) startGold += 5_000;
+  if (this.getPrestigeRank('startGold3')) startGold += 25_000;
+  this.gold = startGold;
+  this.currentHp = this.getStats().maxHp;
+
+  this.emit('player:prestige', { count: this.prestigeCount, totalPp: this.prestigePoints });
+  this.emit('player:classChanged', { classId: 'novice' });
+  this.emit('player:statsChanged');
+  this.emit('player:goldChanged', { gold: this.gold });
+  this.emit('player:hpChanged', { hp: this.currentHp });
+  this.emit('shadow:soulsChanged', { souls: this.souls });
+  this.save();
+
+  return summary;
+};
+
+/** Можно ли завершить ран */
+GameState.prototype.canEndRun = function() {
+  return this.zonesProgress?.forest?.bossDefeated || this.globalWave >= 10;
+};

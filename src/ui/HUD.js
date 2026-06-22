@@ -36,7 +36,9 @@ export class HUD {
         this._updateInvCount();
         this._updateSkillBtn();
       }),
-      state.on('player:ppChanged', () => { this._updatePrestigeBtn(); this._updateSkillUpgrade(); }),
+      state.on('player:ppChanged',      () => { this._updatePrestigeBtn(); this._updateSkillUpgrade(); }),
+      state.on('shadow:soulsChanged',   () => this._updateSouls()),
+      state.on('shadow:perkBought',     () => this._updateSouls()),
 
       state.on('player:prestigeShopChanged', () => this._syncAutoCast()),
       state.on('combat:milestone', (d) => {
@@ -59,10 +61,11 @@ export class HUD {
     this._milestoneTimeout = null;
     this._skillCdTimer = setInterval(() => this._updateSkillCd(), 100);
 
-    // Prestige modal
+    // Prestige modal → endRun() + RunSummary
     document.getElementById('prestige-confirm-btn').addEventListener('click', () => {
-      this.state.prestige();
       document.getElementById('prestige-modal-overlay').classList.remove('visible');
+      const summary = this.state.endRun();
+      window.game?.showRunSummary?.(summary, () => window.game?.restartCombat?.());
     });
     document.getElementById('prestige-cancel-btn').addEventListener('click', () => {
       document.getElementById('prestige-modal-overlay').classList.remove('visible');
@@ -268,11 +271,15 @@ export class HUD {
   }
 
   _updatePrestigeBtn() {
-    const canDo = this.state.canPrestige();
+    const canDo = this.state.canEndRun ? this.state.canEndRun() : this.state.canPrestige?.();
     const btn   = document.getElementById('prestige-btn');
     const hudPp = document.getElementById('hud-pp');
 
-    if (btn)   btn.disabled      = !canDo;
+    if (btn) {
+      btn.disabled    = !canDo;
+      btn.textContent = '⚡ Завершить ран';
+      btn.title       = canDo ? 'Завершить ран и получить Души' : 'Нужна волна 10 или победа над боссом Зоны 1';
+    }
     if (hudPp) hudPp.textContent = this.state.prestigePoints;
   }
 

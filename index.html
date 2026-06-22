@@ -154,6 +154,13 @@
       transition: background 0.15s;
     }
     #settings-btn:hover { background: rgba(139,0,0,0.15); color: var(--text-parchment); }
+    #shadow-mirror-btn {
+      padding: 5px 10px; background: #12060a;
+      border: 1px solid var(--color-souls, #9b59b6); border-radius: 6px;
+      color: var(--color-souls, #9b59b6); cursor: pointer; font-size: 11px;
+      letter-spacing: 1px; transition: background 0.15s;
+    }
+    #shadow-mirror-btn:hover { background: rgba(155,89,182,0.15); color: var(--text-parchment); }
     #achievements-btn, #zone-map-btn {
       padding: 5px 10px; background: #12060a;
       border: 1px solid var(--border-dark); border-radius: 6px;
@@ -1243,7 +1250,7 @@
       .hud-stat .lbl { font-size: 11px; }
       #xp-bar-wrap { order: 5; flex-basis: 100%; }
       /* nav-иконки переехали в нижний таб-бар */
-      #achievements-btn, #zone-map-btn, #class-tree-btn, #inventory-btn, #settings-btn { display: none; }
+      #achievements-btn, #zone-map-btn, #shadow-mirror-btn, #class-tree-btn, #inventory-btn, #settings-btn { display: none; }
       #prestige-btn { font-size: 12px; padding: 7px 12px; }
       #prestige-pp-badge { font-size: 12px; padding: 7px 10px; }
 
@@ -1393,9 +1400,10 @@
       <div class="hud-stat"><span class="lbl">Волна</span><span class="val" id="hud-wave">1</span></div>
       <div class="hud-stat"><span class="lbl">Убито</span><span class="val" id="hud-kills">0</span></div>
       <div id="prestige-area">
-        <button id="prestige-btn" onclick="window.game && window.game.showPrestigeModal()">⭐ Переродиться</button>
-        <div id="prestige-pp-badge" onclick="window.game && window.game.openPrestigeShop()">🏆 <span id="hud-pp">0</span> ПО</div>
+        <button id="prestige-btn" onclick="window.game && window.game.showPrestigeModal()">⚡ Завершить ран</button>
+        <div id="prestige-pp-badge" onclick="window.game && window.game.openShadowMirror()" title="Зеркало Теней">💜 <span id="hud-pp">0</span> Душ</div>
       </div>
+      <button id="shadow-mirror-btn" onclick="window.game && window.game.openShadowMirror()" title="Зеркало Теней">💜 Зеркало</button>
       <button id="achievements-btn" onclick="window.game && window.game.openAchievements()" title="Достижения">🏆 Ачивки</button>
       <button id="zone-map-btn" onclick="window.game && window.game.openZoneMap()" title="Карта мира">🗺 Зоны</button>
       <button id="class-tree-btn" onclick="window.game && window.game.openClassGraph()" title="Дерево классов">🌿 Классы</button>

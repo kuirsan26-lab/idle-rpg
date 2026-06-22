@@ -20,6 +20,8 @@ import { AchievementsPanel }  from './ui/AchievementsPanel.js';
 import { MobileNav }          from './ui/MobileNav.js';
 import { OfflineModal }       from './ui/OfflineModal.js';
 import { ZoneMap }            from './ui/ZoneMap.js';
+import { RunSummary }         from './ui/RunSummary.js';
+import { ShadowMirror }       from './ui/ShadowMirror.js';
 import { CLASS_MAP }     from './data/classes.js';
 
 window._classMap = CLASS_MAP;
@@ -71,6 +73,22 @@ const achievementsPanel = new AchievementsPanel(state);
 const mobileNav         = new MobileNav();
 const offlineModal      = new OfflineModal();
 const zoneMap           = new ZoneMap(state);
+const runSummary        = new RunSummary();
+const shadowMirror      = new ShadowMirror(state);
+
+// restartCombat — перезапуск боя после конца рана
+window.game.restartCombat = () => {
+  combat.mobs = [];
+  combat.waveState = 'fighting';
+  combat.deathsOnWave = 0;
+  combat.attackCooldown = 0;
+  combat._pendingPoison = null;
+  state.isAlive  = true;
+  state.currentHp = state.getStats().maxHp;
+  state.emit('player:hpChanged', { hp: state.currentHp });
+  combat._emit('onRespawn', {});
+  combat._spawnWave();
+};
 
 // Логирование боевых событий
 combat.register({

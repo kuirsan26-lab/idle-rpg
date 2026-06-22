@@ -41,6 +41,9 @@ export function installSave(proto) {
       zoneWave:       this.zoneWave,
       globalWave:     this.globalWave,
       zonesProgress:  JSON.parse(JSON.stringify(this.zonesProgress)),
+      // Зеркало Теней (постоянное)
+      souls:          this.souls,
+      shadowPerks:    { ...this.shadowPerks },
       timestamp:      Date.now(),
     };
     try {
@@ -112,6 +115,14 @@ export function installSave(proto) {
       this.zonesProgress = {};
       for (const [id, def] of Object.entries(defaultZones)) {
         this.zonesProgress[id] = { ...def, ...(data.zonesProgress?.[id] ?? {}) };
+      }
+
+      // Зеркало Теней — загрузка постоянных данных
+      this.souls       = data.souls       ?? 0;
+      this.shadowPerks = data.shadowPerks ?? {};
+      // Миграция: конвертируем старые ПО → Души (один раз)
+      if (!data.souls && data.prestigePoints > 0 && !data.shadowPerks) {
+        this.souls = data.prestigePoints;
       }
 
       // Офлайн-прогресс (до 8 часов) — волновая симуляция + экран возвращения
