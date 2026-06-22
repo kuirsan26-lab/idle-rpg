@@ -23,6 +23,7 @@ import { ZoneMap }            from './ui/ZoneMap.js';
 import { RunSummary }         from './ui/RunSummary.js';
 import { ShadowMirror }       from './ui/ShadowMirror.js';
 import { Tutorial }           from './ui/Tutorial.js';
+import { BattleInfoPanel }    from './ui/BattleInfoPanel.js';
 import { CLASS_MAP }     from './data/classes.js';
 
 window._classMap = CLASS_MAP;
@@ -76,6 +77,7 @@ const offlineModal      = new OfflineModal();
 const zoneMap           = new ZoneMap(state);
 const runSummary        = new RunSummary();
 const shadowMirror      = new ShadowMirror(state);
+const battleInfoPanel   = new BattleInfoPanel(state, combat);
 
 // restartCombat — перезапуск боя после конца рана
 window.game.restartCombat = () => {
@@ -121,6 +123,17 @@ combat.register({
   onPlayerAttack:  (d) => battleStrip.onPlayerAttack(d),
   onWaveRollback:  (d) => battleStrip.onWaveRollback(d),
 });
+
+// Пробрасываем combat в battleInfoPanel
+combat.register({
+  onWaveSpawn: ({ mobs }) => { battleInfoPanel.resetKills(); battleInfoPanel.updateEnemies(mobs); },
+  onMobDeath:  ()         => battleInfoPanel.addKill(),
+});
+
+// Обновление HP врагов в реальном времени
+setInterval(() => {
+  if (combat.mobs) battleInfoPanel.updateEnemies(combat.mobs);
+}, 500);
 
 // ── 5. Главное меню → старт боя ───────────────────────────────────────────────
 const tutorial = new Tutorial(state);
