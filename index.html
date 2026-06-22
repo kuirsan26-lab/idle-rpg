@@ -124,8 +124,8 @@
     #xp-bar-wrap { flex: 1; display: flex; align-items: center; gap: 8px; min-width: 80px; max-width: 220px; }
     #xp-bar-bg { flex: 1; height: 6px; background: #1a0a0a; border-radius: 1px; overflow: hidden; border: 1px solid #2a1010; min-width: 40px; }
     #xp-bar { height: 100%; background: linear-gradient(90deg, #4a0080, #9b59b6); border-radius: 1px; transition: width 0.3s; width: 0%; }
-    #xp-label { font-size: 10px; color: #666; white-space: nowrap; flex-shrink: 0; }
-    #prestige-area { display: flex; align-items: center; gap: 5px; }
+    #xp-label { display: none; }
+    #prestige-area { display: flex; align-items: center; gap: 5px; margin-left: auto; }
     #prestige-btn {
       padding: 4px 10px;
       background: #12060a;
@@ -302,10 +302,11 @@
     .bs-wave-prog-bar { width: 64px; height: 3px; background: #1a0a1a; border-radius: 2px; overflow: hidden; }
     .bs-wave-prog-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #3a0a0a, #8b0000); border-radius: 2px; transition: width 0.3s; }
     .bs-wave-badge {
-      font-size: 9px; color: var(--border-red); padding: 1px 6px;
+      font-size: 9px; color: var(--border-red); padding: 1px 8px;
       border-radius: 10px; background: #1a0a1a;
       border: 1px solid var(--border-dark);
-      white-space: nowrap; letter-spacing: 2px; text-transform: uppercase;
+      white-space: nowrap; letter-spacing: 1px; text-transform: uppercase;
+      max-width: 140px; overflow: hidden; text-overflow: ellipsis;
     }
 
     .bs-enemies-block {
@@ -383,7 +384,8 @@
     .bip-enemy-name { color: #c0392b; font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .bip-enemy-hp-track { height: 2px; background: #1a0a1a; border-radius: 1px; margin-top: 1px; }
     .bip-enemy-hp-fill { height: 100%; background: #8b0000; border-radius: 1px; transition: width 0.2s; }
-    .bip-kill-big { font-size: 28px; color: #9b59b6; font-family: 'Cinzel', serif; text-align: center; }
+    .bip-kill-big { font-size: 20px; color: #9b59b6; font-family: 'Cinzel', serif; text-align: center; }
+    .bip-kill-big:empty, .bip-kill-big[data-zero="true"] { color: #2a1a2a; }
 
 /* ═══════════════════════════ CANVAS ═══════════════════════════ */
     #game-container {

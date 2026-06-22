@@ -41,11 +41,7 @@ export class BattleInfoPanel {
     this._enemyListEl.innerHTML = '';
     const alive = (mobs || []).filter(m => m.hp > 0);
     if (alive.length === 0) {
-      const empty = document.createElement('div');
-      empty.className = 'bip-enemy-item';
-      empty.style.color = '#4a4';
-      empty.textContent = '✓ Победа!';
-      this._enemyListEl.appendChild(empty);
+      this._enemyListEl.innerHTML = '<div class="bip-enemy-item" style="color:#2a2a2a;font-style:italic;">—</div>';
       return;
     }
     alive.slice(0, 6).forEach(mob => {
@@ -65,12 +61,18 @@ export class BattleInfoPanel {
 
   addKill() {
     this._kills++;
-    if (this._killCountEl) this._killCountEl.textContent = this._kills;
+    if (this._killCountEl) {
+      this._killCountEl.textContent = this._kills;
+      this._killCountEl.dataset.zero = 'false';
+    }
   }
 
   resetKills() {
     this._kills = 0;
-    if (this._killCountEl) this._killCountEl.textContent = '0';
+    if (this._killCountEl) {
+      this._killCountEl.textContent = '0';
+      this._killCountEl.dataset.zero = 'true';
+    }
     this._updateWave();
   }
 }

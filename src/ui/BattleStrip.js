@@ -258,9 +258,9 @@ export class BattleStrip {
     if (zone && zoneWave != null) {
       const isBoss = zoneWave > 20;
       if (isBoss) {
-        badge.textContent = `◆ 👑 ФИНАЛЬНЫЙ БОСС ◆`;
+        badge.textContent = `👑 ФИНАЛЬНЫЙ БОСС`;
       } else {
-        badge.textContent = `◆ ${zone.icon} ${zone.name} · Волна ${zoneWave}/20 ◆`;
+        badge.textContent = `⚔ Волна ${zoneWave}/20`;
       }
       badge.style.background  = isBoss ? 'rgba(139,0,0,0.25)' : '#1a0a1a';
       badge.style.borderColor = isBoss ? 'var(--border-red)' : 'var(--border-dark)';
