@@ -453,6 +453,70 @@
 
     @keyframes fadeIn { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: translateY(0); } }
 
+    /* ═══════════════════════ GAME FEEL: LEVEL UP BANNER ═══════════════════════ */
+    #levelup-banner {
+      position: absolute; top: 38%; left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Cinzel', serif; font-size: 22px;
+      color: #f39c12; text-shadow: 0 0 20px rgba(243,156,18,0.8);
+      pointer-events: none; z-index: 100; white-space: nowrap;
+      animation: levelupAnim 1.5s ease forwards;
+    }
+    @keyframes levelupAnim {
+      0%   { opacity: 0; transform: translateX(-50%) scale(0.7); }
+      30%  { opacity: 1; transform: translateX(-50%) scale(1.1); }
+      70%  { opacity: 1; transform: translateX(-50%) scale(1.0); }
+      100% { opacity: 0; transform: translateX(-50%) scale(1.0); }
+    }
+
+    /* ═══════════════════════ GAME FEEL: ZONE COMPLETE ═══════════════════════ */
+    #zone-complete-overlay {
+      position: absolute; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.85);
+      display: none; align-items: center; justify-content: center;
+      animation: fadeIn 0.3s ease;
+    }
+    .zco-content { text-align: center; font-family: 'Cinzel', serif; }
+    .zco-title { font-size: 28px; color: #f39c12; text-shadow: 0 0 20px rgba(243,156,18,0.6); margin-bottom: 12px; }
+    .zco-zone-name { font-size: 20px; color: #e8d5b7; margin-bottom: 8px; }
+    .zco-souls { font-size: 16px; color: #9b59b6; margin-bottom: 20px; }
+    .zco-btn {
+      padding: 10px 24px; background: #1a0a0a; border: 1px solid #8b0000;
+      color: #e8d5b7; font-family: 'Cinzel', serif; cursor: pointer; border-radius: 4px;
+      font-size: 13px; transition: background 0.15s;
+    }
+    .zco-btn:hover { background: #2a0a0a; }
+
+    /* ═══════════════════════ GAME FEEL: IDLE INDICATOR ═══════════════════════ */
+    .idle-indicator { display: flex; gap: 4px; align-items: center; font-size: 12px; color: #666; }
+    .idle-dot { animation: dotPulse 1.2s infinite; display: inline-block; }
+    .idle-dot:nth-child(2) { animation-delay: 0.3s; }
+    .idle-dot:nth-child(3) { animation-delay: 0.6s; }
+    @keyframes dotPulse { 0%,100% { opacity: 0.2; } 50% { opacity: 1; } }
+
+    /* ═══════════════════════ GAME FEEL: END-RUN FADE-IN ═══════════════════════ */
+    @keyframes endRunFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    /* ═══════════════════════ GAME FEEL: TUTORIAL ═══════════════════════ */
+    #tutorial-overlay {
+      position: fixed; inset: 0; z-index: 500; cursor: pointer;
+      background: transparent;
+    }
+    #tutorial-tooltip {
+      position: fixed; z-index: 501; max-width: 280px;
+      background: #0d0510; border: 1px solid #8b0000; border-radius: 6px;
+      padding: 12px 16px; color: #e8d5b7; font-size: 13px; line-height: 1.5;
+      box-shadow: 0 4px 20px rgba(139,0,0,0.3);
+      display: none; pointer-events: none;
+    }
+    #tutorial-skip {
+      position: fixed; z-index: 502; bottom: 20px; right: 20px;
+      background: #12060a; border: 1px solid #3a1a1a; border-radius: 4px;
+      padding: 6px 14px; color: #666; font-size: 11px; cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    #tutorial-skip:hover { color: #e8d5b7; border-color: #8b0000; }
+
     /* ═══════════════════════════ CLASS MODAL ═══════════════════════════ */
     #class-modal-overlay {
       display: none; position: fixed; inset: 0;
@@ -1486,6 +1550,16 @@
 
     <!-- MAIN MENU OVERLAY (поверх всего, внутри #app для масштабирования) -->
     <div id="main-menu-overlay"></div>
+
+    <!-- ZONE COMPLETE OVERLAY -->
+    <div id="zone-complete-overlay">
+      <div class="zco-content">
+        <div class="zco-title">✦ ЗОНА ПРОЙДЕНА ✦</div>
+        <div class="zco-zone-name" id="zco-zone-name"></div>
+        <div class="zco-souls" id="zco-souls"></div>
+        <button class="zco-btn" id="zco-next-btn">Следующая зона →</button>
+      </div>
+    </div>
 
   </div>
 

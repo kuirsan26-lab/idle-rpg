@@ -44,10 +44,16 @@ export function installSave(proto) {
       // Зеркало Теней (постоянное)
       souls:          this.souls,
       shadowPerks:    { ...this.shadowPerks },
+      // Онбординг (постоянное — не сбрасывается при hardReset)
+      tutorialDone:   this.tutorialDone ?? false,
       timestamp:      Date.now(),
     };
     try {
       localStorage.setItem('idle_rpg_save', JSON.stringify(data));
+      // tutorialDone в отдельном ключе — сохраняется при hardReset
+      if (this.tutorialDone) {
+        localStorage.setItem('idle_rpg_tutorial_done', 'true');
+      }
     } catch (e) {
       console.warn('Save failed:', e);
     }
@@ -120,6 +126,11 @@ export function installSave(proto) {
       // Зеркало Теней — загрузка постоянных данных
       this.souls       = data.souls       ?? 0;
       this.shadowPerks = data.shadowPerks ?? {};
+
+      // Онбординг — постоянное, не сбрасывается при hardReset
+      // Читаем из отдельного ключа (не удаляется при hardReset)
+      const tutorialPersist = localStorage.getItem('idle_rpg_tutorial_done');
+      this.tutorialDone = tutorialPersist === 'true' || (data.tutorialDone ?? false);
       // Миграция: конвертируем старые ПО → Души (один раз)
       if (!data.souls && data.prestigePoints > 0 && !data.shadowPerks) {
         this.souls = data.prestigePoints;

@@ -20,7 +20,7 @@ export class HUD {
       state.on('player:goldChanged',      () => { this._updateGold(); this._updateSkillUpgrade(); }),
       state.on('player:xpChanged',        () => this._updateXp()),
       state.on('player:skillLevelChanged', () => { this._updateSkillBtn(); }),
-      state.on('player:levelUp',          (d) => { this._update(); this._updatePrestigeBtn(); this._log(`🎉 Уровень ${d.level}!`, 'level'); }),
+      state.on('player:levelUp',          (d) => { this._update(); this._updatePrestigeBtn(); this._log(`🎉 Уровень ${d.level}!`, 'level'); this._showLevelUpBanner(d.level); }),
       state.on('player:classChanged',     () => { this._update(); this._updateSkillBtn(); }),
       state.on('combat:killCountChanged', () => this._updateKills()),
       state.on('combat:waveCleared',      (d) => { this._log(`✅ Волна ${d.wave} пройдена`, 'wave'); this._updatePrestigeBtn(); }),
@@ -56,6 +56,7 @@ export class HUD {
       state.on('player:classDiscovered', ({ totalDiscovered }) => {
         this._log(`🔍 Новый класс открыт! (открыто: ${totalDiscovered})`, 'level');
       }),
+      state.on('zone:completed', () => this._updatePrestigeBtn()),
     ];
 
     this._milestoneTimeout = null;
@@ -274,6 +275,25 @@ export class HUD {
     const canDo = this.state.canEndRun ? this.state.canEndRun() : this.state.canPrestige?.();
     const btn   = document.getElementById('prestige-btn');
     const hudPp = document.getElementById('hud-pp');
+    const area  = document.getElementById('prestige-area');
+
+    // Контекстная видимость: кнопка появляется только после победы над боссом Зоны 1
+    const forestBeaten = this.state.zonesProgress?.forest?.bossDefeated === true;
+    if (area) {
+      if (forestBeaten) {
+        if (!this._prestigeAreaShown) {
+          // Первый раз показываем — анимация fadeIn
+          area.style.display = 'flex';
+          area.style.animation = 'endRunFadeIn 400ms ease';
+          this._prestigeAreaShown = true;
+        } else {
+          area.style.display = 'flex';
+        }
+      } else {
+        area.style.display = 'none';
+        this._prestigeAreaShown = false;
+      }
+    }
 
     if (btn) {
       btn.disabled    = !canDo;
@@ -303,6 +323,18 @@ export class HUD {
 
     clearTimeout(this._milestoneTimeout);
     this._milestoneTimeout = setTimeout(() => overlay.classList.remove('visible'), 3200);
+  }
+
+  // ── Level Up Banner ───────────────────────────────────────────────────────────
+  _showLevelUpBanner(level) {
+    // Удаляем предыдущий баннер если ещё висит
+    document.getElementById('levelup-banner')?.remove();
+    const banner = document.createElement('div');
+    banner.id = 'levelup-banner';
+    banner.textContent = `⬆ УРОВЕНЬ ${level}`;
+    const container = document.getElementById('main-area') ?? document.getElementById('app');
+    container?.appendChild(banner);
+    setTimeout(() => banner.remove(), 1500);
   }
 
   // ── Журнал боя ────────────────────────────────────────────────────────────────

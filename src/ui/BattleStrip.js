@@ -155,7 +155,7 @@ export class BattleStrip {
       <!-- ВРАГИ -->
       <div class="bs-enemies-block" id="bs-enemies-block">
         <div class="bs-enemies-list" id="bs-enemies-list">
-          <span class="bs-waiting">Ожидание...</span>
+          <span class="idle-indicator"><span class="idle-dot">◆</span><span class="idle-dot">·</span><span class="idle-dot">·</span><span style="margin-left:3px;color:#555;">СЛЕДУЮЩАЯ ВОЛНА</span></span>
         </div>
       </div>
     `;
@@ -304,7 +304,8 @@ export class BattleStrip {
 
     const alive = this._currentMobs.filter(m => m.hp > 0);
     if (alive.length === 0) {
-      list.innerHTML = '<span class="bs-waiting" style="color:#4a4">✓ Победа!</span>';
+      list.innerHTML = `<span class="bs-waiting" style="color:#4a4">✓ Победа!</span>
+        <span class="idle-indicator" style="margin-left:8px;"><span class="idle-dot">◆</span><span class="idle-dot">·</span><span class="idle-dot">·</span><span style="margin-left:3px;color:#555;">СЛЕДУЮЩАЯ ВОЛНА</span></span>`;
       return;
     }
 

@@ -2,7 +2,7 @@
  * ZoneMap — оверлей выбора зоны мира.
  * Показывает 5 зон, их прогресс и позволяет переключаться между разблокированными зонами.
  */
-import { ZONES } from '../data/zones.js';
+import { ZONES, ZONES_MAP } from '../data/zones.js';
 
 export class ZoneMap {
   constructor(state) {
@@ -74,7 +74,10 @@ export class ZoneMap {
 
     // Обновляем при разблокировке/завершении зоны
     this.state.on('zone:unlocked', () => this._refresh());
-    this.state.on('zone:completed', () => this._refresh());
+    this.state.on('zone:completed', ({ zoneId }) => {
+      this._refresh();
+      this._showZoneComplete(zoneId);
+    });
   }
 
   open() {
@@ -155,5 +158,32 @@ export class ZoneMap {
 
       this._list.appendChild(card);
     }
+  }
+
+  _showZoneComplete(zoneId) {
+    const overlay  = document.getElementById('zone-complete-overlay');
+    const nameEl   = document.getElementById('zco-zone-name');
+    const soulsEl  = document.getElementById('zco-souls');
+    const btn      = document.getElementById('zco-next-btn');
+    if (!overlay) return;
+
+    const zone = ZONES_MAP?.get ? ZONES_MAP.get(zoneId) : ZONES_MAP?.[zoneId];
+    if (nameEl) nameEl.textContent = zone ? `${zone.icon ?? ''} ${zone.name}` : zoneId;
+    if (soulsEl) soulsEl.textContent = this.state.souls > 0 ? `💜 ${this.state.souls} Душ накоплено` : '';
+
+    overlay.style.display = 'flex';
+
+    let closed = false;
+    const close = () => {
+      if (closed) return;
+      closed = true;
+      overlay.style.display = 'none';
+      // После закрытия открываем карту зон
+      setTimeout(() => this.open(), 80);
+    };
+
+    if (btn) btn.onclick = close;
+    clearTimeout(this._zcoTimeout);
+    this._zcoTimeout = setTimeout(close, 2500);
   }
 }
