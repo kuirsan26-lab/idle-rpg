@@ -121,10 +121,10 @@
     .hud-stat .val { color: var(--text-parchment); font-size: 15px; font-weight: 700; }
     .hud-stat .val.gold { color: var(--color-gold); }
     .hud-stat .val.souls { color: var(--color-souls); }
-    #xp-bar-wrap { flex: 1; display: flex; align-items: center; gap: 8px; min-width: 0; }
-    #xp-bar-bg { flex: 1; height: 6px; background: #1a0a0a; border-radius: 1px; overflow: hidden; border: 1px solid #2a1010; }
+    #xp-bar-wrap { flex: 1; display: flex; align-items: center; gap: 8px; min-width: 80px; max-width: 220px; }
+    #xp-bar-bg { flex: 1; height: 6px; background: #1a0a0a; border-radius: 1px; overflow: hidden; border: 1px solid #2a1010; min-width: 40px; }
     #xp-bar { height: 100%; background: linear-gradient(90deg, #4a0080, #9b59b6); border-radius: 1px; transition: width 0.3s; width: 0%; }
-    #xp-label { font-size: 10px; color: #666; white-space: nowrap; }
+    #xp-label { font-size: 10px; color: #666; white-space: nowrap; flex-shrink: 0; }
     #prestige-area { display: flex; align-items: center; gap: 5px; }
     #prestige-btn {
       padding: 4px 10px;
@@ -356,6 +356,34 @@
       flex: 1;
       overflow: hidden;
     }
+
+    /* ═══════════════════════════ BATTLE INFO PANEL ═══════════════════════════ */
+    #battle-info-panel {
+      width: 160px; min-width: 160px;
+      background: #06030a;
+      border-right: 1px solid #1a0a1a;
+      display: flex; flex-direction: column; gap: 0;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .bip-section {
+      padding: 8px 10px;
+      border-bottom: 1px solid #1a0a1a;
+    }
+    .bip-title {
+      font-size: 9px; letter-spacing: 2px; color: #4a2a2a;
+      text-transform: uppercase; margin-bottom: 5px;
+    }
+    .bip-zone { font-size: 11px; color: #8b0000; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .bip-wave-num { font-size: 20px; color: #e8d5b7; font-family: 'Cinzel', serif; font-weight: bold; }
+    .bip-progress-track { height: 3px; background: #1a0a1a; border-radius: 2px; margin-top: 5px; }
+    .bip-progress-fill { height: 100%; background: linear-gradient(90deg, #8b0000, #e74c3c); border-radius: 2px; transition: width 0.4s ease; }
+    .bip-enemy-list { display: flex; flex-direction: column; gap: 3px; max-height: 140px; overflow-y: auto; }
+    .bip-enemy-item { font-size: 10px; color: #888; }
+    .bip-enemy-name { color: #c0392b; font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .bip-enemy-hp-track { height: 2px; background: #1a0a1a; border-radius: 1px; margin-top: 1px; }
+    .bip-enemy-hp-fill { height: 100%; background: #8b0000; border-radius: 1px; transition: width 0.2s; }
+    .bip-kill-big { font-size: 28px; color: #9b59b6; font-family: 'Cinzel', serif; text-align: center; }
 
 /* ═══════════════════════════ CANVAS ═══════════════════════════ */
     #game-container {
@@ -1270,6 +1298,7 @@
       .bs-enemies-list { max-height: none; }
 
       /* ── Main area: только canvas во всю ширину ── */
+      #battle-info-panel { display: none; }
       #main-area { flex: 1; min-height: 0; }
       #game-container { flex: 1; width: 100%; }
       #game-container canvas {
@@ -1395,15 +1424,14 @@
         <div id="xp-bar-bg"><div id="xp-bar"></div></div>
         <span id="xp-label">0 / 100 XP</span>
       </div>
-      <div class="hud-stat"><span class="lbl">Золото</span><span class="val gold" id="hud-gold">0</span></div>
-      <div class="hud-stat" id="hud-souls-stat"><span class="lbl">Души</span><span class="val souls" id="hud-souls">💜 0</span></div>
-      <div class="hud-stat"><span class="lbl">Волна</span><span class="val" id="hud-wave">1</span></div>
-      <div class="hud-stat"><span class="lbl">Убито</span><span class="val" id="hud-kills">0</span></div>
+      <div class="hud-stat" style="flex-shrink:0"><span class="lbl">Золото</span><span class="val gold" id="hud-gold">0</span></div>
+      <div class="hud-stat" style="flex-shrink:0"><span class="lbl">Волна</span><span class="val" id="hud-wave">1</span></div>
+      <div class="hud-stat" style="flex-shrink:0"><span class="lbl">Убито</span><span class="val" id="hud-kills">0</span></div>
       <div id="prestige-area">
         <button id="prestige-btn" onclick="window.game && window.game.showPrestigeModal()">⚡ Завершить ран</button>
-        <div id="prestige-pp-badge" onclick="window.game && window.game.openShadowMirror()" title="Зеркало Теней">💜 <span id="hud-pp">0</span> Душ</div>
       </div>
-      <button id="shadow-mirror-btn" onclick="window.game && window.game.openShadowMirror()" title="Зеркало Теней">💜 Зеркало</button>
+      <div id="hud-divider"></div>
+      <button id="shadow-mirror-btn" onclick="window.game && window.game.openShadowMirror()" title="Зеркало Теней — Души и постоянные перки">💜 <span id="hud-souls-count">0</span></button>
       <button id="achievements-btn" onclick="window.game && window.game.openAchievements()" title="Достижения">🏆 Ачивки</button>
       <button id="zone-map-btn" onclick="window.game && window.game.openZoneMap()" title="Карта мира">🗺 Зоны</button>
       <button id="class-tree-btn" onclick="window.game && window.game.openClassGraph()" title="Дерево классов">🌿 Классы</button>
@@ -1435,6 +1463,25 @@
     <!-- MAIN AREA -->
     <div id="main-area">
 
+      <!-- Battle Info Panel -->
+      <div id="battle-info-panel">
+        <div class="bip-section">
+          <div class="bip-title">⚔ ВОЛНА</div>
+          <div id="bip-zone-name" class="bip-zone">Тёмный Лес</div>
+          <div id="bip-wave-text" class="bip-wave-num">1 / 20</div>
+          <div class="bip-progress-track">
+            <div id="bip-wave-progress" class="bip-progress-fill" style="width:5%"></div>
+          </div>
+        </div>
+        <div class="bip-section">
+          <div class="bip-title">☠ ВРАГИ</div>
+          <div id="bip-enemy-list" class="bip-enemy-list"></div>
+        </div>
+        <div class="bip-section">
+          <div class="bip-title">💀 УБИТО</div>
+          <div id="bip-kill-count" class="bip-kill-big">0</div>
+        </div>
+      </div>
 
       <!-- Phaser Canvas -->
       <div id="game-container"></div>

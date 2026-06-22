@@ -261,8 +261,8 @@ export class HUD {
   }
 
   _updateSouls() {
-    const el = document.getElementById('hud-souls');
-    if (el) el.textContent = `💜 ${this._fmt(this.state.souls || 0)}`;
+    const el = document.getElementById('hud-souls-count');
+    if (el) el.textContent = this._fmt(this.state.souls || 0);
   }
 
   _updateKills() {
