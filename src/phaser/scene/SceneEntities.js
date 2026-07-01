@@ -56,13 +56,6 @@ export function installEntities(proto) {
 
     this.playerContainer.add([this.playerShadow, this.playerBody, hpBg, this.playerHpFill]);
 
-    this.playerLabel = this.add.text(PLAYER_X, PLAYER_Y - 52, '', {
-      fontSize: '11px', fill: '#99aacc',
-      fontFamily: 'Segoe UI', fontStyle: 'bold',
-      stroke: '#000', strokeThickness: 2,
-    }).setOrigin(0.5, 1).setDepth(3);
-    this._updatePlayerLabel();
-
     // Лёгкий float контейнера. Амплитуда мягкая, чтобы не перебивать
     // покадровую idle-анимацию анимированных героев (breathing-idle).
     this.tweens.add({
@@ -169,12 +162,6 @@ export function installEntities(proto) {
     } else {
       this._drawPlayerBody();
     }
-    this._updatePlayerLabel();
-  };
-
-  proto._updatePlayerLabel = function() {
-    const cls = window._classMap?.get(this.gameState?.currentClass);
-    this.playerLabel?.setText(cls?.name ?? 'Новичок');
   };
 
   proto._updatePlayerHpBar = function() {
