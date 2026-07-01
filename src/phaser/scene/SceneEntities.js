@@ -4,6 +4,7 @@
  */
 import { BRANCH_HEX } from '../../data/classes.js';
 import { FLAG_ICONS } from '../../data/mobs.js';
+import { heroAnimKey } from './heroAnims.js';
 
 const SCENE_H  = 480;
 const PLAYER_X = 100;
@@ -55,27 +56,31 @@ export function installEntities(proto) {
 
     this.playerContainer.add([this.playerShadow, this.playerBody, hpBg, this.playerHpFill]);
 
-    this.playerLabel = this.add.text(PLAYER_X, PLAYER_Y - 52, '', {
-      fontSize: '11px', fill: '#99aacc',
-      fontFamily: 'Segoe UI', fontStyle: 'bold',
-      stroke: '#000', strokeThickness: 2,
-    }).setOrigin(0.5, 1).setDepth(3);
-    this._updatePlayerLabel();
-
+    // Лёгкий float контейнера. Амплитуда мягкая, чтобы не перебивать
+    // покадровую idle-анимацию анимированных героев (breathing-idle).
     this.tweens.add({
-      targets: this.playerContainer, y: PLAYER_Y - 4,
-      duration: 1800, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+      targets: this.playerContainer, y: PLAYER_Y - 2,
+      duration: 2200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
     });
   };
 
   proto._buildPlayerSprite = function() {
     const branch = this._getBranch();
-    const key    = `hero_${branch}`;
+    // 1) Анимированный пиксель-герой (Pixellab spritesheet) — приоритет.
+    if (this._hasHeroAnim(branch)) {
+      const spr = this.add.sprite(0, 0, `hero_anim_${branch}`);
+      spr.setOrigin(0.5, 1).setY(24).setScale(110 / spr.height);
+      spr.play(heroAnimKey(branch, 'idle'));
+      return spr;
+    }
+    // 2) Статичный спрайт из мобового атласа.
+    const key = `hero_${branch}`;
     if (this._hasSprite(key)) {
       const spr = this.add.image(0, 0, 'sprites', key);
       spr.setScale(110 / spr.height).setOrigin(0.5, 1).setY(24);
       return spr;
     }
+    // 3) Процедурная отрисовка (Graphics) — гарантированный fallback.
     const gfx = this.add.graphics();
     this._drawPlayerBodyGfx(gfx);
     return gfx;
@@ -145,13 +150,18 @@ export function installEntities(proto) {
   };
 
   proto._updatePlayerVisual = function() {
-    this._drawPlayerBody();
-    this._updatePlayerLabel();
-  };
-
-  proto._updatePlayerLabel = function() {
-    const cls = window._classMap?.get(this.gameState?.currentClass);
-    this.playerLabel?.setText(cls?.name ?? 'Новичок');
+    const branch   = this._getBranch();
+    const wantAnim = this._hasHeroAnim(branch);
+    const isSprite = this.playerBody?.type === 'Sprite';
+    // Пересобрать body, если нужен анимированный герой ИЛИ уходим с анимированного.
+    if (wantAnim || isSprite) {
+      const old = this.playerBody;
+      this.playerBody = this._buildPlayerSprite();
+      this.playerContainer.replace(old, this.playerBody);  // сохраняет порядок глубины
+      old.destroy();
+    } else {
+      this._drawPlayerBody();
+    }
   };
 
   proto._updatePlayerHpBar = function() {

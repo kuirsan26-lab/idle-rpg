@@ -6,6 +6,7 @@ import Phaser from 'phaser';
 import { installBackground } from './scene/SceneBackground.js';
 import { installEntities }   from './scene/SceneEntities.js';
 import { installFX }         from './scene/SceneFX.js';
+import { registerHeroAnims, HERO_BRANCHES, heroAnimKey } from './scene/heroAnims.js';
 
 export class GameScene extends Phaser.Scene {
   constructor() { super({ key: 'GameScene' }); }
@@ -25,10 +26,21 @@ export class GameScene extends Phaser.Scene {
                        'ground_51_60','ground_61_70','ground_71_80','ground_81_90','ground_91_100']) {
       this.load.image(key, `/backgrounds/${key}.png`);
     }
+    // Анимированные пиксель-спрайты героев (отдельно от мобового атласа).
+    // Отсутствующие файлы дают loaderror, но не крашат — подхват через textures.exists в create().
+    for (const branch of HERO_BRANCHES) {
+      this.load.spritesheet(`hero_anim_${branch}`, `/sprites/heroes/hero_${branch}.png`,
+        { frameWidth: 96, frameHeight: 96 });
+      this.load.json(`hero_json_${branch}`, `/sprites/heroes/hero_${branch}.json`);
+    }
   }
 
   _hasSprite(key) {
     return this.textures.get('sprites').has(key);
+  }
+
+  _hasHeroAnim(branch) {
+    return this.anims.exists(heroAnimKey(branch, 'idle'));
   }
 
   create() {
@@ -37,6 +49,14 @@ export class GameScene extends Phaser.Scene {
 
     this._createBackground();
     this._createArena();
+
+    // Регистрация анимаций героев ДО создания игрока (fallback при отсутствии ассета).
+    for (const branch of HERO_BRANCHES) {
+      if (!this.textures.exists(`hero_anim_${branch}`)) continue;
+      const json = this.cache.json.get(`hero_json_${branch}`);
+      if (json) registerHeroAnims(this, branch, json);
+    }
+
     this._createPlayer();
     this._createOverlayUI();
 

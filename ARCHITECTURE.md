@@ -1,7 +1,7 @@
 # Idle RPG — Living Architecture
 
 > Живой документ. Обновлять при каждом значимом изменении структуры или планов.
-> Последнее обновление: 2026-06-23 (v2.1.0: visual polish, battle info panel, class tree filters, tutorial, game feel)
+> Последнее обновление: 2026-07-01 (v2.2.0: анимированные пиксель-спрайты героев через Pixellab)
 
 ---
 
@@ -494,7 +494,10 @@ onPlayerAttack: burn → if rand < burn% → mob.burnTicks=4, mob.burnDmg=atk*0.
 #### 🟢 Низкий приоритет
 
 - [ ] **Звук** — Web Audio API: фоновая музыка по тиру фона + SFX ударов/крита/смерти/уровня
-- [ ] **Анимации спрайтов** — spritesheet вместо static PNG (idle/attack/hit/death)
+- [~] **Анимации спрайтов** — ✅ герои (v2.2.0): анимированные пиксель-спрайтшиты 96×96
+  (idle/attack/hit/death) через Pixellab MCP; загрузка+регистрация в `heroAnims.js`,
+  привязка к бою в `SceneFX._playHeroAnim`, import — `scripts/import_pixellab_hero.py`.
+  ⬜ мобы/боссы — пока static PNG (возможная будущая итерация)
 - [x] **Мобильная адаптация** — responsive reflow ≤820px, нижний таб-бар, bottom-sheet (v1.14.0)
 - [ ] **Волны 101–200** — новые мобы (Celestial-тир), фоны, 10 новых боссов
 - [ ] **Новые классы depth 1–4** — ветки Некромант / Берсерк

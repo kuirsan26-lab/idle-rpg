@@ -2,6 +2,7 @@
  * Mixin: эффекты, floating text, combat callbacks + хелперы
  * Устанавливается на GameScene.prototype
  */
+import { heroAnimKey } from './heroAnims.js';
 
 const PLAYER_X = 100;
 const GROUND_Y = 310;
@@ -32,6 +33,28 @@ export function installFX(proto) {
     return Math.round(n).toString();
   };
 
+  // ── Анимации героя ───────────────────────────────────────────────────────────
+
+  /**
+   * Проиграть состояние анимированного героя. Для one-shot (attack/hit)
+   * автоматически возвращает в idle по завершении. death — замирает.
+   * Молча выходит, если body не анимированный Sprite (fallback-отрисовка).
+   */
+  proto._playHeroAnim = function(state) {
+    const body = this.playerBody;
+    if (!body || body.type !== 'Sprite') return false;
+    const branch = this._getBranch();
+    const key    = heroAnimKey(branch, state);
+    if (!this.anims.exists(key)) return false;
+    body.play(key, true);
+    if (state !== 'idle' && state !== 'death') {
+      body.once('animationcomplete', () => {
+        if (body.active) body.play(heroAnimKey(branch, 'idle'), true);
+      });
+    }
+    return true;
+  };
+
   // ── Combat callbacks ─────────────────────────────────────────────────────────
 
   proto._onWaveSpawn = function({ mobs }) {
@@ -41,6 +64,7 @@ export function installFX(proto) {
   };
 
   proto._onPlayerAttack = function({ mob, damage, isCrit, isDeathblow, shieldAbsorbed }) {
+    this._playHeroAnim('attack');
     const v = this.mobVisuals.get(mob.id);
     if (!v) return;
 
@@ -88,6 +112,7 @@ export function installFX(proto) {
       this._spawnDmgText(PLAYER_X, PLAYER_Y - 60, 'MISS', '#888888', '14px');
       return;
     }
+    this._playHeroAnim('hit');
     if (this.combat.mobs[0]?.data?.isBoss) this.cameras.main.shake(110, 0.012);
 
     const flash = this.add.rectangle(0, 0, SCENE_W, SCENE_H, 0x8b0000, 0.18)
@@ -121,11 +146,16 @@ export function installFX(proto) {
   };
 
   proto._onPlayerDeath = function() {
+    const played = this._playHeroAnim('death');
     this.deathOverlay.setAlpha(0.55).setDepth(20);
     this.deathText.setAlpha(1);
     this.respawnText.setAlpha(1);
     this.playerContainer.setAlpha(0.35);
-    this.tweens.add({ targets: this.playerContainer, angle: 88, duration: 550, ease: 'Power2' });
+    // Крутим контейнер «падением» только для fallback-отрисовки; у анимированного
+    // героя death-спрайтшит уже показывает падение — иначе двойной наклон.
+    if (!played) {
+      this.tweens.add({ targets: this.playerContainer, angle: 88, duration: 550, ease: 'Power2' });
+    }
 
     this._respawnCountdown = 3;
     this.respawnText.setText('Возрождение через 3с...');
@@ -146,6 +176,7 @@ export function installFX(proto) {
     this.deathText.setAlpha(0);
     this.respawnText.setAlpha(0);
     this.playerContainer.setAlpha(1).setAngle(0);
+    this._playHeroAnim('idle');
     this._updatePlayerHpBar();
   };
 

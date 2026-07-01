@@ -197,6 +197,30 @@ _MOB_SPRITES = { goblin: 'mob_goblin', ... };
 
 Credentials YandexART 2.0 — в `memory/reference_yandexart.md`.
 
+### Hero animations (Pixellab, c v2.2.0)
+
+Герои (5 классов) — **анимированные пиксель-спрайтшиты**, отдельно от мобового атласа
+(осознанный стиль-микс пиксель-герои vs painterly-мобы).
+
+- **Ассеты:** `public/sprites/heroes/hero_<branch>.png` (сетка **96×96**, один ряд, 24 кадра) +
+  `hero_<branch>.json` (`{ frameSize, states: { idle|attack|hit|death: {start,count,frameRate} } }`).
+  Ветки: `novice/warrior/rogue/archer/mage`. Вид сбоку, **лицом вправо** (Pixellab dir `east`).
+- **Состояния:** idle (loop), attack (one-shot→idle), hit (one-shot→idle), death (one-shot, hold).
+  Реальные counts: idle 4 / attack 7 / hit 6 / death 7.
+- **Загрузка:** `GameScene.preload` грузит `hero_anim_<branch>` (spritesheet 96×96) + `hero_json_<branch>`.
+  `GameScene.create` регистрирует анимации через `registerHeroAnims` (модуль `phaser/scene/heroAnims.js`),
+  ставит NEAREST **только на текстуры героев** (глобальный `pixelArt` НЕ включён — мобы сглажены).
+- **Отрисовка:** `SceneEntities._buildPlayerSprite` — приоритет: анимированный `Sprite` →
+  статичный Image из атласа → Graphics-fallback (`_hasHeroAnim(branch)`). Смена класса пересобирает
+  body через `_updatePlayerVisual` (`playerContainer.replace`).
+- **Привязка к бою:** `SceneFX._playHeroAnim(state)` дёргается из `_onPlayerAttack/_onPlayerHit/`
+  `_onPlayerDeath/_onRespawn`. Молча возвращает false, если body не анимированный Sprite (fallback).
+  При death-анимации 88°-наклон контейнера пропускается (чтобы не было двойного падения).
+- **Генерация:** через **Pixellab MCP** (`create_character` view=side + `animate_character`
+  template/v3, только dir `east`). Скачанный zip → `scripts/import_pixellab_hero.py --branch X
+  --extracted <dir>` (читает `metadata.json`, паддит кадры до 96×96, склеивает ряд idle→attack→hit→death).
+  Детали формата и лимиты — `docs/superpowers/plans/pixellab-facts.md`.
+
 ### BattleStrip (ui/BattleStrip.js)
 
 Обновляется через те же combat-колбэки. Показывает HP-бар игрока (цвет: зелёный/оранжевый/красный), чипы врагов сгруппированные по имени с мини HP-барами, прогресс волны (X/N убитых). Боссы — отдельный стиль с 👑.
@@ -219,7 +243,7 @@ Credentials YandexART 2.0 — в `memory/reference_yandexart.md`.
 
 ### Versioning (data/changelog.js)
 
-Единый источник истины версии — `GAME_VERSION` в `src/data/changelog.js` + `CHANGELOG` (массив записей, `type: new|changed|fixed|balance`). При релизе синхронизировать с `package.json` `version`. «Что нового» в SettingsMenu и MainMenu читаются из этого массива. См. `/ship`-воркфлоу. Текущая версия: **v2.1.0**.
+Единый источник истины версии — `GAME_VERSION` в `src/data/changelog.js` + `CHANGELOG` (массив записей, `type: new|changed|fixed|balance`). При релизе синхронизировать с `package.json` `version`. «Что нового» в SettingsMenu и MainMenu читаются из этого массива. См. `/ship`-воркфлоу. Текущая версия: **v2.2.0**.
 
 ### Dark Fantasy Theme (c v1.17.0)
 
