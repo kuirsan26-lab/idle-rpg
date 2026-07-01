@@ -63,9 +63,11 @@ export function installEntities(proto) {
     }).setOrigin(0.5, 1).setDepth(3);
     this._updatePlayerLabel();
 
+    // Лёгкий float контейнера. Амплитуда мягкая, чтобы не перебивать
+    // покадровую idle-анимацию анимированных героев (breathing-idle).
     this.tweens.add({
-      targets: this.playerContainer, y: PLAYER_Y - 4,
-      duration: 1800, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+      targets: this.playerContainer, y: PLAYER_Y - 2,
+      duration: 2200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
     });
   };
 

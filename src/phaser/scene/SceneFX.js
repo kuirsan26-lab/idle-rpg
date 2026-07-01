@@ -146,12 +146,16 @@ export function installFX(proto) {
   };
 
   proto._onPlayerDeath = function() {
-    this._playHeroAnim('death');
+    const played = this._playHeroAnim('death');
     this.deathOverlay.setAlpha(0.55).setDepth(20);
     this.deathText.setAlpha(1);
     this.respawnText.setAlpha(1);
     this.playerContainer.setAlpha(0.35);
-    this.tweens.add({ targets: this.playerContainer, angle: 88, duration: 550, ease: 'Power2' });
+    // Крутим контейнер «падением» только для fallback-отрисовки; у анимированного
+    // героя death-спрайтшит уже показывает падение — иначе двойной наклон.
+    if (!played) {
+      this.tweens.add({ targets: this.playerContainer, angle: 88, duration: 550, ease: 'Power2' });
+    }
 
     this._respawnCountdown = 3;
     this.respawnText.setText('Возрождение через 3с...');
