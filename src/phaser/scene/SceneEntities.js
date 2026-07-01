@@ -4,6 +4,7 @@
  */
 import { BRANCH_HEX } from '../../data/classes.js';
 import { FLAG_ICONS } from '../../data/mobs.js';
+import { heroAnimKey } from './heroAnims.js';
 
 const SCENE_H  = 480;
 const PLAYER_X = 100;
@@ -70,12 +71,21 @@ export function installEntities(proto) {
 
   proto._buildPlayerSprite = function() {
     const branch = this._getBranch();
-    const key    = `hero_${branch}`;
+    // 1) Анимированный пиксель-герой (Pixellab spritesheet) — приоритет.
+    if (this._hasHeroAnim(branch)) {
+      const spr = this.add.sprite(0, 0, `hero_anim_${branch}`);
+      spr.setOrigin(0.5, 1).setY(24).setScale(110 / spr.height);
+      spr.play(heroAnimKey(branch, 'idle'));
+      return spr;
+    }
+    // 2) Статичный спрайт из мобового атласа.
+    const key = `hero_${branch}`;
     if (this._hasSprite(key)) {
       const spr = this.add.image(0, 0, 'sprites', key);
       spr.setScale(110 / spr.height).setOrigin(0.5, 1).setY(24);
       return spr;
     }
+    // 3) Процедурная отрисовка (Graphics) — гарантированный fallback.
     const gfx = this.add.graphics();
     this._drawPlayerBodyGfx(gfx);
     return gfx;
@@ -145,7 +155,18 @@ export function installEntities(proto) {
   };
 
   proto._updatePlayerVisual = function() {
-    this._drawPlayerBody();
+    const branch   = this._getBranch();
+    const wantAnim = this._hasHeroAnim(branch);
+    const isSprite = this.playerBody?.type === 'Sprite';
+    // Пересобрать body, если нужен анимированный герой ИЛИ уходим с анимированного.
+    if (wantAnim || isSprite) {
+      const old = this.playerBody;
+      this.playerBody = this._buildPlayerSprite();
+      this.playerContainer.replace(old, this.playerBody);  // сохраняет порядок глубины
+      old.destroy();
+    } else {
+      this._drawPlayerBody();
+    }
     this._updatePlayerLabel();
   };
 
