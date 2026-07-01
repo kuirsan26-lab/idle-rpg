@@ -3,3 +3,6 @@ dist/
 .env
 .env.local
 .claude/settings.local.json
+
+# Pixellab raw hero frames (regenerated via import script)
+public/sprites/heroes/_raw/
