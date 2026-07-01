@@ -1,0 +1,25 @@
+{
+  "frameSize": 96,
+  "states": {
+    "idle": {
+      "start": 0,
+      "count": 4,
+      "frameRate": 6
+    },
+    "attack": {
+      "start": 4,
+      "count": 7,
+      "frameRate": 12
+    },
+    "hit": {
+      "start": 11,
+      "count": 6,
+      "frameRate": 12
+    },
+    "death": {
+      "start": 17,
+      "count": 7,
+      "frameRate": 8
+    }
+  }
+}

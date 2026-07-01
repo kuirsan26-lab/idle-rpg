@@ -39,6 +39,12 @@
   picking-up, pull-heavy-object, pushing, roundhouse-kick, running-*, sad-walk, scary-walk,
   surprise-uppercut, taking-punch, throw-object, two-footed-jump, walk*, walking* и др.
 - Джобы дольше estimate: реально ~7–8 мин на 4 анимации.
+- **Лимит одновременных джоб = 8** (на аккаунт). Ставить анимации волнами ≤8.
+- **v3-анимацию (attack) нельзя ставить до завершения create** — ей нужен rotation-кадр как
+  стартовый (иначе `404: Character rotation image not found`). Template-анимации (idle/hit/death)
+  можно ставить сразу после `create_character` (запустятся по готовности).
+- Практика для батча 5 героев: сначала template-анимации, attack (v3) — отдельной волной
+  после того, как все `create` завершились.
 
 ## Скачивание результата
 
